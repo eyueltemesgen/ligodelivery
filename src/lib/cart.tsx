@@ -55,7 +55,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       shopName: items[0]?.shopName ?? null,
       add: (item, qty = 1) =>
         setItems((prev) => {
-          const base = prev.length && prev[0].shopId !== item.shopId ? [] : prev;
+          const base = prev.length && prev[0]?.shopId !== item.shopId ? [] : prev;
           const found = base.find((i) => i.productId === item.productId);
           if (found)
             return base.map((i) =>
