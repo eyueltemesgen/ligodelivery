@@ -1,0 +1,43 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { categoriesQuery } from "@/lib/queries";
+import { StorageImage } from "@/lib/media";
+
+export const Route = createFileRoute("/categories")({
+  head: () => ({
+    meta: [
+      { title: "Browse categories — Ligo Delivery Bishoftu" },
+      { name: "description", content: "Restaurants, groceries, pharmacy, bakery and more — browse every Ligo delivery category in Bishoftu." },
+      { property: "og:title", content: "Browse categories — Ligo Delivery" },
+      { property: "og:description", content: "Every Ligo delivery category in Bishoftu." },
+    ],
+  }),
+  component: CategoriesPage,
+});
+
+function CategoriesPage() {
+  const { data = [], isLoading } = useQuery(categoriesQuery);
+  return (
+    <div className="container-ligo py-10">
+      <h1 className="font-display text-3xl font-extrabold">Categories</h1>
+      <p className="mt-2 text-muted-foreground">Pick what you need delivered today.</p>
+      {isLoading ? (
+        <p className="mt-8 text-sm text-muted-foreground">Loading categories…</p>
+      ) : (
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {data.map((c) => (
+            <Link
+              key={c.id}
+              to="/shops"
+              search={{ category: c.id }}
+              className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-pop"
+            >
+              <StorageImage path={c.image_url} alt={c.name} className="h-28 w-full object-cover" />
+              <div className="p-3 text-sm font-semibold">{c.name}</div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
