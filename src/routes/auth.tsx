@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +9,8 @@ import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
-    mode: s.mode === "register" ? ("register" as const) : ("login" as const),
-    role: s.role === "rider" ? ("rider" as const) : ("customer" as const),
+    mode: s['mode'] === "register" ? ("register" as const) : ("login" as const),
+    role: s['role'] === "rider" ? ("rider" as const) : ("customer" as const),
   }),
   head: () => ({
     meta: [
@@ -66,14 +65,6 @@ function AuthPage() {
     }
   };
 
-  const google = async () => {
-    try {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
-    }
-  };
-
   return (
     <div className="container-ligo flex justify-center py-12">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-pop">
@@ -107,8 +98,6 @@ function AuthPage() {
             {busy ? "Please wait…" : mode === "register" ? "Create account" : "Sign in"}
           </Button>
         </form>
-
-        <Button variant="outline" className="mt-3 w-full" onClick={google}>Continue with Google</Button>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
           {mode === "register" ? (
