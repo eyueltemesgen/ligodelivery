@@ -3,12 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery, shopsQuery } from "@/lib/queries";
 import { ShopCard } from "@/components/ligo/Cards";
 
-type ShopSearch = { category?: string };
-
 export const Route = createFileRoute("/shops/")({
-  validateSearch: (s: Record<string, unknown>): ShopSearch => ({
-    category: typeof s.category === "string" ? s.category : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>) =>
+    typeof s['category'] === "string" ? { category: s['category'] } : {},
   head: () => ({
     meta: [
       { title: "Shops in Bishoftu — Ligo Delivery" },
