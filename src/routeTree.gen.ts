@@ -19,6 +19,7 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OffersRouteImport } from './routes/offers'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
+import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
 import { Route as ShopsIndexRouteImport } from './routes/shops.index'
 import { Route as ShopsShopIdRouteImport } from './routes/shops.$shopId'
 
@@ -72,6 +73,11 @@ const OrdersIndexRoute = OrdersIndexRouteImport.update({
   path: '/orders/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
+  id: '/orders/$orderId',
+  path: '/orders/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopsIndexRoute = ShopsIndexRouteImport.update({
   id: '/shops/',
   path: '/shops/',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/search': typeof SearchRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/orders/': typeof OrdersIndexRoute
   '/shops/': typeof ShopsIndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/search': typeof SearchRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/orders': typeof OrdersIndexRoute
   '/shops': typeof ShopsIndexRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/search': typeof SearchRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/orders/': typeof OrdersIndexRoute
   '/shops/': typeof ShopsIndexRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/offers'
     | '/search'
+    | '/orders/$orderId'
     | '/shops/$shopId'
     | '/orders/'
     | '/shops/'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/offers'
     | '/search'
+    | '/orders/$orderId'
     | '/shops/$shopId'
     | '/orders'
     | '/shops'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/offers'
     | '/search'
+    | '/orders/$orderId'
     | '/shops/$shopId'
     | '/orders/'
     | '/shops/'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OffersRoute: typeof OffersRoute
   SearchRoute: typeof SearchRoute
+  OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   ShopsShopIdRoute: typeof ShopsShopIdRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   ShopsIndexRoute: typeof ShopsIndexRoute
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orders/$orderId': {
+      id: '/orders/$orderId'
+      path: '/orders/$orderId'
+      fullPath: '/orders/$orderId'
+      preLoaderRoute: typeof OrdersOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shops/': {
       id: '/shops/'
       path: '/shops'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OffersRoute: OffersRoute,
   SearchRoute: SearchRoute,
+  OrdersOrderIdRoute: OrdersOrderIdRoute,
   ShopsShopIdRoute: ShopsShopIdRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   ShopsIndexRoute: ShopsIndexRoute,
