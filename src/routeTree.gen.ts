@@ -20,6 +20,8 @@ import { Route as OffersRouteImport } from './routes/offers'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
+import { Route as RiderIndexRouteImport } from './routes/rider.index'
+import { Route as RiderJoinRouteImport } from './routes/rider.join'
 import { Route as ShopsIndexRouteImport } from './routes/shops.index'
 import { Route as ShopsShopIdRouteImport } from './routes/shops.$shopId'
 
@@ -78,6 +80,16 @@ const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
   path: '/orders/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RiderIndexRoute = RiderIndexRouteImport.update({
+  id: '/rider/',
+  path: '/rider/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RiderJoinRoute = RiderJoinRouteImport.update({
+  id: '/rider/join',
+  path: '/rider/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopsIndexRoute = ShopsIndexRouteImport.update({
   id: '/shops/',
   path: '/shops/',
@@ -100,8 +112,10 @@ export interface FileRoutesByFullPath {
   '/offers': typeof OffersRoute
   '/search': typeof SearchRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/rider/join': typeof RiderJoinRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/orders/': typeof OrdersIndexRoute
+  '/rider/': typeof RiderIndexRoute
   '/shops/': typeof ShopsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -115,8 +129,10 @@ export interface FileRoutesByTo {
   '/offers': typeof OffersRoute
   '/search': typeof SearchRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/rider/join': typeof RiderJoinRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/orders': typeof OrdersIndexRoute
+  '/rider': typeof RiderIndexRoute
   '/shops': typeof ShopsIndexRoute
 }
 export interface FileRoutesById {
@@ -131,8 +147,10 @@ export interface FileRoutesById {
   '/offers': typeof OffersRoute
   '/search': typeof SearchRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/rider/join': typeof RiderJoinRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/orders/': typeof OrdersIndexRoute
+  '/rider/': typeof RiderIndexRoute
   '/shops/': typeof ShopsIndexRoute
 }
 export interface FileRouteTypes {
@@ -148,8 +166,10 @@ export interface FileRouteTypes {
     | '/offers'
     | '/search'
     | '/orders/$orderId'
+    | '/rider/join'
     | '/shops/$shopId'
     | '/orders/'
+    | '/rider/'
     | '/shops/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -163,8 +183,10 @@ export interface FileRouteTypes {
     | '/offers'
     | '/search'
     | '/orders/$orderId'
+    | '/rider/join'
     | '/shops/$shopId'
     | '/orders'
+    | '/rider'
     | '/shops'
   id:
     | '__root__'
@@ -178,8 +200,10 @@ export interface FileRouteTypes {
     | '/offers'
     | '/search'
     | '/orders/$orderId'
+    | '/rider/join'
     | '/shops/$shopId'
     | '/orders/'
+    | '/rider/'
     | '/shops/'
   fileRoutesById: FileRoutesById
 }
@@ -194,8 +218,10 @@ export interface RootRouteChildren {
   OffersRoute: typeof OffersRoute
   SearchRoute: typeof SearchRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
+  RiderJoinRoute: typeof RiderJoinRoute
   ShopsShopIdRoute: typeof ShopsShopIdRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
+  RiderIndexRoute: typeof RiderIndexRoute
   ShopsIndexRoute: typeof ShopsIndexRoute
 }
 
@@ -278,6 +304,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rider/': {
+      id: '/rider/'
+      path: '/rider'
+      fullPath: '/rider/'
+      preLoaderRoute: typeof RiderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rider/join': {
+      id: '/rider/join'
+      path: '/rider/join'
+      fullPath: '/rider/join'
+      preLoaderRoute: typeof RiderJoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shops/': {
       id: '/shops/'
       path: '/shops'
@@ -306,8 +346,10 @@ const rootRouteChildren: RootRouteChildren = {
   OffersRoute: OffersRoute,
   SearchRoute: SearchRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
+  RiderJoinRoute: RiderJoinRoute,
   ShopsShopIdRoute: ShopsShopIdRoute,
   OrdersIndexRoute: OrdersIndexRoute,
+  RiderIndexRoute: RiderIndexRoute,
   ShopsIndexRoute: ShopsIndexRoute,
 }
 export const routeTree = rootRouteImport
