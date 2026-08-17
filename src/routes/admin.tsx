@@ -131,8 +131,11 @@ function OrdersAdmin() {
   });
 
   const update = async (id: string, patch: Record<string, unknown>, customerId: string, code: string, message: string) => {
-    const { error } = await supabase.from("orders").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    const { error } = await supabase.from("orders").update(patch as never).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await notify(customerId, `Order ${code}`, message, "order", id);
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
     toast.success("Order updated");
@@ -190,7 +193,10 @@ function PaymentsAdmin() {
 
   const review = async (id: string, orderId: string, userId: string, status: "approved" | "rejected") => {
     const { error } = await supabase.from("payment_proofs").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (status === "approved") {
       await supabase.from("orders").update({ payment_status: "paid", status: "confirmed" }).eq("id", orderId);
     }
@@ -236,7 +242,10 @@ function RidersAdmin() {
 
   const approve = async (id: string, value: boolean) => {
     const { error } = await supabase.from("riders").update({ is_approved: value }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await notify(id, value ? "Rider approved" : "Rider access paused", value ? "You can now accept deliveries." : "Contact the Ligo team.", "rider");
     void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
   };
@@ -356,7 +365,7 @@ function ShopsAdmin() {
   };
 
   const toggle = async (id: string, patch: Record<string, unknown>) => {
-    await supabase.from("shops").update(patch).eq("id", id);
+    await supabase.from("shops").update(patch as never).eq("id", id);
     void qc.invalidateQueries({ queryKey: ["admin-shops"] });
   };
 
@@ -434,7 +443,7 @@ function ProductsAdmin() {
   };
 
   const toggle = async (id: string, patch: Record<string, unknown>) => {
-    await supabase.from("products").update(patch).eq("id", id);
+    await supabase.from("products").update(patch as never).eq("id", id);
     void qc.invalidateQueries({ queryKey: ["admin-products"] });
   };
 
@@ -555,7 +564,10 @@ function SettingsAdmin() {
 
   const save = async (key: string, value: Record<string, string>) => {
     const { error } = await supabase.from("settings").upsert({ key, value, is_public: false }, { onConflict: "key" });
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     void qc.invalidateQueries({ queryKey: ["admin-settings"] });
     toast.success("Saved");
   };

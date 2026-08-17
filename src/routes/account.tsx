@@ -44,7 +44,10 @@ function AccountPage() {
     setBusy(true);
     const { error } = await supabase.from("profiles").update({ full_name: fullName, phone }).eq("id", user.id);
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refresh();
     toast.success("Profile updated");
   };
