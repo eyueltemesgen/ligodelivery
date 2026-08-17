@@ -36,7 +36,10 @@ function RiderJoin() {
       .from("riders")
       .upsert({ id: user.id, vehicle_type: vehicle, national_id: nationalId, notes }, { onConflict: "id" });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Application submitted — an admin will review it shortly.");
   };
 

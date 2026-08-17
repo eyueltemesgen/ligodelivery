@@ -84,7 +84,10 @@ function RiderPortal() {
 
   const setStatus = async (orderId: string, status: string, customerId: string, code: string) => {
     const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await notify(customerId, `Order ${code} updated`, STATUS_LABEL[status as OrderStatus] ?? status, "order", orderId);
     void qc.invalidateQueries({ queryKey: ["rider-orders"] });
     toast.success("Status updated");

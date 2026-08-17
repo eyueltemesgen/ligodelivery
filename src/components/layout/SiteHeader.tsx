@@ -111,10 +111,10 @@ export function SiteHeader() {
           ) : (
             <div className="flex items-center gap-2">
               <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-                <Link to="/auth">Login</Link>
+                <Link to="/auth" search={{ mode: "login", role: "customer" }}>Login</Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/auth" search={{ mode: "register" }}>Sign up</Link>
+                <Link to="/auth" search={{ mode: "register", role: "customer" }}>Sign up</Link>
               </Button>
             </div>
           )}
