@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Bike, Clock, ShieldCheck, Search } from "lucide-react";
 import heroImage from "@/assets/hero-rider.jpg";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
+import { bannersQuery, siteContentQuery } from "@/lib/content";
+import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import { StorageImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
@@ -24,24 +26,28 @@ function Home() {
   const { data: shops = [] } = useQuery(shopsQuery());
   const { data: popular = [] } = useQuery(featuredProductsQuery);
   const { data: offers = [] } = useQuery(offersQuery);
+  const { data: c } = useQuery(siteContentQuery);
+  const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
+  const heroBanner = heroBanners[0];
 
   return (
     <div>
+      <BannerSlot placement="home_top" />
       <section className="border-b border-border bg-surface">
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
           <div>
             <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
-              Delivering across Bishoftu
+              {c?.hero_badge}
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
-              Everything you need, delivered in minutes
+              {c?.hero_title}
             </h1>
             <p className="mt-4 max-w-lg text-muted-foreground">
-              Food, groceries, pharmacy and daily essentials from your favourite Bishoftu shops — with live tracking and Telebirr, CBE, BOA or cash payment.
+              {c?.hero_subtitle}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild size="lg"><Link to="/shops">Order now</Link></Button>
-              <Button asChild size="lg" variant="outline"><Link to="/rider/join">Become a rider</Link></Button>
+              <Button asChild size="lg"><Link to="/shops">{c?.hero_primary_cta}</Link></Button>
+              <Button asChild size="lg" variant="outline"><Link to="/rider/join">{c?.hero_secondary_cta}</Link></Button>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {[
@@ -55,13 +61,17 @@ function Home() {
               ))}
             </div>
           </div>
-          <img src={heroImage} alt="Ligo rider delivering an order in Bishoftu" className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96" />
+          {heroBanner?.image_url ? (
+            <StorageImage path={heroBanner.image_url} alt={heroBanner.title || "Ligo hero banner"} className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96" />
+          ) : (
+            <img src={heroImage} alt="Ligo rider delivering an order in Bishoftu" className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96" />
+          )}
         </div>
       </section>
 
       <section className="container-ligo py-10">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">Categories</h2>
+          <h2 className="font-display text-2xl font-bold">{c?.categories_title}</h2>
           <Link to="/categories" className="text-sm font-medium text-primary">See all</Link>
         </div>
         <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
@@ -74,10 +84,12 @@ function Home() {
         </div>
       </section>
 
+      <BannerSlot placement="home_middle" />
+
       {offers.length > 0 && (
         <section className="container-ligo py-4">
           <div className="flex items-end justify-between">
-            <h2 className="font-display text-2xl font-bold">Today's offers</h2>
+            <h2 className="font-display text-2xl font-bold">{c?.offers_title}</h2>
             <Link to="/offers" className="text-sm font-medium text-primary">See all</Link>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -96,7 +108,7 @@ function Home() {
 
       <section className="container-ligo py-10">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">Popular shops</h2>
+          <h2 className="font-display text-2xl font-bold">{c?.shops_title}</h2>
           <Link to="/shops" className="text-sm font-medium text-primary">See all</Link>
         </div>
         <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -106,21 +118,23 @@ function Home() {
 
       {popular.length > 0 && (
         <section className="container-ligo pb-12">
-          <h2 className="font-display text-2xl font-bold">Trending items</h2>
+          <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
           <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {popular.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>
       )}
 
+      <BannerSlot placement="home_bottom" />
+
       <section className="container-ligo pb-16">
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
-          <h2 className="font-display text-2xl font-bold">How Ligo works</h2>
+          <h2 className="font-display text-2xl font-bold">{c?.how_title}</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
             {[
-              { icon: Search, t: "1. Choose", d: "Browse Bishoftu shops and add items to your cart." },
-              { icon: ShieldCheck, t: "2. Pay", d: "Cash on delivery or upload your Telebirr/bank receipt." },
-              { icon: Bike, t: "3. Track", d: "Follow your rider live until the order arrives." },
+              { icon: Search, t: c?.how_step1_title, d: c?.how_step1_text },
+              { icon: ShieldCheck, t: c?.how_step2_title, d: c?.how_step2_text },
+              { icon: Bike, t: c?.how_step3_title, d: c?.how_step3_text },
             ].map((s) => (
               <div key={s.t}>
                 <s.icon className="h-6 w-6" />

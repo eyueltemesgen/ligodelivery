@@ -1,3 +1,4 @@
+import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery } from "@/lib/queries";
@@ -19,6 +20,7 @@ function CategoriesPage() {
   const { data = [], isLoading } = useQuery(categoriesQuery);
   return (
     <div className="container-ligo py-10">
+      <BannerSlot placement="categories" className="px-0 py-4" />
       <h1 className="font-display text-3xl font-extrabold">Categories</h1>
       <p className="mt-2 text-muted-foreground">Pick what you need delivered today.</p>
       {isLoading ? (

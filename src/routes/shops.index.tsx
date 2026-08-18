@@ -1,3 +1,4 @@
+import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery, shopsQuery } from "@/lib/queries";
@@ -24,6 +25,7 @@ function ShopsPage() {
 
   return (
     <div className="container-ligo py-10">
+      <BannerSlot placement="shops" className="px-0 py-4" />
       <h1 className="font-display text-3xl font-extrabold">Shops</h1>
       <div className="mt-5 flex flex-wrap gap-2">
         <Link to="/shops" search={{}} className={`rounded-full border px-3 py-1.5 text-sm ${!category ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>

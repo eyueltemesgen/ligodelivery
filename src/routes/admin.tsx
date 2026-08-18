@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ETB, formatDate } from "@/lib/format";
 import { ORDER_STATUSES, STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
+import { BANNER_PLACEMENTS, CONTENT_FIELDS, DEFAULT_CONTENT, type SiteContent } from "@/lib/content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,8 @@ function AdminPage() {
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="offers">Offers</TabsTrigger>
+          <TabsTrigger value="banners">Banners</TabsTrigger>
+          <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         <TabsContent value="orders"><OrdersAdmin /></TabsContent>
@@ -60,6 +63,8 @@ function AdminPage() {
         <TabsContent value="products"><ProductsAdmin /></TabsContent>
         <TabsContent value="categories"><CategoriesAdmin /></TabsContent>
         <TabsContent value="offers"><OffersAdmin /></TabsContent>
+        <TabsContent value="banners"><BannersAdmin /></TabsContent>
+        <TabsContent value="content"><ContentAdmin /></TabsContent>
         <TabsContent value="settings"><SettingsAdmin /></TabsContent>
       </Tabs>
     </div>
@@ -315,9 +320,18 @@ function CategoriesAdmin() {
       </form>
       <ul className="space-y-2">
         {rows.map((c) => (
-          <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
-            <span className="font-medium">{c.name}</span>
-            <Switch checked={c.is_active} onCheckedChange={(v) => void toggle(c.id, v)} />
+          <li key={c.id} className="rounded-xl border border-border bg-card p-3">
+            <div className="flex items-center justify-between gap-3">
+              <RowEditor
+                table="categories"
+                id={c.id}
+                name={c.name}
+                imagePath={c.image_url}
+                folder="categories"
+                invalidateKey="admin-categories"
+              />
+              <Switch checked={c.is_active} onCheckedChange={(v) => void toggle(c.id, v)} />
+            </div>
           </li>
         ))}
       </ul>
@@ -391,9 +405,9 @@ function ShopsAdmin() {
       <ul className="space-y-2">
         {rows.map((s) => (
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
-            <div>
-              <p className="font-medium">{s.name}</p>
-              <p className="text-xs text-muted-foreground">{s.address} · {ETB(s.delivery_fee)}</p>
+            <div className="min-w-0 flex-1">
+              <RowEditor table="shops" id={s.id} name={s.name} imagePath={s.image_url} folder="shops" invalidateKey="admin-shops" alsoSetCover />
+              <p className="mt-1 text-xs text-muted-foreground">{s.address} · {ETB(s.delivery_fee)}</p>
             </div>
             <div className="flex items-center gap-4 text-sm">
               <label className="flex items-center gap-2">Featured<Switch checked={s.is_featured} onCheckedChange={(v) => void toggle(s.id, { is_featured: v })} /></label>
@@ -467,9 +481,9 @@ function ProductsAdmin() {
       <ul className="space-y-2">
         {rows.map((p) => (
           <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
-            <div>
-              <p className="font-medium">{p.name}</p>
-              <p className="text-xs text-muted-foreground">{ETB(p.price)} · {shops.find((s) => s.id === p.shop_id)?.name}</p>
+            <div className="min-w-0 flex-1">
+              <RowEditor table="products" id={p.id} name={p.name} imagePath={p.image_url} folder="products" invalidateKey="admin-products" price={Number(p.price)} />
+              <p className="mt-1 text-xs text-muted-foreground">{shops.find((s) => s.id === p.shop_id)?.name}</p>
             </div>
             <div className="flex items-center gap-4 text-sm">
               <label className="flex items-center gap-2">Popular<Switch checked={p.is_popular} onCheckedChange={(v) => void toggle(p.id, { is_popular: v })} /></label>
@@ -532,7 +546,9 @@ function OffersAdmin() {
       <ul className="space-y-2">
         {rows.map((o) => (
           <li key={o.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
-            <span className="font-medium">{o.title}</span>
+            <div className="min-w-0 flex-1">
+              <RowEditor table="offers" id={o.id} name={o.title} nameColumn="title" imagePath={o.image_url} folder="offers" invalidateKey="admin-offers" />
+            </div>
             <Switch checked={o.is_active} onCheckedChange={async (v) => {
               await supabase.from("offers").update({ is_active: v }).eq("id", o.id);
               void qc.invalidateQueries({ queryKey: ["admin-offers"] });
@@ -600,6 +616,197 @@ function PaymentSetting({ label, value, onSave }: { label: string; value: Record
         <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
       </div>
       <Button type="submit" size="sm">Save</Button>
+    </form>
+  );
+}
+
+
+function RowEditor({
+  table, id, name, nameColumn = "name", imagePath, folder, invalidateKey, price, alsoSetCover,
+}: {
+  table: "categories" | "shops" | "products" | "offers";
+  id: string;
+  name: string;
+  nameColumn?: string;
+  imagePath: string | null;
+  folder: string;
+  invalidateKey: string;
+  price?: number;
+  alsoSetCover?: boolean;
+}) {
+  const qc = useQueryClient();
+  const [value, setValue] = useState(name);
+  const [priceValue, setPriceValue] = useState(price != null ? String(price) : "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async (file?: File | null) => {
+    setSaving(true);
+    try {
+      const patch: Record<string, unknown> = { [nameColumn]: value.trim().slice(0, 120) };
+      if (price != null && priceValue !== "") patch['price'] = Number(priceValue);
+      if (file) {
+        const path = await uploadImage(file, folder);
+        patch['image_url'] = path;
+        if (alsoSetCover) patch['cover_url'] = path;
+      }
+      const { error } = await supabase.from(table).update(patch as never).eq("id", id);
+      if (error) throw error;
+      void qc.invalidateQueries({ queryKey: [invalidateKey] });
+      toast.success("Saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <StorageImage path={imagePath} alt={name} className="h-12 w-12 rounded-md object-cover" />
+      <Input value={value} onChange={(e) => setValue(e.target.value)} maxLength={120} className="h-9 w-44" />
+      {price != null && (
+        <Input type="number" step="0.01" value={priceValue} onChange={(e) => setPriceValue(e.target.value)} className="h-9 w-28" />
+      )}
+      <Input type="file" accept="image/*" className="h-9 w-44 text-xs" onChange={(e) => void save(e.target.files?.[0] ?? null)} />
+      <Button size="sm" variant="outline" disabled={saving} onClick={() => void save(null)}>Save</Button>
+    </div>
+  );
+}
+
+function BannersAdmin() {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({ title: "", subtitle: "", cta_label: "", link_url: "", placement: "home_top", sort_order: "0" });
+  const [file, setFile] = useState<File | null>(null);
+  const { data: rows = [] } = useQuery({
+    queryKey: ["admin-banners"],
+    queryFn: async () => (await supabase.from("banners").select("*").order("placement").order("sort_order")).data ?? [],
+  });
+
+  const create = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const image = file ? await uploadImage(file, "banners") : null;
+      const { error } = await supabase.from("banners").insert({
+        title: form.title.trim().slice(0, 120),
+        subtitle: form.subtitle.trim().slice(0, 300) || null,
+        cta_label: form.cta_label.trim().slice(0, 60) || null,
+        link_url: form.link_url.trim().slice(0, 500) || null,
+        placement: form.placement,
+        sort_order: Number(form.sort_order) || 0,
+        image_url: image,
+      });
+      if (error) throw error;
+      setForm({ title: "", subtitle: "", cta_label: "", link_url: "", placement: form.placement, sort_order: "0" });
+      setFile(null);
+      void qc.invalidateQueries({ queryKey: ["admin-banners"] });
+      toast.success("Banner created");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    }
+  };
+
+  const patch = async (id: string, value: Record<string, unknown>) => {
+    const { error } = await supabase.from("banners").update(value as never).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    void qc.invalidateQueries({ queryKey: ["admin-banners"] });
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from("banners").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    void qc.invalidateQueries({ queryKey: ["admin-banners"] });
+    toast.success("Banner deleted");
+  };
+
+  return (
+    <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
+      <form onSubmit={create} className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card">
+        <h3 className="font-display font-bold">New banner</h3>
+        <Input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+        <Textarea placeholder="Subtitle" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
+        <Input placeholder="Button label" value={form.cta_label} onChange={(e) => setForm({ ...form, cta_label: e.target.value })} />
+        <Input placeholder="Link (/shops or https://…)" value={form.link_url} onChange={(e) => setForm({ ...form, link_url: e.target.value })} />
+        <select className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={form.placement} onChange={(e) => setForm({ ...form, placement: e.target.value })}>
+          {BANNER_PLACEMENTS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+        <Input type="number" placeholder="Order" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} />
+        <Input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <Button type="submit">Create banner</Button>
+      </form>
+      <ul className="space-y-2">
+        {rows.length === 0 && <p className="text-sm text-muted-foreground">No banners yet.</p>}
+        {rows.map((b) => (
+          <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <StorageImage path={b.image_url} alt={b.title} className="h-12 w-20 rounded-md object-cover" />
+              <div className="min-w-0">
+                <p className="truncate font-medium">{b.title}</p>
+                <p className="text-xs text-muted-foreground">{BANNER_PLACEMENTS.find((p) => p.value === b.placement)?.label ?? b.placement}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <select
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                value={b.placement}
+                onChange={(e) => void patch(b.id, { placement: e.target.value })}
+              >
+                {BANNER_PLACEMENTS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+              </select>
+              <Input
+                type="number"
+                defaultValue={b.sort_order}
+                className="h-9 w-20"
+                onBlur={(e) => void patch(b.id, { sort_order: Number(e.target.value) || 0 })}
+              />
+              <label className="flex items-center gap-2">Active<Switch checked={b.is_active} onCheckedChange={(v) => void patch(b.id, { is_active: v })} /></label>
+              <Button size="sm" variant="outline" onClick={() => void remove(b.id)}>Delete</Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ContentAdmin() {
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ["admin-site-content"],
+    queryFn: async () => {
+      const { data: row } = await supabase.from("settings").select("value").eq("key", "site_content").maybeSingle();
+      return { ...DEFAULT_CONTENT, ...((row?.value ?? {}) as Partial<SiteContent>) };
+    },
+  });
+  const [draft, setDraft] = useState<SiteContent | null>(null);
+  const value = draft ?? data ?? DEFAULT_CONTENT;
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = Object.fromEntries(
+      CONTENT_FIELDS.map((f) => [f.key, String(value[f.key] ?? "").trim().slice(0, 500)]),
+    );
+    const { error } = await supabase.from("settings").upsert({ key: "site_content", value: clean, is_public: true }, { onConflict: "key" });
+    if (error) { toast.error(error.message); return; }
+    void qc.invalidateQueries({ queryKey: ["admin-site-content"] });
+    void qc.invalidateQueries({ queryKey: ["site-content"] });
+    toast.success("Site content saved");
+  };
+
+  return (
+    <form onSubmit={save} className="mt-6 space-y-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {CONTENT_FIELDS.map((f) => (
+          <div key={f.key} className="space-y-1.5">
+            <Label>{f.label}</Label>
+            {f.long ? (
+              <Textarea value={value[f.key] ?? ""} onChange={(e) => setDraft({ ...value, [f.key]: e.target.value })} />
+            ) : (
+              <Input value={value[f.key] ?? ""} onChange={(e) => setDraft({ ...value, [f.key]: e.target.value })} maxLength={200} />
+            )}
+          </div>
+        ))}
+      </div>
+      <Button type="submit">Save all text</Button>
     </form>
   );
 }
