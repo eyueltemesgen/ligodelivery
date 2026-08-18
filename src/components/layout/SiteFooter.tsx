@@ -1,16 +1,18 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/Logo";
 import { Phone, Mail, MapPin } from "lucide-react";
+import { siteContentQuery } from "@/lib/content";
 
 export function SiteFooter() {
+  const { data: c } = useQuery(siteContentQuery);
+
   return (
     <footer className="mt-16 border-t border-border bg-surface">
       <div className="container-ligo grid gap-8 py-12 md:grid-cols-4">
         <div className="space-y-3">
           <Logo />
-          <p className="text-sm text-muted-foreground">
-            Ligo delivers food, groceries and essentials across Bishoftu — fast, local and reliable.
-          </p>
+          <p className="text-sm text-muted-foreground">{c?.footer_tagline}</p>
         </div>
         <div>
           <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">Explore</h3>
@@ -31,14 +33,21 @@ export function SiteFooter() {
         <div>
           <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">Contact</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" />Bishoftu, Oromia</li>
-            <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" />+251 900 000 000</li>
-            <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary" />hello@ligo.et</li>
+            <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" />{c?.contact_address}</li>
+            <li className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-primary" />
+              <a href={`tel:${(c?.contact_phone ?? "").replace(/\s/g, "")}`} className="hover:text-foreground">{c?.contact_phone}</a>
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-primary" />
+              <a href={`mailto:${c?.contact_email ?? ""}`} className="hover:text-foreground">{c?.contact_email}</a>
+            </li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Ligo Delivery. All rights reserved.
+      <div className="space-y-1 border-t border-border py-4 text-center text-xs text-muted-foreground">
+        <p>© {new Date().getFullYear()} {c?.brand_name}. All rights reserved.</p>
+        <p>Developed by {c?.developer_name} · {c?.company_name}</p>
       </div>
     </footer>
   );
