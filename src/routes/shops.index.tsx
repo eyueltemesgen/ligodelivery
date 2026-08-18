@@ -24,8 +24,8 @@ function ShopsPage() {
   const { data: shops = [], isLoading } = useQuery(shopsQuery(category));
 
   return (
-      <BannerSlot placement="shops" />
     <div className="container-ligo py-10">
+      <BannerSlot placement="shops" className="px-0 py-4" />
       <h1 className="font-display text-3xl font-extrabold">Shops</h1>
       <div className="mt-5 flex flex-wrap gap-2">
         <Link to="/shops" search={{}} className={`rounded-full border px-3 py-1.5 text-sm ${!category ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>

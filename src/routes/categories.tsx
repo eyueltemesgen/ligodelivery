@@ -19,8 +19,8 @@ export const Route = createFileRoute("/categories")({
 function CategoriesPage() {
   const { data = [], isLoading } = useQuery(categoriesQuery);
   return (
-      <BannerSlot placement="categories" />
     <div className="container-ligo py-10">
+      <BannerSlot placement="categories" className="px-0 py-4" />
       <h1 className="font-display text-3xl font-extrabold">Categories</h1>
       <p className="mt-2 text-muted-foreground">Pick what you need delivered today.</p>
       {isLoading ? (

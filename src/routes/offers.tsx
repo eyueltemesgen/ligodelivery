@@ -20,8 +20,8 @@ export const Route = createFileRoute("/offers")({
 function OffersPage() {
   const { data = [], isLoading } = useQuery(offersQuery);
   return (
-      <BannerSlot placement="offers" />
     <div className="container-ligo py-10">
+      <BannerSlot placement="offers" className="px-0 py-4" />
       <h1 className="font-display text-3xl font-extrabold">Offers</h1>
       <p className="mt-2 text-muted-foreground">Deals running right now in Bishoftu.</p>
       {isLoading ? (
