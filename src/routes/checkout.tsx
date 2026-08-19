@@ -1,16 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB } from "@/lib/format";
+import { closedReason, isShopOpenNow } from "@/lib/hours";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
-import { shopQuery } from "@/lib/queries";
+import { shopHoursQuery, shopQuery } from "@/lib/queries";
 
 const METHODS = [
   { id: "cash", label: "Cash on delivery" },
@@ -23,7 +25,10 @@ export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Checkout — Ligo Delivery Bishoftu" },
-      { name: "description", content: "Confirm your delivery address and payment method to place your Ligo order." },
+      {
+        name: "description",
+        content: "Confirm your delivery address and payment method to place your Ligo order.",
+      },
       { property: "og:title", content: "Checkout — Ligo Delivery" },
       { property: "og:description", content: "Place your Ligo Delivery order in Bishoftu." },
     ],
@@ -36,6 +41,7 @@ function CheckoutPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { data: shop } = useQuery({ ...shopQuery(shopId ?? ""), enabled: !!shopId });
+  const { data: hours = [] } = useQuery({ ...shopHoursQuery(shopId ?? ""), enabled: !!shopId });
   const [name, setName] = useState(profile?.full_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [address, setAddress] = useState("");
@@ -45,12 +51,18 @@ function CheckoutPage() {
 
   const deliveryFee = Number(shop?.delivery_fee ?? 50);
   const total = subtotal + deliveryFee;
+  const shopLoaded = !shopId || !!shop;
+  const shopOpen = shopLoaded ? isShopOpenNow(shop ?? {}, hours) : false;
 
   if (!user)
     return (
       <div className="container-ligo py-16 text-center">
         <h1 className="font-display text-2xl font-extrabold">Sign in to place your order</h1>
-        <Button asChild className="mt-6"><Link to="/auth" search={{ mode: "login", role: "customer" }}>Sign in</Link></Button>
+        <Button asChild className="mt-6">
+          <Link to="/auth" search={{ mode: "login", role: "customer" }}>
+            Sign in
+          </Link>
+        </Button>
       </div>
     );
 
@@ -58,12 +70,37 @@ function CheckoutPage() {
     return (
       <div className="container-ligo py-16 text-center">
         <h1 className="font-display text-2xl font-extrabold">Your cart is empty</h1>
-        <Button asChild className="mt-6"><Link to="/shops">Browse shops</Link></Button>
+        <Button asChild className="mt-6">
+          <Link to="/shops">Browse shops</Link>
+        </Button>
+      </div>
+    );
+
+  if (shopLoaded && !shopOpen)
+    return (
+      <div className="container-ligo py-16 text-center">
+        <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-8 shadow-card">
+          <Lock className="mx-auto h-8 w-8 text-muted-foreground" />
+          <h1 className="mt-4 font-display text-2xl font-extrabold">
+            {shopName} is closed right now
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {closedReason(shop ?? {}, hours)} Checkout is locked until the shop reopens — your cart
+            is saved.
+          </p>
+          <Button asChild className="mt-6">
+            <Link to="/shops">Browse open shops</Link>
+          </Button>
+        </div>
       </div>
     );
 
   const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isShopOpenNow(shop ?? {}, hours)) {
+      toast.error("This shop is closed right now — checkout is locked.");
+      return;
+    }
     setBusy(true);
     try {
       const { data: order, error } = await supabase
@@ -71,7 +108,7 @@ function CheckoutPage() {
         .insert({
           customer_id: user.id,
           shop_id: shopId,
-          status: method === "cash" ? "pending" : "payment_verification",
+          status: "pending_payment",
           payment_method: method,
           payment_status: "unpaid",
           subtotal,
@@ -99,7 +136,7 @@ function CheckoutPage() {
       if (itemsError) throw itemsError;
 
       clear();
-      toast.success("Order placed!");
+      toast.success("Order placed — awaiting payment verification");
       await navigate({ to: "/orders/$orderId", params: { orderId: order.id } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place order");
@@ -109,7 +146,10 @@ function CheckoutPage() {
   };
 
   return (
-    <form onSubmit={placeOrder} className="container-ligo grid gap-8 py-10 lg:grid-cols-[1fr_340px]">
+    <form
+      onSubmit={placeOrder}
+      className="container-ligo grid gap-8 py-10 lg:grid-cols-[1fr_340px]"
+    >
       <div className="space-y-6">
         <h1 className="font-display text-3xl font-extrabold">Checkout</h1>
         <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
@@ -126,11 +166,21 @@ function CheckoutPage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="a">Delivery address in Bishoftu</Label>
-            <Input id="a" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="Kebele, landmark, house no." />
+            <Input
+              id="a"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+              placeholder="Kebele, landmark, house no."
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="i">Instructions (optional)</Label>
-            <Textarea id="i" value={instructions} onChange={(e) => setInstructions(e.target.value)} />
+            <Textarea
+              id="i"
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+            />
           </div>
         </section>
 
@@ -150,7 +200,8 @@ function CheckoutPage() {
           </div>
           {method !== "cash" && (
             <p className="text-xs text-muted-foreground">
-              After placing the order you'll see the account details and can upload your payment receipt for verification.
+              After placing the order you'll see the account details and can upload your payment
+              receipt for verification.
             </p>
           )}
         </section>
@@ -162,17 +213,30 @@ function CheckoutPage() {
         <ul className="space-y-1 text-sm">
           {items.map((i) => (
             <li key={i.productId} className="flex justify-between gap-3">
-              <span className="text-muted-foreground">{i.quantity} × {i.name}</span>
+              <span className="text-muted-foreground">
+                {i.quantity} × {i.name}
+              </span>
               <span>{ETB(i.unitPrice * i.quantity)}</span>
             </li>
           ))}
         </ul>
         <div className="border-t border-border pt-3 text-sm">
-          <div className="flex justify-between"><span>Subtotal</span><span>{ETB(subtotal)}</span></div>
-          <div className="flex justify-between"><span>Delivery</span><span>{ETB(deliveryFee)}</span></div>
-          <div className="mt-2 flex justify-between font-display text-base font-bold"><span>Total</span><span>{ETB(total)}</span></div>
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>{ETB(subtotal)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Delivery</span>
+            <span>{ETB(deliveryFee)}</span>
+          </div>
+          <div className="mt-2 flex justify-between font-display text-base font-bold">
+            <span>Total</span>
+            <span>{ETB(total)}</span>
+          </div>
         </div>
-        <Button type="submit" className="w-full" disabled={busy}>{busy ? "Placing order…" : "Place order"}</Button>
+        <Button type="submit" className="w-full" disabled={busy}>
+          {busy ? "Placing order…" : "Place order"}
+        </Button>
       </aside>
     </form>
   );
