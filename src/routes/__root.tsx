@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SoundProvider } from "@/hooks/useSound";
 import { CartProvider } from "@/lib/cart";
 import { SiteHeader, MobileTabBar } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -125,6 +126,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <SoundProvider>
         <CartProvider>
           <div className="flex min-h-screen flex-col pb-16 md:pb-0">
             <SiteHeader />
@@ -137,6 +139,7 @@ function RootComponent() {
           </div>
           <Toaster position="top-center" richColors />
         </CartProvider>
+        </SoundProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

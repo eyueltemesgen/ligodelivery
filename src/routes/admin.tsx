@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSound } from "@/hooks/useSound";
 import { ETB, formatDate } from "@/lib/format";
+import { FinancialOverview } from "@/components/ligo/FinancialOverview";
 import { ORDER_STATUSES, STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
 import { BANNER_PLACEMENTS, CONTENT_FIELDS, DEFAULT_CONTENT, type SiteContent } from "@/lib/content";
@@ -29,6 +31,26 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
   const { isAdmin, loading, user } = useAuth();
+  const { play } = useSound();
+  const qc = useQueryClient();
+
+  // Audible alert for admins whenever a new order lands on the platform.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase
+      .channel("admin-new-orders")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
+        play("new_order");
+        void qc.invalidateQueries({ queryKey: ["admin-orders"] });
+        void qc.invalidateQueries({ queryKey: ["admin-stats"] });
+        void qc.invalidateQueries({ queryKey: ["admin-financials"] });
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [isAdmin, play, qc]);
+
   if (loading) return <div className="container-ligo py-16 text-muted-foreground">Loading…</div>;
   if (!user)
     return (
@@ -46,6 +68,7 @@ function AdminPage() {
       <Tabs defaultValue="orders" className="mt-8">
         <TabsList className="flex flex-wrap">
           <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="financials">Financials</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="riders">Riders</TabsTrigger>
           <TabsTrigger value="shops">Shops</TabsTrigger>
@@ -57,6 +80,7 @@ function AdminPage() {
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         <TabsContent value="orders"><OrdersAdmin /></TabsContent>
+        <TabsContent value="financials"><FinancialOverview /></TabsContent>
         <TabsContent value="payments"><PaymentsAdmin /></TabsContent>
         <TabsContent value="riders"><RidersAdmin /></TabsContent>
         <TabsContent value="shops"><ShopsAdmin /></TabsContent>

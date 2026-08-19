@@ -78,6 +78,23 @@ function OrderDetail() {
     };
   }, [orderId, qc]);
 
+  // Live GPS: follow the assigned rider's position updates in real time.
+  const riderId = order?.rider_id;
+  useEffect(() => {
+    if (!riderId) return;
+    const channel = supabase
+      .channel(`rider-loc-${riderId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "riders", filter: `id=eq.${riderId}` },
+        () => void qc.invalidateQueries({ queryKey: ["rider", riderId] }),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [riderId, qc]);
+
   if (!order) return <div className="container-ligo py-16 text-muted-foreground">Loading order…</div>;
 
   const currentIndex = TIMELINE.indexOf(order.status as OrderStatus);

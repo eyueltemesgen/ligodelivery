@@ -4,8 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSound } from "@/hooks/useSound";
 import { ETB, formatDate } from "@/lib/format";
 import { ORDER_STATUSES, STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
+import { RiderEarnings } from "@/components/ligo/RiderEarnings";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,7 +28,27 @@ export const Route = createFileRoute("/rider/")({
 
 function RiderPortal() {
   const { user, isRider, loading } = useAuth();
+  const { play } = useSound();
   const qc = useQueryClient();
+
+  // Alert the rider when a new delivery is assigned to them.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`rider-orders-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `rider_id=eq.${user.id}` },
+        (payload) => {
+          if (payload.eventType === "INSERT") play("new_order");
+          void qc.invalidateQueries({ queryKey: ["rider-orders"] });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, play, qc]);
 
   const { data: rider } = useQuery({
     queryKey: ["rider-me", user?.id],
@@ -107,6 +129,8 @@ function RiderPortal() {
           <Switch checked={!!rider?.is_online} onCheckedChange={(v) => void toggleOnline(v)} disabled={!rider?.is_approved} />
         </label>
       </div>
+
+      <RiderEarnings orders={orders as never} />
 
       <h2 className="mt-8 font-display text-xl font-bold">Assigned deliveries</h2>
       {orders.length === 0 ? (
