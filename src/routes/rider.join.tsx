@@ -36,6 +36,9 @@ function RiderJoin() {
   const [notes, setNotes] = useState("");
   const [idDoc, setIdDoc] = useState<File | null>(null);
   const [licenseDoc, setLicenseDoc] = useState<File | null>(null);
+  const [payoutMethod, setPayoutMethod] = useState("telebirr");
+  const [payoutAccount, setPayoutAccount] = useState("");
+  const [payoutName, setPayoutName] = useState("");
   const [busy, setBusy] = useState(false);
 
   const apply = async (e: React.FormEvent) => {
@@ -55,6 +58,11 @@ function RiderJoin() {
           notes,
           id_document_url: idPath,
           license_document_url: licensePath,
+          payout_method: payoutMethod,
+          payout_account: payoutAccount.trim(),
+          payout_account_name: payoutName.trim(),
+          verification_status: "pending_verification",
+          is_approved: false,
         },
         { onConflict: "id" },
       );
@@ -94,7 +102,7 @@ function RiderJoin() {
           <div className="rounded-xl border border-border bg-card p-6 text-center shadow-card">
             <p className="font-semibold">Create a rider account to apply</p>
             <Button asChild className="mt-4">
-              <Link to="/auth" search={{ mode: "register", role: "rider" }}>
+              <Link to="/register" search={{ role: "rider" }}>
                 Register as rider
               </Link>
             </Button>
@@ -107,12 +115,18 @@ function RiderJoin() {
             <h2 className="font-display text-lg font-bold">Rider application</h2>
             <div className="space-y-1.5">
               <Label htmlFor="v">Vehicle type</Label>
-              <Input
+              <select
                 id="v"
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={vehicle}
                 onChange={(e) => setVehicle(e.target.value)}
-                placeholder="motorbike / bicycle / foot"
-              />
+              >
+                <option value="bicycle">Bicycle</option>
+                <option value="motorbike">Motorbike</option>
+                <option value="scooter">Scooter</option>
+                <option value="car">Car</option>
+                <option value="foot">On foot</option>
+              </select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="nid">National ID number</Label>
@@ -139,6 +153,38 @@ function RiderJoin() {
                 type="file"
                 accept="image/*"
                 onChange={(e) => setLicenseDoc(e.target.files?.[0] ?? null)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pm">Payout method</Label>
+              <select
+                id="pm"
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                value={payoutMethod}
+                onChange={(e) => setPayoutMethod(e.target.value)}
+              >
+                <option value="telebirr">Telebirr</option>
+                <option value="bank_account">Bank account</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pa">
+                {payoutMethod === "telebirr" ? "Telebirr phone number" : "Bank account number"}
+              </Label>
+              <Input
+                id="pa"
+                value={payoutAccount}
+                onChange={(e) => setPayoutAccount(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pn">Account holder name</Label>
+              <Input
+                id="pn"
+                value={payoutName}
+                onChange={(e) => setPayoutName(e.target.value)}
+                required
               />
             </div>
             <div className="space-y-1.5">
