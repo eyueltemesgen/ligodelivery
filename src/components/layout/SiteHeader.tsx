@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/lib/cart";
+import { useQuery } from "@tanstack/react-query";
+import { siteContentQuery } from "@/lib/content";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +27,7 @@ const NAV = [
 export function SiteHeader() {
   const { user, profile, isAdmin, isRider, signOut } = useAuth();
   const { count } = useCart();
+  const { data: content } = useQuery(siteContentQuery);
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -40,7 +43,7 @@ export function SiteHeader() {
         <Logo />
         <div className="hidden items-center gap-1 text-sm text-muted-foreground lg:flex">
           <MapPin className="h-4 w-4 text-primary" />
-          <span className="font-medium text-foreground">Bishoftu</span>
+          <span className="font-medium text-foreground">{content?.city}</span>
         </div>
         <form onSubmit={submit} className="relative hidden flex-1 md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
