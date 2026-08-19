@@ -56,6 +56,21 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_bootstrap: {
+        Row: {
+          completed_at: string
+          id: boolean
+        }
+        Insert: {
+          completed_at?: string
+          id?: boolean
+        }
+        Update: {
+          completed_at?: string
+          id?: boolean
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           created_at: string
