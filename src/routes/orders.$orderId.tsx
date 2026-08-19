@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check, Upload } from "lucide-react";
@@ -10,6 +10,7 @@ import { ETB, formatDate } from "@/lib/format";
 import { STATUS_LABEL, TIMELINE, statusTone, type OrderStatus } from "@/lib/orders";
 import { PROOF_BUCKET, uploadImage } from "@/lib/media";
 import { publicSettingsQuery } from "@/lib/queries";
+import { sounds, loadAudioSettings, primeAudio } from "@/lib/audio";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,9 +68,28 @@ function OrderDetail() {
   const { data: settings = {} } = useQuery(publicSettingsQuery);
 
   useEffect(() => {
+    void loadAudioSettings();
+    const handler = () => primeAudio();
+    window.addEventListener("pointerdown", handler, { once: true });
+    return () => window.removeEventListener("pointerdown", handler);
+  }, []);
+
+  const prevStatus = useRef<string | null>(null);
+  const prevPayment = useRef<string | null>(null);
+
+  useEffect(() => {
     const channel = supabase
       .channel(`order-${orderId}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` }, () => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` }, (payload) => {
+        const next = payload.new as { status?: string; payment_status?: string };
+        if (next.status && next.status !== prevStatus.current) {
+          sounds.statusUpdate();
+          prevStatus.current = next.status;
+        }
+        if (next.payment_status === "paid" && next.payment_status !== prevPayment.current) {
+          sounds.payment();
+          prevPayment.current = next.payment_status;
+        }
         void qc.invalidateQueries({ queryKey: ["order", orderId] });
       })
       .subscribe();
