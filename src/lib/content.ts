@@ -85,6 +85,7 @@ export const siteContentQuery = {
     const { data } = await supabase.from("settings").select("value").eq("key", "site_content").maybeSingle();
     return { ...DEFAULT_CONTENT, ...((data?.value ?? {}) as Partial<SiteContent>) };
   },
+  placeholderData: DEFAULT_CONTENT,
 };
 
 export const bannersQuery = (placement?: string) => ({
