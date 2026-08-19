@@ -24,6 +24,9 @@ export const BANNER_PLACEMENTS = [
 
 export const DEFAULT_CONTENT = {
   brand_name: "Ligo Delivery",
+  brand_short_name: "Ligo",
+  brand_tagline: "Fast. Local. Delivered.",
+  logo_url: "",
   city: "Bishoftu",
   hero_badge: "Delivering across Bishoftu",
   hero_title: "Everything you need, delivered in minutes",
@@ -54,6 +57,8 @@ export type SiteContent = typeof DEFAULT_CONTENT;
 
 export const CONTENT_FIELDS: { key: keyof SiteContent; label: string; long?: boolean }[] = [
   { key: "brand_name", label: "Brand name" },
+  { key: "brand_short_name", label: "Short name (header logo)" },
+  { key: "brand_tagline", label: "Logo tagline" },
   { key: "city", label: "City" },
   { key: "hero_badge", label: "Hero badge" },
   { key: "hero_title", label: "Hero title", long: true },
