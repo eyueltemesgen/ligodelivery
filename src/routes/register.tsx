@@ -1,18 +1,15 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Bike, MailCheck, ShoppingBag, Store } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bike, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadImage } from "@/lib/media";
-import { categoriesQuery } from "@/lib/queries";
-import { DAY_NAMES } from "@/lib/hours";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-type SignupRole = "customer" | "merchant" | "rider";
+type SignupRole = "customer" | "rider";
 type Channel = "email" | "phone";
 
 const ROLE_CARDS: {
@@ -33,12 +30,6 @@ const ROLE_CARDS: {
     description: "Deliver on your own schedule and cash out instantly.",
     icon: Bike,
   },
-  {
-    id: "merchant",
-    title: "Merchant",
-    description: "List your shop, set your hours and reach more customers.",
-    icon: Store,
-  },
 ];
 
 const VEHICLE_TYPES = [
@@ -53,26 +44,21 @@ const PAYOUT_METHODS = [
   { value: "bank_account", label: "Bank account" },
 ];
 
-type HoursDraft = { opens_at: string; closes_at: string; is_closed: boolean };
-const DEFAULT_HOURS: HoursDraft[] = DAY_NAMES.map(() => ({
-  opens_at: "08:00",
-  closes_at: "22:00",
-  is_closed: false,
-}));
-
 export const Route = createFileRoute("/register")({
   validateSearch: (s: Record<string, unknown>) => {
     const out: { role?: SignupRole } = {};
-    if (["customer", "merchant", "rider"].includes(String(s["role"])))
-      out.role = s["role"] as SignupRole;
+    if (["customer", "rider"].includes(String(s["role"]))) out.role = s["role"] as SignupRole;
     return out;
   },
   head: () => ({
     meta: [
       { title: "Create your account — Ligo Delivery" },
-      { name: "description", content: "Join Ligo as a customer, rider or merchant in Bishoftu." },
+      {
+        name: "description",
+        content: "Join Ligo as a customer or rider in Bishoftu.",
+      },
       { property: "og:title", content: "Create your account — Ligo Delivery" },
-      { property: "og:description", content: "Join Ligo as a customer, rider or merchant." },
+      { property: "og:description", content: "Join Ligo as a customer or rider." },
     ],
   }),
   component: RegisterPage,
@@ -98,91 +84,23 @@ function RegisterPage() {
   const [payoutMethod, setPayoutMethod] = useState("telebirr");
   const [payoutAccount, setPayoutAccount] = useState("");
   const [payoutName, setPayoutName] = useState("");
-  // Merchant onboarding
-  const { data: categories = [] } = useQuery(categoriesQuery);
-  const [shopName, setShopName] = useState("");
-  const [shopCategory, setShopCategory] = useState("");
-  const [shopPhone, setShopPhone] = useState("");
-  const [shopAddress, setShopAddress] = useState("");
-  const [shopLogo, setShopLogo] = useState<File | null>(null);
-  const [shopCover, setShopCover] = useState<File | null>(null);
-  const [hours, setHours] = useState<HoursDraft[]>(DEFAULT_HOURS);
 
   const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
-  const [emailLinkSent, setEmailLinkSent] = useState(false);
 
   const identifier = channel === "email" ? email.trim() : phone.trim();
 
   const step2Valid = (() => {
-    if (fullName.trim().length < 2) return false;
+    if (fullName.trim().length < 2 || password.length < 6) return false;
     if (channel === "email") {
       if (!email.trim().includes("@")) return false;
-      if (role === "customer" && password.length < 6) return false;
     } else if (phone.trim().length < 9) return false;
     if (role === "rider") {
       if (nationalId.trim().length < 3 || !licenseDoc) return false;
       if (payoutAccount.trim().length < 5 || payoutName.trim().length < 2) return false;
     }
-    if (role === "merchant") {
-      if (
-        shopName.trim().length < 2 ||
-        shopAddress.trim().length < 3 ||
-        shopPhone.trim().length < 7
-      )
-        return false;
-    }
     return true;
   })();
-
-  const setDay = (day: number, patch: Partial<HoursDraft>) =>
-    setHours((cur) => cur.map((d, i) => (i === day ? { ...d, ...patch } : d)));
-
-  const sendVerification = async () => {
-    setBusy(true);
-    try {
-      if (role === "customer" && channel === "email") {
-        // Password signup — Supabase emails a verification link
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: { full_name: fullName.trim(), phone: phone.trim(), role },
-          },
-        });
-        if (error) throw error;
-        if (data.session) {
-          toast.success("Account created. Welcome to Ligo!");
-          await navigate({ to: "/" });
-        } else {
-          setEmailLinkSent(true);
-          setStep(3);
-        }
-        return;
-      }
-      const data: Record<string, string> = {
-        full_name: fullName.trim(),
-        phone: phone.trim(),
-        role,
-      };
-      if (role === "merchant") data["shop_name"] = shopName.trim();
-      const { error } =
-        channel === "email"
-          ? await supabase.auth.signInWithOtp({
-              email: email.trim(),
-              options: { emailRedirectTo: `${window.location.origin}/`, data },
-            })
-          : await supabase.auth.signInWithOtp({ phone: phone.trim(), options: { data } });
-      if (error) throw error;
-      toast.success(`Verification code sent to your ${channel}.`);
-      setStep(3);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not start verification");
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const completeRiderOnboarding = async (userId: string) => {
     const idPath = idDoc ? await uploadImage(idDoc, `rider-docs/${userId}`) : null;
@@ -205,34 +123,38 @@ function RegisterPage() {
     if (error) throw error;
   };
 
-  const completeMerchantOnboarding = async (userId: string) => {
-    const logoPath = shopLogo ? await uploadImage(shopLogo, "shops") : null;
-    const coverPath = shopCover ? await uploadImage(shopCover, "shops") : null;
-    const { data: shop, error } = await supabase
-      .from("shops")
-      .insert({
-        name: shopName.trim(),
-        category_id: shopCategory || null,
-        phone: shopPhone.trim(),
-        address: shopAddress.trim(),
-        image_url: logoPath,
-        cover_url: coverPath,
-        owner_id: userId,
-        is_active: false,
-      })
-      .select("id")
-      .single();
-    if (error) throw error;
-    const { error: hoursError } = await supabase.from("shop_hours").insert(
-      hours.map((h, day) => ({
-        shop_id: shop.id,
-        day_of_week: day,
-        opens_at: h.opens_at,
-        closes_at: h.closes_at,
-        is_closed: h.is_closed,
-      })),
+  const finishSignup = async (userId: string) => {
+    if (role === "rider") await completeRiderOnboarding(userId);
+    toast.success(
+      role === "rider"
+        ? "Rider application received — sit tight while we verify your documents."
+        : "Account created. Welcome to Ligo!",
     );
-    if (hoursError) throw hoursError;
+    await navigate({ to: role === "rider" ? "/rider" : "/" });
+  };
+
+  // Signup issues a 6-digit code (no email confirmation links)
+  const submitRegistration = async () => {
+    setBusy(true);
+    try {
+      const meta = { full_name: fullName.trim(), phone: phone.trim(), role };
+      const { data, error } =
+        channel === "email"
+          ? await supabase.auth.signUp({ email: email.trim(), password, options: { data: meta } })
+          : await supabase.auth.signUp({ phone: phone.trim(), password, options: { data: meta } });
+      if (error) throw error;
+      if (data.session && data.user) {
+        // Email/phone confirmation disabled in the project — account is live
+        await finishSignup(data.user.id);
+        return;
+      }
+      toast.success(`Verification code sent to your ${channel}.`);
+      setStep(3);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not create account");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const verifyOtp = async (e: React.FormEvent) => {
@@ -245,19 +167,11 @@ function RegisterPage() {
     try {
       const { data, error } =
         channel === "email"
-          ? await supabase.auth.verifyOtp({ email: email.trim(), token: otp, type: "email" })
+          ? await supabase.auth.verifyOtp({ email: email.trim(), token: otp, type: "signup" })
           : await supabase.auth.verifyOtp({ phone: phone.trim(), token: otp, type: "sms" });
       if (error) throw error;
-      if (data.user && role === "rider") await completeRiderOnboarding(data.user.id);
-      if (data.user && role === "merchant") await completeMerchantOnboarding(data.user.id);
-      toast.success(
-        role === "rider"
-          ? "Rider application received — sit tight while we verify your documents."
-          : role === "merchant"
-            ? "Shop registered — our team will verify it shortly."
-            : "Account created. Welcome to Ligo!",
-      );
-      await navigate({ to: role === "rider" ? "/rider" : role === "merchant" ? "/merchant" : "/" });
+      if (!data.user) throw new Error("Verification failed — please try again");
+      await finishSignup(data.user.id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Invalid code");
     } finally {
@@ -316,7 +230,9 @@ function RegisterPage() {
                   key={c}
                   type="button"
                   onClick={() => setChannel(c)}
-                  className={`rounded-md py-1.5 font-medium capitalize transition-colors ${channel === c ? "bg-background text-foreground shadow" : "text-muted-foreground"}`}
+                  className={`rounded-md py-1.5 font-medium capitalize transition-colors ${
+                    channel === c ? "bg-background text-foreground shadow" : "text-muted-foreground"
+                  }`}
                 >
                   {c}
                 </button>
@@ -333,16 +249,28 @@ function RegisterPage() {
               />
             </div>
             {channel === "email" ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone-opt">Phone {role === "rider" ? "" : "(optional)"}</Label>
+                  <Input
+                    id="phone-opt"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+2519…"
+                    required={role === "rider"}
+                  />
+                </div>
+              </>
             ) : (
               <div className="space-y-1.5">
                 <Label htmlFor="reg-phone">Phone number</Label>
@@ -355,33 +283,20 @@ function RegisterPage() {
                 />
               </div>
             )}
-            {role === "customer" && channel === "email" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="reg-password">Password</Label>
-                <Input
-                  id="reg-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <p className="text-xs text-muted-foreground">
-                  We'll email you a verification link to activate your account.
-                </p>
-              </div>
-            )}
-            {channel === "email" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="phone-opt">Phone {role === "customer" ? "(optional)" : ""}</Label>
-                <Input
-                  id="phone-opt"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+2519…"
-                />
-              </div>
-            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="reg-password">Password</Label>
+              <Input
+                id="reg-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <p className="text-xs text-muted-foreground">
+                We'll send a 6-digit verification code to your {channel}.
+              </p>
+            </div>
 
             {role === "rider" && (
               <div className="space-y-4 rounded-xl border border-border bg-surface p-4">
@@ -472,110 +387,6 @@ function RegisterPage() {
               </div>
             )}
 
-            {role === "merchant" && (
-              <div className="space-y-4 rounded-xl border border-border bg-surface p-4">
-                <p className="text-sm font-semibold">Your shop</p>
-                <div className="space-y-1.5">
-                  <Label htmlFor="shop-name">Store name</Label>
-                  <Input
-                    id="shop-name"
-                    value={shopName}
-                    onChange={(e) => setShopName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="shop-cat">Category</Label>
-                  <select
-                    id="shop-cat"
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                    value={shopCategory}
-                    onChange={(e) => setShopCategory(e.target.value)}
-                  >
-                    <option value="">Select a category…</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="shop-phone">Store phone</Label>
-                  <Input
-                    id="shop-phone"
-                    value={shopPhone}
-                    onChange={(e) => setShopPhone(e.target.value)}
-                    placeholder="+2519…"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="shop-addr">Operating address</Label>
-                  <Input
-                    id="shop-addr"
-                    value={shopAddress}
-                    onChange={(e) => setShopAddress(e.target.value)}
-                    placeholder="Kebele, street, landmark"
-                    required
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="shop-logo">Store logo</Label>
-                    <Input
-                      id="shop-logo"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setShopLogo(e.target.files?.[0] ?? null)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="shop-cover">Cover image</Label>
-                    <Input
-                      id="shop-cover"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setShopCover(e.target.files?.[0] ?? null)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold">Weekly operating hours</p>
-                  {hours.map((d, day) => (
-                    <div key={day} className="flex flex-wrap items-center gap-2 text-sm">
-                      <span className="w-24 text-xs font-medium">{DAY_NAMES[day]}</span>
-                      <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <input
-                          type="checkbox"
-                          checked={d.is_closed}
-                          onChange={(e) => setDay(day, { is_closed: e.target.checked })}
-                        />
-                        Closed
-                      </label>
-                      {!d.is_closed && (
-                        <>
-                          <Input
-                            type="time"
-                            className="h-8 w-28"
-                            value={d.opens_at}
-                            onChange={(e) => setDay(day, { opens_at: e.target.value })}
-                          />
-                          <span className="text-muted-foreground">–</span>
-                          <Input
-                            type="time"
-                            className="h-8 w-28"
-                            value={d.closes_at}
-                            onChange={(e) => setDay(day, { closes_at: e.target.value })}
-                          />
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => setStep(1)}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
@@ -583,35 +394,15 @@ function RegisterPage() {
               <Button
                 className="flex-1"
                 disabled={busy || !step2Valid}
-                onClick={() => void sendVerification()}
+                onClick={() => void submitRegistration()}
               >
-                {busy
-                  ? "Please wait…"
-                  : role === "customer" && channel === "email"
-                    ? "Send verification link"
-                    : `Send ${channel === "email" ? "email" : "SMS"} code`}
+                {busy ? "Please wait…" : "Send verification code"}
               </Button>
             </div>
           </div>
         )}
 
-        {step === 3 && emailLinkSent && (
-          <div className="mt-6 space-y-4 text-center">
-            <MailCheck className="mx-auto h-10 w-10 text-primary" />
-            <div>
-              <p className="font-semibold">Check your inbox</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                We sent a verification link to {identifier}. Click it to activate your account, then
-                sign in.
-              </p>
-            </div>
-            <Button asChild className="w-full">
-              <Link to="/login">Go to sign in</Link>
-            </Button>
-          </div>
-        )}
-
-        {step === 3 && !emailLinkSent && (
+        {step === 3 && (
           <form onSubmit={verifyOtp} className="mt-6 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="otp">Enter verification code</Label>
@@ -630,7 +421,7 @@ function RegisterPage() {
               </InputOTP>
             </div>
             <Button type="submit" className="w-full" disabled={busy || otp.length < 6}>
-              {busy ? "Verifying…" : "Create account"}
+              {busy ? "Verifying…" : "Verify & create account"}
             </Button>
             <button
               type="button"
