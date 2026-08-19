@@ -634,6 +634,7 @@ function RowEditor({
   price?: number;
   alsoSetCover?: boolean;
 }) {
+  const [deleting, setDeleting] = useState(false);
   const qc = useQueryClient();
   const [value, setValue] = useState(name);
   const [priceValue, setPriceValue] = useState(price != null ? String(price) : "");
@@ -660,6 +661,29 @@ function RowEditor({
     }
   };
 
+  const remove = async () => {
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from(table).delete().eq("id", id);
+      if (error) {
+        const { error: deactivateError } = await supabase
+          .from(table)
+          .update({ is_active: false } as never)
+          .eq("id", id);
+        if (deactivateError) throw error;
+        toast.success("In use by existing orders — hidden from the app instead");
+      } else {
+        toast.success("Deleted");
+      }
+      void qc.invalidateQueries({ queryKey: [invalidateKey] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <StorageImage path={imagePath} alt={name} className="h-12 w-12 rounded-md object-cover" />
@@ -669,6 +693,7 @@ function RowEditor({
       )}
       <Input type="file" accept="image/*" className="h-9 w-44 text-xs" onChange={(e) => void save(e.target.files?.[0] ?? null)} />
       <Button size="sm" variant="outline" disabled={saving} onClick={() => void save(null)}>Save</Button>
+      <Button size="sm" variant="destructive" disabled={deleting} onClick={() => void remove()}>Delete</Button>
     </div>
   );
 }
@@ -782,9 +807,10 @@ function ContentAdmin() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = Object.fromEntries(
+    const clean: Record<string, string> = Object.fromEntries(
       CONTENT_FIELDS.map((f) => [f.key, String(value[f.key] ?? "").trim().slice(0, 500)]),
     );
+    clean['logo_url'] = value.logo_url ?? "";
     const { error } = await supabase.from("settings").upsert({ key: "site_content", value: clean, is_public: true }, { onConflict: "key" });
     if (error) { toast.error(error.message); return; }
     void qc.invalidateQueries({ queryKey: ["admin-site-content"] });
@@ -792,8 +818,38 @@ function ContentAdmin() {
     toast.success("Site content saved");
   };
 
+  const uploadLogo = async (file?: File | null) => {
+    if (!file) return;
+    try {
+      const path = await uploadImage(file, "branding");
+      const next = { ...value, logo_url: path };
+      setDraft(next);
+      const { error } = await supabase
+        .from("settings")
+        .upsert({ key: "site_content", value: next as never, is_public: true }, { onConflict: "key" });
+      if (error) throw error;
+      void qc.invalidateQueries({ queryKey: ["admin-site-content"] });
+      void qc.invalidateQueries({ queryKey: ["site-content"] });
+      toast.success("Logo updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload logo");
+    }
+  };
+
   return (
     <form onSubmit={save} className="mt-6 space-y-4">
+      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-card">
+        <StorageImage path={value.logo_url || null} alt="Platform logo" className="h-14 w-14 rounded-lg object-cover" />
+        <div className="space-y-1.5">
+          <Label>Platform logo</Label>
+          <Input type="file" accept="image/*" className="w-64" onChange={(e) => void uploadLogo(e.target.files?.[0] ?? null)} />
+        </div>
+        {value.logo_url && (
+          <Button type="button" size="sm" variant="outline" onClick={() => setDraft({ ...value, logo_url: "" })}>
+            Remove logo
+          </Button>
+        )}
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {CONTENT_FIELDS.map((f) => (
           <div key={f.key} className="space-y-1.5">
