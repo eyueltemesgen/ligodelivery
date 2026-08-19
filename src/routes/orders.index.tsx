@@ -24,7 +24,10 @@ function OrdersPage() {
     queryKey: ["orders", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
       return data ?? [];
     },
   });
@@ -34,7 +37,9 @@ function OrdersPage() {
     return (
       <div className="container-ligo py-16 text-center">
         <h1 className="font-display text-2xl font-extrabold">Sign in to track your orders</h1>
-        <Button asChild className="mt-6"><Link to="/auth" search={{ mode: "login", role: "customer" }}>Sign in</Link></Button>
+        <Button asChild className="mt-6">
+          <Link to="/login">Sign in</Link>
+        </Button>
       </div>
     );
 
@@ -47,13 +52,19 @@ function OrdersPage() {
         <ul className="mt-6 space-y-3">
           {data.map((o) => (
             <li key={o.id}>
-              <Link to="/orders/$orderId" params={{ orderId: o.id }} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-card hover:shadow-pop">
+              <Link
+                to="/orders/$orderId"
+                params={{ orderId: o.id }}
+                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-card hover:shadow-pop"
+              >
                 <div>
                   <p className="font-display font-bold">{o.order_code}</p>
                   <p className="text-xs text-muted-foreground">{formatDate(o.created_at)}</p>
                 </div>
                 <div className="text-right">
-                  <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusTone(o.status)}`}>
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-semibold ${statusTone(o.status)}`}
+                  >
                     {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
                   </span>
                   <p className="mt-1 text-sm font-semibold">{ETB(o.total)}</p>

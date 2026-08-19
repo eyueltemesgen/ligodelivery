@@ -39,9 +39,7 @@ function AccountPage() {
       <div className="container-ligo py-16 text-center">
         <h1 className="font-display text-2xl font-extrabold">Sign in to view your account</h1>
         <Button asChild className="mt-6">
-          <Link to="/auth" search={{ mode: "login", role: "customer" }}>
-            Sign in
-          </Link>
+          <Link to="/login">Sign in</Link>
         </Button>
       </div>
     );

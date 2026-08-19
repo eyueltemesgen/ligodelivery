@@ -720,8 +720,13 @@ export type Database = {
           location_updated_at: string | null;
           national_id: string | null;
           notes: string | null;
+          payout_account: string | null;
+          payout_account_name: string | null;
+          payout_method: string;
+          review_notes: string | null;
           updated_at: string;
           vehicle_type: string;
+          verification_status: string;
         };
         Insert: {
           created_at?: string;
@@ -735,8 +740,13 @@ export type Database = {
           location_updated_at?: string | null;
           national_id?: string | null;
           notes?: string | null;
+          payout_account?: string | null;
+          payout_account_name?: string | null;
+          payout_method?: string;
+          review_notes?: string | null;
           updated_at?: string;
           vehicle_type?: string;
+          verification_status?: string;
         };
         Update: {
           created_at?: string;
@@ -750,8 +760,13 @@ export type Database = {
           location_updated_at?: string | null;
           national_id?: string | null;
           notes?: string | null;
+          payout_account?: string | null;
+          payout_account_name?: string | null;
+          payout_method?: string;
+          review_notes?: string | null;
           updated_at?: string;
           vehicle_type?: string;
+          verification_status?: string;
         };
         Relationships: [];
       };

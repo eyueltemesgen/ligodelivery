@@ -1,9 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { MerchantGate } from "@/components/auth/guards";
 import { isShopOpenNow } from "@/lib/hours";
 import type { Shop } from "@/lib/queries";
 import { ShopHoursEditor } from "@/components/ligo/ShopHoursEditor";
@@ -26,6 +27,14 @@ export const Route = createFileRoute("/merchant")({
 });
 
 function MerchantPage() {
+  return (
+    <MerchantGate>
+      <MerchantPortal />
+    </MerchantGate>
+  );
+}
+
+function MerchantPortal() {
   const { user, isMerchant, isAdmin, loading } = useAuth();
   const qc = useQueryClient();
 
@@ -40,24 +49,9 @@ function MerchantPage() {
     },
   });
 
-  if (loading) return <div className="container-ligo py-16 text-muted-foreground">Loading…</div>;
-  if (!user)
-    return (
-      <div className="container-ligo py-16 text-center">
-        <h1 className="font-display text-2xl font-extrabold">Sign in to manage your shop</h1>
-        <Button asChild className="mt-6">
-          <Link to="/auth" search={{ mode: "login", role: "merchant" }}>
-            Sign in
-          </Link>
-        </Button>
-      </div>
-    );
-  if (!isMerchant && !isAdmin)
-    return (
-      <div className="container-ligo py-16 text-center font-display text-xl font-bold">
-        Merchants only.
-      </div>
-    );
+  if (loading || !user || (!isMerchant && !isAdmin)) {
+    return <div className="container-ligo py-16 text-muted-foreground">Loading…</div>;
+  }
 
   const toggleOnline = async (shopId: string, value: boolean) => {
     const { error } = await supabase.from("shops").update({ is_online: value }).eq("id", shopId);

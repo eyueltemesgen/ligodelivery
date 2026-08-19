@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
-import { shopHoursQuery, shopQuery } from "@/lib/queries";
+import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
 
 const METHODS = [
   { id: "cash", label: "Cash on delivery" },
@@ -42,6 +42,7 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const { data: shop } = useQuery({ ...shopQuery(shopId ?? ""), enabled: !!shopId });
   const { data: hours = [] } = useQuery({ ...shopHoursQuery(shopId ?? ""), enabled: !!shopId });
+  const { data: publicSettings } = useQuery(publicSettingsQuery);
   const [name, setName] = useState(profile?.full_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [address, setAddress] = useState("");
@@ -49,7 +50,14 @@ function CheckoutPage() {
   const [method, setMethod] = useState("cash");
   const [busy, setBusy] = useState(false);
 
-  const deliveryFee = Number(shop?.delivery_fee ?? 50);
+  const platform = (publicSettings?.["platform"] ?? {}) as {
+    base_delivery_fee?: number;
+    surge_multiplier?: number;
+  };
+  const surge = Math.max(Number(platform.surge_multiplier ?? 1), 1);
+  const deliveryFee = Math.round(
+    Number(shop?.delivery_fee ?? platform.base_delivery_fee ?? 50) * surge,
+  );
   const total = subtotal + deliveryFee;
   const shopLoaded = !shopId || !!shop;
   const shopOpen = shopLoaded ? isShopOpenNow(shop ?? {}, hours) : false;
@@ -59,9 +67,7 @@ function CheckoutPage() {
       <div className="container-ligo py-16 text-center">
         <h1 className="font-display text-2xl font-extrabold">Sign in to place your order</h1>
         <Button asChild className="mt-6">
-          <Link to="/auth" search={{ mode: "login", role: "customer" }}>
-            Sign in
-          </Link>
+          <Link to="/login">Sign in</Link>
         </Button>
       </div>
     );
@@ -226,7 +232,7 @@ function CheckoutPage() {
             <span>{ETB(subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Delivery</span>
+            <span>Delivery{surge > 1 ? ` (surge ×${surge})` : ""}</span>
             <span>{ETB(deliveryFee)}</span>
           </div>
           <div className="mt-2 flex justify-between font-display text-base font-bold">

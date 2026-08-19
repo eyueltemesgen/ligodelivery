@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { CheckCircle2, MapPin, Navigation, Percent, Phone, Star, Wallet, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { RiderGate } from "@/components/auth/guards";
 import { ETB, formatDate } from "@/lib/format";
+import { publicSettingsQuery } from "@/lib/queries";
 import { STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
 import { sounds, loadAudioSettings, primeAudio } from "@/lib/audio";
 import { Button } from "@/components/ui/button";
@@ -30,8 +32,16 @@ export const Route = createFileRoute("/rider/")({
       { property: "og:description", content: "Manage your Ligo deliveries in Bishoftu." },
     ],
   }),
-  component: RiderPortal,
+  component: RiderPortalPage,
 });
+
+function RiderPortalPage() {
+  return (
+    <RiderGate>
+      <RiderPortal />
+    </RiderGate>
+  );
+}
 
 type OrderRow = {
   id: string;
@@ -92,6 +102,11 @@ function RiderPortal() {
       return data;
     },
   });
+
+  const { data: publicSettings = {} } = useQuery(publicSettingsQuery);
+  const dispatchPaused =
+    (publicSettings["platform"] as { dispatch_paused?: boolean } | undefined)?.dispatch_paused ===
+    true;
 
   const { data: orders = [] } = useQuery<OrderRow[]>({
     queryKey: ["rider-orders", user?.id],
@@ -298,27 +313,9 @@ function RiderPortal() {
     return () => navigator.geolocation.clearWatch(id);
   }, [user, rider?.is_online]);
 
-  if (loading) return <div className="container-ligo py-16 text-muted-foreground">Loading…</div>;
-  if (!user)
-    return (
-      <div className="container-ligo py-16 text-center">
-        <h1 className="font-display text-2xl font-extrabold">Sign in to open the rider portal</h1>
-        <Button asChild className="mt-6">
-          <Link to="/auth" search={{ mode: "login", role: "customer" }}>
-            Sign in
-          </Link>
-        </Button>
-      </div>
-    );
-  if (!isRider)
-    return (
-      <div className="container-ligo py-16 text-center">
-        <h1 className="font-display text-2xl font-extrabold">You're not registered as a rider</h1>
-        <Button asChild className="mt-6">
-          <Link to="/rider/join">Apply to become a rider</Link>
-        </Button>
-      </div>
-    );
+  if (loading || !user || !isRider) {
+    return <div className="container-ligo py-16 text-muted-foreground">Loading…</div>;
+  }
 
   const toggleOnline = async (value: boolean) => {
     await supabase.from("riders").update({ is_online: value }).eq("id", user.id);
@@ -440,6 +437,12 @@ function RiderPortal() {
           />
         </label>
       </div>
+
+      {dispatchPaused && (
+        <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
+          Dispatch is paused platform-wide — no new orders will be offered until operations resume.
+        </div>
+      )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
