@@ -1,6 +1,19 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bell, Home, LayoutDashboard, LogOut, MapPin, Menu, Package, Search, ShoppingBag, ShoppingCart, Store, User } from "lucide-react";
+import {
+  Bell,
+  Home,
+  LayoutDashboard,
+  LogOut,
+  MapPin,
+  Menu,
+  Package,
+  Search,
+  ShoppingBag,
+  ShoppingCart,
+  Store,
+  User,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +38,7 @@ const NAV = [
 ];
 
 export function SiteHeader() {
-  const { user, profile, isAdmin, isRider, signOut } = useAuth();
+  const { user, profile, isAdmin, isRider, isMerchant, signOut } = useAuth();
   const { count } = useCart();
   const { data: content } = useQuery(siteContentQuery);
   const navigate = useNavigate();
@@ -80,44 +93,74 @@ export function SiteHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">{profile?.full_name?.split(" ")[0] || "Account"}</span>
+                  <span className="hidden sm:inline">
+                    {profile?.full_name?.split(" ")[0] || "Account"}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel>{profile?.full_name || user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/account"><User className="mr-2 h-4 w-4" />My account</Link>
+                  <Link to="/account">
+                    <User className="mr-2 h-4 w-4" />
+                    My account
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/orders"><Package className="mr-2 h-4 w-4" />My orders</Link>
+                  <Link to="/orders">
+                    <Package className="mr-2 h-4 w-4" />
+                    My orders
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/notifications"><Bell className="mr-2 h-4 w-4" />Notifications</Link>
+                  <Link to="/notifications">
+                    <Bell className="mr-2 h-4 w-4" />
+                    Notifications
+                  </Link>
                 </DropdownMenuItem>
                 {isRider && (
                   <DropdownMenuItem asChild>
-                    <Link to="/rider"><ShoppingBag className="mr-2 h-4 w-4" />Rider portal</Link>
+                    <Link to="/rider">
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      Rider portal
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {isMerchant && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/merchant">
+                      <Store className="mr-2 h-4 w-4" />
+                      Merchant portal
+                    </Link>
                   </DropdownMenuItem>
                 )}
                 {isAdmin && (
                   <DropdownMenuItem asChild>
-                    <Link to="/admin"><LayoutDashboard className="mr-2 h-4 w-4" />Admin dashboard</Link>
+                    <Link to="/admin">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Admin dashboard
+                    </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => void signOut()}>
-                  <LogOut className="mr-2 h-4 w-4" />Sign out
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
               <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-                <Link to="/auth" search={{ mode: "login", role: "customer" }}>Login</Link>
+                <Link to="/auth" search={{ mode: "login", role: "customer" }}>
+                  Login
+                </Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/auth" search={{ mode: "register", role: "customer" }}>Sign up</Link>
+                <Link to="/auth" search={{ mode: "register", role: "customer" }}>
+                  Sign up
+                </Link>
               </Button>
             </div>
           )}
@@ -155,7 +198,11 @@ export function SiteHeader() {
                 {n.label}
               </Link>
             ))}
-            <Link to="/rider/join" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary">
+            <Link
+              to="/rider/join"
+              onClick={() => setOpen(false)}
+              className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary"
+            >
               Become a rider
             </Link>
           </div>

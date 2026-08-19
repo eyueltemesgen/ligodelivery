@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "admin" | "rider" | "customer";
+export type Role = "admin" | "rider" | "customer" | "merchant";
 
 export type Profile = {
   id: string;
@@ -20,6 +20,7 @@ type AuthValue = {
   loading: boolean;
   isAdmin: boolean;
   isRider: boolean;
+  isMerchant: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -39,7 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, phone, email, avatar_url").eq("id", uid).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("id, full_name, phone, email, avatar_url")
+        .eq("id", uid)
+        .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
     setProfile((p as Profile) ?? null);
@@ -69,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     isAdmin: roles.includes("admin"),
     isRider: roles.includes("rider"),
+    isMerchant: roles.includes("merchant"),
     refresh: () => load(session?.user?.id),
     signOut: async () => {
       await supabase.auth.signOut();
