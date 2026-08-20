@@ -21,10 +21,10 @@ export const Route = createFileRoute("/login")({
       { title: "Sign in — Ligo Delivery" },
       {
         name: "description",
-        content: "Sign in to Ligo Delivery to order or ride in Bishoftu.",
+        content: "Sign in to your Ligo Delivery customer account to order in Bishoftu.",
       },
       { property: "og:title", content: "Sign in — Ligo Delivery" },
-      { property: "og:description", content: "Access your Ligo Delivery account." },
+      { property: "og:description", content: "Access your Ligo Delivery customer account." },
     ],
   }),
   component: LoginPage,
@@ -38,11 +38,16 @@ function LoginPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [staffNotice, setStaffNotice] = useState<string | null>(null);
 
-  // Route signed-in users straight to the portal for their verified role:
-  // admins -> /admin, riders -> /rider (pending screen if unapproved), customers -> /
+  // Customer login only: staff accounts get pointed at their dedicated
+  // portals instead of landing on the customer storefront.
   useEffect(() => {
-    if (user && !loading) void navigate({ to: portalPathFor(roles) });
+    if (!user || loading) return;
+    if (roles.includes("admin")) setStaffNotice("admin");
+    else if (roles.includes("rider")) setStaffNotice("rider");
+    else if (roles.includes("merchant")) setStaffNotice("merchant");
+    else void navigate({ to: "/" });
   }, [user, loading, roles, navigate]);
 
   const signIn = async (e: React.FormEvent) => {
@@ -66,11 +71,43 @@ function LoginPage() {
     password.length >= 6 &&
     (channel === "email" ? email.trim().includes("@") : phone.trim().length >= 9);
 
+  if (staffNotice) {
+    const portal = portalPathFor(roles);
+    const label =
+      staffNotice === "admin"
+        ? "the Admin dashboard"
+        : staffNotice === "rider"
+          ? "the Rider portal"
+          : "the Merchant portal";
+    return (
+      <div className="container-ligo flex justify-center py-12">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-pop">
+          <h1 className="font-display text-2xl font-extrabold">This is a staff account</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Customer sign-in is only for customer accounts. Continue to {label} instead.
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button onClick={() => void navigate({ to: portal })}>Go to {label}</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStaffNotice(null);
+                void supabase.auth.signOut();
+              }}
+            >
+              Sign in with a different account
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container-ligo flex justify-center py-12">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-pop">
         <h1 className="font-display text-2xl font-extrabold">Welcome back</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Ligo Delivery · Bishoftu</p>
+        <p className="mt-1 text-sm text-muted-foreground">Customer sign-in · Bishoftu</p>
 
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm">
           {(["email", "phone"] as Channel[]).map((c) => (

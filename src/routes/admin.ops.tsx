@@ -381,16 +381,27 @@ export function FinancialsPanel() {
 }
 
 function Stats() {
+  const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const [orders, shops, products, proofs] = await Promise.all([
-        supabase.from("orders").select("total,status"),
+      const [orders, shops, products, proofs, riders] = await Promise.all([
+        supabase.from("orders").select("total,status,rider_id"),
         supabase.from("shops").select("id"),
         supabase.from("products").select("id"),
         supabase.from("payment_proofs").select("id,status"),
+        supabase.from("riders").select("id,is_online,is_approved"),
       ]);
       const list = orders.data ?? [];
+      const approvedRiders = (riders.data ?? []).filter((r) => r.is_approved);
+      const onTrip = new Set(
+        list
+          .filter((o) =>
+            ["accepted", "arrived_at_merchant", "picked_up", "on_the_way"].includes(o.status),
+          )
+          .map((o) => o.rider_id)
+          .filter(Boolean),
+      );
       return {
         orders: list.length,
         revenue: list
@@ -400,17 +411,50 @@ function Stats() {
         shops: shops.data?.length ?? 0,
         products: products.data?.length ?? 0,
         pendingProofs: (proofs.data ?? []).filter((p) => p.status === "pending").length,
+        ridersOnline: approvedRiders.filter((r) => r.is_online).length,
+        ridersOnTrip: onTrip.size,
+        ridersTotal: approvedRiders.length,
       };
     },
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-stats-riders-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "riders" }, () => {
+        void qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
   return (
-    <div className="mt-6 grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="mt-6 grid gap-4 sm:grid-cols-3 lg:grid-cols-7">
       <Card label="Orders" value={data?.orders ?? 0} />
       <Card label="Active" value={data?.active ?? 0} />
       <Card label="Revenue" value={ETB(data?.revenue ?? 0)} />
       <Card label="Shops" value={data?.shops ?? 0} />
       <Card label="Products" value={data?.products ?? 0} />
       <Card label="Pending receipts" value={data?.pendingProofs ?? 0} />
+      <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">Fleet</p>
+        <p className="mt-1 font-display text-2xl font-extrabold">
+          {data?.ridersOnline ?? 0}
+          <span className="text-sm font-semibold text-muted-foreground">
+            /{data?.ridersTotal ?? 0}
+          </span>
+        </p>
+        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span
+            className={`inline-block h-2 w-2 rounded-full ${
+              (data?.ridersOnline ?? 0) > 0 ? "bg-primary" : "bg-muted-foreground/40"
+            }`}
+          />
+          {data?.ridersOnline ?? 0} online · {data?.ridersOnTrip ?? 0} on trip
+        </p>
+      </div>
     </div>
   );
 }

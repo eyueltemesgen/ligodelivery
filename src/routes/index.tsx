@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bike, Clock, ShieldCheck, Search } from "lucide-react";
 import heroImage from "@/assets/hero-rider.jpg";
@@ -6,6 +7,7 @@ import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from 
 import { bannersQuery, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
+import { ActiveOrderBanner } from "@/components/ligo/ActiveOrderBanner";
 import { StorageImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +31,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  const navigate = useNavigate();
+  const [quickCategory, setQuickCategory] = useState<string | null>(null);
   const { data: categories = [] } = useQuery(categoriesQuery);
   const { data: shops = [] } = useQuery(shopsQuery());
   const { data: popular = [] } = useQuery(featuredProductsQuery);
@@ -37,8 +41,15 @@ function Home() {
   const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
   const heroBanner = heroBanners[0];
 
+  const featuredShops = (
+    quickCategory ? shops.filter((s) => s.category_id === quickCategory) : shops
+  ).slice(0, 6);
+
   return (
     <div>
+      <div className="container-ligo pt-4">
+        <ActiveOrderBanner />
+      </div>
       <BannerSlot placement="home_top" />
       <section className="border-b border-border bg-surface">
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
@@ -75,12 +86,18 @@ function Home() {
             <StorageImage
               path={heroBanner.image_url}
               alt={heroBanner.title || "Ligo hero banner"}
+              priority
               className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
             />
           ) : (
             <img
               src={heroImage}
               alt="Ligo rider delivering an order in Bishoftu"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              width={800}
+              height={600}
               className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
             />
           )}
@@ -106,6 +123,43 @@ function Home() {
               <p className="p-2 text-xs font-semibold">{c.name}</p>
             </Link>
           ))}
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Quick category filter">
+          <button
+            type="button"
+            onClick={() => setQuickCategory(null)}
+            className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              !quickCategory
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card hover:border-primary/50"
+            }`}
+          >
+            All
+          </button>
+          {categories.slice(0, 8).map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setQuickCategory((cur) => (cur === cat.id ? null : cat.id))}
+              className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                quickCategory === cat.id
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card hover:border-primary/50"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+          {quickCategory && (
+            <button
+              type="button"
+              onClick={() => void navigate({ to: "/shops", search: { category: quickCategory } })}
+              className="rounded-full border border-primary/40 bg-primary-soft px-3.5 py-1.5 text-sm font-semibold text-accent-foreground"
+            >
+              View all in {categories.find((x) => x.id === quickCategory)?.name ?? "category"} →
+            </button>
+          )}
         </div>
       </section>
 
@@ -148,10 +202,15 @@ function Home() {
           </Link>
         </div>
         <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {shops.slice(0, 6).map((s) => (
+          {featuredShops.map((s) => (
             <ShopCard key={s.id} shop={s} />
           ))}
         </div>
+        {featuredShops.length === 0 && (
+          <p className="mt-5 text-sm text-muted-foreground">
+            No shops in this category yet — try another one.
+          </p>
+        )}
       </section>
 
       {popular.length > 0 && (

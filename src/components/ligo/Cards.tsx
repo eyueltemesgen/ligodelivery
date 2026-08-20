@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 
+/** Delivery window shown as a range, e.g. "15–25 min", with safe fallbacks. */
+const deliveryWindow = (mins: number | null | undefined) => {
+  const base = Math.max(Number(mins) || 25, 5);
+  return `${base}–${base + 10} min`;
+};
+
 export function ShopCard({ shop }: { shop: Shop }) {
   const open = shop.is_online !== false && isShopOpen(shop.opens_at, shop.closes_at);
   return (
@@ -15,16 +21,20 @@ export function ShopCard({ shop }: { shop: Shop }) {
       params={{ shopId: shop.id }}
       className="group overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-pop"
     >
-      <div className="relative h-36 w-full overflow-hidden">
+      <div className="relative aspect-[16/9] w-full overflow-hidden">
         <StorageImage
           path={shop.cover_url ?? shop.image_url}
           alt={shop.name}
-          className="h-36 w-full object-cover transition-transform group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform group-hover:scale-105"
         />
         <span
           className={`absolute left-3 top-3 rounded-full px-2 py-1 text-[11px] font-semibold ${open ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
         >
           {open ? "Open now" : "Closed"}
+        </span>
+        <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[11px] font-semibold text-foreground shadow-sm">
+          <Clock className="h-3 w-3 text-primary" />
+          {deliveryWindow(shop.delivery_time_min)}
         </span>
       </div>
       <div className="space-y-2 p-4">
@@ -32,18 +42,14 @@ export function ShopCard({ shop }: { shop: Shop }) {
         <p className="line-clamp-1 text-sm text-muted-foreground">
           {shop.description ?? shop.address}
         </p>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-            {shop.rating}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
+            <Star className="h-3 w-3 fill-warning text-warning" />
+            {Number(shop.rating) > 0 ? Number(shop.rating).toFixed(1) : "New"}
           </span>
-          <span className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            {shop.delivery_time_min} min
-          </span>
-          <span className="flex items-center gap-1">
-            <Bike className="h-3.5 w-3.5" />
-            {ETB(shop.delivery_fee)}
+          <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
+            <Bike className="h-3 w-3" />
+            {Number(shop.delivery_fee) > 0 ? `${ETB(shop.delivery_fee)} fee` : "Free delivery"}
           </span>
         </div>
       </div>
