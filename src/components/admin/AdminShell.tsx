@@ -24,6 +24,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { publicSettingsQuery } from "@/lib/queries";
 import { AdminCommandSearch } from "@/components/admin/CommandSearch";
+import { NotificationsCenter } from "@/components/admin/NotificationsCenter";
+import { AdminUserMenu } from "@/components/admin/AdminUserMenu";
 
 type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -132,13 +134,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 {group.items.map((item) => {
                   const [to] = item.to.split("?") as [string];
                   const active = item.to === "/admin" ? pathname === "/admin" : pathname === to;
+                  // Nav entries span routes with different search schemas (ops tabs
+                  // vs dashboard range), so the link props stay loosely typed here.
+                  const linkProps = {
+                    to,
+                    ...(item.to.includes("?tab=")
+                      ? { search: { tab: item.to.split("tab=")[1] } }
+                      : {}),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  } as any;
                   return (
                     <li key={item.to}>
                       <Link
-                        to={to as "/admin"}
-                        {...(item.to.includes("?tab=")
-                          ? { search: { tab: item.to.split("tab=")[1] } }
-                          : {})}
+                        {...linkProps}
                         className={`flex items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors ${
                           active
                             ? "bg-primary-soft text-accent-foreground"
@@ -186,6 +194,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Gauge className="h-3.5 w-3.5" />
             {dispatchPaused ? "Dispatch Paused" : "All Systems Operational"}
           </span>
+          <NotificationsCenter />
+          <AdminUserMenu />
         </header>
         <AdminCommandSearch open={searchOpen} onOpenChange={setSearchOpen} />
         <main className="flex-1 p-4 lg:p-6">{children}</main>

@@ -2,13 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, FileText, XCircle } from "lucide-react";
+import { CheckCircle2, FileText, NotebookText, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/orders";
 import { useMediaUrl } from "@/lib/media";
 import { formatDate } from "@/lib/format";
+import { RiderDossier } from "@/components/admin/RiderDossier";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -48,9 +56,16 @@ type RiderRow = {
   payout_account_name: string | null;
   verification_status: string;
   review_notes: string | null;
+  commission_tier: string;
   created_at: string;
   profile?: { full_name: string; phone: string | null; email: string | null } | undefined;
 };
+
+const COMMISSION_TIERS = [
+  { key: "standard", label: "Standard" },
+  { key: "silver", label: "Silver" },
+  { key: "gold", label: "Gold" },
+];
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   pending_verification: {
@@ -64,6 +79,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 function RiderApprovalQueue() {
   const qc = useQueryClient();
   const [rejectTarget, setRejectTarget] = useState<RiderRow | null>(null);
+  const [dossierTarget, setDossierTarget] = useState<RiderRow | null>(null);
 
   const { data: riders = [] } = useQuery({
     queryKey: ["admin-riders-full"],
@@ -111,6 +127,21 @@ function RiderApprovalQueue() {
     );
     void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
     toast.success("Rider approved — they can now go online");
+  };
+
+  const setCommissionTier = async (r: RiderRow, tier: string) => {
+    const { error } = await supabase
+      .from("riders")
+      .update({ commission_tier: tier })
+      .eq("id", r.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
+    toast.success(
+      `Commission tier set to ${COMMISSION_TIERS.find((t) => t.key === tier)?.label ?? tier}`,
+    );
   };
 
   const pendingCount = riders.filter(
@@ -167,7 +198,28 @@ function RiderApprovalQueue() {
                 </p>
               )}
 
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button size="sm" variant="secondary" onClick={() => setDossierTarget(r)}>
+                  <NotebookText className="mr-2 h-4 w-4" /> View dossier
+                </Button>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Commission tier</span>
+                  <Select
+                    value={r.commission_tier}
+                    onValueChange={(tier) => void setCommissionTier(r, tier)}
+                  >
+                    <SelectTrigger className="h-8 w-28 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMISSION_TIERS.map((t) => (
+                        <SelectItem key={t.key} value={t.key}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 {!r.is_approved && (
                   <Button size="sm" onClick={() => void approve(r)}>
                     <CheckCircle2 className="mr-2 h-4 w-4" /> Approve rider
@@ -189,6 +241,12 @@ function RiderApprovalQueue() {
         })}
       </div>
 
+      <RiderDossier
+        riderId={dossierTarget?.id ?? null}
+        riderName={dossierTarget?.profile?.full_name || "Rider"}
+        open={!!dossierTarget}
+        onOpenChange={(open) => !open && setDossierTarget(null)}
+      />
       <RejectDialog
         rider={rejectTarget}
         onClose={() => setRejectTarget(null)}

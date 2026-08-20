@@ -727,6 +727,7 @@ export type Database = {
           created_at: string;
           id: string;
           battery: number | null;
+          commission_tier: string;
           id_document_url: string | null;
           is_approved: boolean;
           is_online: boolean;
@@ -749,6 +750,7 @@ export type Database = {
           created_at?: string;
           id: string;
           battery?: number | null;
+          commission_tier?: string;
           id_document_url?: string | null;
           is_approved?: boolean;
           is_online?: boolean;
@@ -771,6 +773,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           battery?: number | null;
+          commission_tier?: string;
           id_document_url?: string | null;
           is_approved?: boolean;
           is_online?: boolean;
