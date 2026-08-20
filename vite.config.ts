@@ -6,10 +6,10 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig({
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
-  },
-});
+// NOTE: no custom tanstackStart.server.entry override. The previous hand-rolled
+// src/server.ts wrapper got co-chunked with shared app modules, producing a
+// circular chunk dependency that crashed at import time in production
+// (TypeError: __exportAll is not a function). The SDK default server entry
+// keeps the chunk graph acyclic; SSR error handling lives in src/start.ts
+// request middleware instead.
+export default defineConfig({});
