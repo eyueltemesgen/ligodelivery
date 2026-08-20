@@ -1,6 +1,10 @@
-export const ETB = (amount: number | string | null | undefined) => {
+/**
+ * Money formatter. Defaults to Ethiopian Birr; the currency can be
+ * overridden (platform settings or future cross-border markets).
+ */
+export const ETB = (amount: number | string | null | undefined, currency = "ETB") => {
   const n = Number(amount ?? 0);
-  return `${n.toLocaleString("en-ET", { minimumFractionDigits: n % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })} ETB`;
+  return `${n.toLocaleString("en-ET", { minimumFractionDigits: n % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })} ${currency}`;
 };
 
 export const discounted = (price: number, discountPercent: number) =>

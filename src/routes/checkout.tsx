@@ -17,7 +17,8 @@ import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
 const METHODS = [
   { id: "cash", label: "Cash on delivery" },
   { id: "telebirr", label: "Telebirr" },
-  { id: "cbe", label: "CBE transfer" },
+  { id: "cbe", label: "CBE Birr" },
+  { id: "chapa", label: "Chapa" },
   { id: "boa", label: "Bank of Abyssinia" },
 ];
 
@@ -116,6 +117,7 @@ function CheckoutPage() {
           shop_id: shopId,
           status: "pending_payment",
           payment_method: method,
+          delivery_pin: String(Math.floor(1000 + Math.random() * 9000)),
           payment_status: "unpaid",
           subtotal,
           delivery_fee: deliveryFee,

@@ -2,8 +2,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const ORDER_STATUSES = [
   "pending_payment",
+  "confirmed",
+  "preparing",
+  "ready_for_pickup",
   "dispatched",
   "accepted",
+  "arrived_at_merchant",
   "picked_up",
   "on_the_way",
   "delivered",
@@ -11,46 +15,45 @@ export const ORDER_STATUSES = [
   // Legacy statuses kept so older orders still render
   "pending",
   "payment_verification",
-  "confirmed",
-  "preparing",
-  "ready_for_pickup",
   "rider_assigned",
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending_payment: "Pending payment",
+  pending_payment: "Pending Payment",
+  confirmed: "Confirmed",
+  preparing: "Preparing",
+  ready_for_pickup: "Ready for Pickup",
   dispatched: "Dispatched",
-  accepted: "Rider accepted",
-  picked_up: "Picked up",
-  on_the_way: "On the way",
+  accepted: "Rider Accepted",
+  arrived_at_merchant: "At Merchant",
+  picked_up: "Picked Up",
+  on_the_way: "On the Way",
   delivered: "Delivered",
   cancelled: "Cancelled",
-  pending: "Pending payment",
-  payment_verification: "Pending payment",
-  confirmed: "Order confirmed",
-  preparing: "Preparing",
-  ready_for_pickup: "Ready for pickup",
-  rider_assigned: "Rider assigned",
+  pending: "Pending Payment",
+  payment_verification: "Pending Payment",
+  rider_assigned: "Rider Accepted",
 };
 
 export const TIMELINE: OrderStatus[] = [
   "pending_payment",
+  "confirmed",
+  "preparing",
+  "ready_for_pickup",
   "dispatched",
   "accepted",
+  "arrived_at_merchant",
   "picked_up",
   "on_the_way",
   "delivered",
 ];
 
-// Legacy statuses mapped onto the new timeline for progress display
+// Legacy statuses mapped onto the current timeline for progress display
 const TIMELINE_ALIASES: Partial<Record<OrderStatus, OrderStatus>> = {
   pending: "pending_payment",
   payment_verification: "pending_payment",
-  confirmed: "dispatched",
-  preparing: "dispatched",
-  ready_for_pickup: "dispatched",
   rider_assigned: "accepted",
 };
 
