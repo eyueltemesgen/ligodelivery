@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { ETB, formatDate } from "@/lib/format";
 import { ORDER_STATUSES, STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
@@ -14,6 +15,14 @@ import {
   type SiteContent,
 } from "@/lib/content";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -416,6 +425,7 @@ function Stats() {
 
 function OrdersAdmin() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders"],
     queryFn: async () =>
@@ -465,6 +475,12 @@ function OrdersAdmin() {
       toast.error(error.message);
       return;
     }
+    await supabase.from("order_events").insert({
+      order_id: id,
+      actor_id: user?.id ?? null,
+      event: "admin_update",
+      reason: JSON.stringify(patch),
+    });
     await notify(customerId, `Order ${code}`, message, "order", id);
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
     toast.success("Order updated");
@@ -476,6 +492,11 @@ function OrdersAdmin() {
       toast.error(error.message);
       return;
     }
+    await supabase.from("order_events").insert({
+      order_id: id,
+      actor_id: user?.id ?? null,
+      event: "dispatched",
+    });
     await notify(
       customerId,
       `Order ${code} confirmed`,
@@ -487,99 +508,321 @@ function OrdersAdmin() {
     toast.success("Order dispatched to all riders");
   };
 
+  const [cancelTarget, setCancelTarget] = useState<(typeof orders)[number] | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [refund, setRefund] = useState(true);
+  const [commsTarget, setCommsTarget] = useState<(typeof orders)[number] | null>(null);
+  const [commsMessage, setCommsMessage] = useState("");
+  const [commsSending, setCommsSending] = useState(false);
+
+  const shopNameById = (id: string | null) =>
+    id ? (shops.find((s) => s.id === id)?.name ?? "—") : "—";
+  const riderNameById = (id: string | null) =>
+    id ? (riders.find((r) => r.id === id)?.name ?? "—") : "—";
+
+  const cancelOrder = async () => {
+    if (!cancelTarget) return;
+    if (!cancelReason.trim()) {
+      toast.error("Add a cancellation reason");
+      return;
+    }
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "cancelled",
+        cancel_reason: cancelReason.trim(),
+        refunded: refund,
+      } as never)
+      .eq("id", cancelTarget.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await supabase.from("order_events").insert({
+      order_id: cancelTarget.id,
+      actor_id: user?.id ?? null,
+      event: "cancelled",
+      reason: cancelReason.trim(),
+    });
+    await notify(
+      cancelTarget.customer_id,
+      `Order ${cancelTarget.order_code} cancelled`,
+      `Reason: ${cancelReason.trim()}${refund ? " A refund has been initiated." : ""}`,
+      "order",
+      cancelTarget.id,
+    );
+    if (cancelTarget.rider_id) {
+      await notify(
+        cancelTarget.rider_id,
+        `Order ${cancelTarget.order_code} cancelled`,
+        "This order was cancelled by operations.",
+        "order",
+        cancelTarget.id,
+      );
+    }
+    void qc.invalidateQueries({ queryKey: ["admin-orders"] });
+    setCancelTarget(null);
+    setCancelReason("");
+    toast.success("Order cancelled");
+  };
+
+  const sendComms = async () => {
+    if (!commsTarget || !commsMessage.trim()) return;
+    setCommsSending(true);
+    try {
+      const recipients: { id: string; label: string }[] = [
+        { id: commsTarget.customer_id, label: "customer" },
+      ];
+      if (commsTarget.rider_id) recipients.push({ id: commsTarget.rider_id, label: "rider" });
+      const shop = shops.find((s) => s.id === commsTarget.shop_id);
+      if (shop?.owner_id) recipients.push({ id: shop.owner_id, label: "merchant" });
+      for (const r of recipients) {
+        await notify(
+          r.id,
+          `Message from Ligo ops · Order ${commsTarget.order_code}`,
+          commsMessage.trim(),
+          "support",
+          commsTarget.id,
+        );
+      }
+      await supabase.from("order_events").insert({
+        order_id: commsTarget.id,
+        actor_id: user?.id ?? null,
+        event: "ops_message",
+        reason: commsMessage.trim(),
+      });
+      toast.success(`Message sent to ${recipients.map((r) => r.label).join(", ")}`);
+      setCommsTarget(null);
+      setCommsMessage("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send message");
+    } finally {
+      setCommsSending(false);
+    }
+  };
+
+  const { data: shops = [] } = useQuery({
+    queryKey: ["admin-shops-list"],
+    queryFn: async () => (await supabase.from("shops").select("id,name,owner_id")).data ?? [],
+  });
+
   return (
-    <div className="mt-6 space-y-3">
-      {orders.map((o) => (
-        <div key={o.id} className="rounded-xl border border-border bg-card p-4 shadow-card">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="font-display font-bold">{o.order_code}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatDate(o.created_at)} · {o.customer_name} · {o.customer_phone}
-              </p>
-            </div>
-            <span
-              className={`rounded-full px-2 py-1 text-xs font-semibold ${statusTone(o.status)}`}
-            >
-              {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
-            </span>
-          </div>
-          <p className="mt-2 text-sm">{o.delivery_address}</p>
-          <p className="text-sm text-muted-foreground">
-            {ETB(o.total)} · {o.payment_method} · {o.payment_status}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {DISPATCHABLE_STATUSES.includes(o.status) && (
-              <Button
-                size="sm"
-                onClick={() => void approveDispatch(o.id, o.customer_id, o.order_code)}
-              >
-                Approve &amp; Dispatch
-              </Button>
+    <div className="mt-6 space-y-4">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-card">
+        <table className="w-full min-w-[1100px] text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-4 py-3">Order</th>
+              <th className="px-4 py-3">Customer</th>
+              <th className="px-4 py-3">Merchant</th>
+              <th className="px-4 py-3 text-right">Amount</th>
+              <th className="px-4 py-3 text-right">Delivery</th>
+              <th className="px-4 py-3">Payment</th>
+              <th className="px-4 py-3">Rider</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Timestamp</th>
+              <th className="px-4 py-3">Location</th>
+              <th className="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((o) => (
+              <tr key={o.id} className="border-b border-border last:border-0 hover:bg-surface">
+                <td className="px-4 py-3 font-display font-bold">{o.order_code}</td>
+                <td className="px-4 py-3">
+                  <p className="font-medium">{o.customer_name ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground">{o.customer_phone}</p>
+                </td>
+                <td className="px-4 py-3">{shopNameById(o.shop_id)}</td>
+                <td className="px-4 py-3 text-right font-semibold">{ETB(o.total)}</td>
+                <td className="px-4 py-3 text-right">{ETB(o.delivery_fee)}</td>
+                <td className="px-4 py-3">
+                  <span className="uppercase">{o.payment_method}</span>
+                  <span className="block text-xs text-muted-foreground">{o.payment_status}</span>
+                </td>
+                <td className="px-4 py-3">{riderNameById(o.rider_id)}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-semibold ${statusTone(o.status)}`}
+                  >
+                    {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {formatDate(o.created_at)}
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{o.delivery_address}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {DISPATCHABLE_STATUSES.includes(o.status) && (
+                      <Button
+                        size="sm"
+                        onClick={() => void approveDispatch(o.id, o.customer_id, o.order_code)}
+                      >
+                        Dispatch
+                      </Button>
+                    )}
+                    <select
+                      className="h-8 rounded-md border border-input bg-background px-1.5 text-xs"
+                      value={o.status}
+                      onChange={(e) =>
+                        void update(
+                          o.id,
+                          { status: e.target.value },
+                          o.customer_id,
+                          o.order_code,
+                          STATUS_LABEL[e.target.value as OrderStatus] ?? e.target.value,
+                        )
+                      }
+                    >
+                      {ORDER_STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {STATUS_LABEL[s]}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="h-8 rounded-md border border-input bg-background px-1.5 text-xs"
+                      value={o.rider_id ?? ""}
+                      onChange={(e) =>
+                        void update(
+                          o.id,
+                          {
+                            rider_id: e.target.value || null,
+                            status: e.target.value ? "rider_assigned" : o.status,
+                          },
+                          o.customer_id,
+                          o.order_code,
+                          "A rider has been assigned to your order.",
+                        )
+                      }
+                    >
+                      <option value="">Rider…</option>
+                      {riders
+                        .filter((r) => r.is_approved)
+                        .map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name}
+                            {r.is_online ? " (online)" : ""}
+                          </option>
+                        ))}
+                    </select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        void update(
+                          o.id,
+                          { payment_status: "paid" },
+                          o.customer_id,
+                          o.order_code,
+                          "Payment confirmed.",
+                        )
+                      }
+                    >
+                      Mark paid
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setCommsTarget(o)}>
+                      Message
+                    </Button>
+                    {!["delivered", "cancelled"].includes(o.status) && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          setCancelTarget(o);
+                          setCancelReason("");
+                          setRefund(true);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
+                  No orders yet.
+                </td>
+              </tr>
             )}
-            <select
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-              value={o.status}
-              onChange={(e) =>
-                void update(
-                  o.id,
-                  { status: e.target.value },
-                  o.customer_id,
-                  o.order_code,
-                  STATUS_LABEL[e.target.value as OrderStatus] ?? e.target.value,
-                )
-              }
-            >
-              {ORDER_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {STATUS_LABEL[s]}
-                </option>
-              ))}
-            </select>
-            <select
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-              value={o.rider_id ?? ""}
-              onChange={(e) =>
-                void update(
-                  o.id,
-                  {
-                    rider_id: e.target.value || null,
-                    status: e.target.value ? "rider_assigned" : o.status,
-                  },
-                  o.customer_id,
-                  o.order_code,
-                  "A rider has been assigned to your order.",
-                )
-              }
-            >
-              <option value="">Assign rider…</option>
-              {riders
-                .filter((r) => r.is_approved)
-                .map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                    {r.is_online ? " (online)" : ""}
-                  </option>
-                ))}
-            </select>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                void update(
-                  o.id,
-                  { payment_status: "paid" },
-                  o.customer_id,
-                  o.order_code,
-                  "Payment confirmed.",
-                )
-              }
-            >
-              Mark paid
-            </Button>
+          </tbody>
+        </table>
+      </div>
+
+      <Dialog open={!!cancelTarget} onOpenChange={(v) => !v && setCancelTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel order {cancelTarget?.order_code}</DialogTitle>
+            <DialogDescription>
+              Provide a reason and choose whether to trigger a refund.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cancel-reason">Cancellation reason</Label>
+              <Textarea
+                id="cancel-reason"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="e.g. Item unavailable, customer requested cancellation"
+                rows={3}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={refund} onCheckedChange={setRefund} />
+              Trigger refund ({ETB(cancelTarget?.total ?? 0)})
+            </label>
           </div>
-        </div>
-      ))}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>
+              Back
+            </Button>
+            <Button variant="destructive" onClick={() => void cancelOrder()}>
+              Confirm cancellation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!commsTarget} onOpenChange={(v) => !v && setCommsTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Message order parties</DialogTitle>
+            <DialogDescription>
+              Send a direct message to the customer{commsTarget?.rider_id ? ", rider" : ""}
+              {commsTarget?.shop_id && shops.find((s) => s.id === commsTarget.shop_id)?.owner_id
+                ? " and merchant"
+                : ""}{" "}
+              for order {commsTarget?.order_code}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="comms-msg">Message</Label>
+            <Textarea
+              id="comms-msg"
+              value={commsMessage}
+              onChange={(e) => setCommsMessage(e.target.value)}
+              placeholder="e.g. Your rider is 5 minutes away."
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCommsTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={commsSending || !commsMessage.trim()}
+              onClick={() => void sendComms()}
+            >
+              {commsSending ? "Sending…" : "Send message"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

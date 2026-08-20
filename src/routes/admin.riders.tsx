@@ -4,10 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CheckCircle2, FileText, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { notify } from "@/lib/orders";
+import { notify, STATUS_LABEL, type OrderStatus } from "@/lib/orders";
 import { useMediaUrl } from "@/lib/media";
-import { formatDate } from "@/lib/format";
+import { ETB, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -39,6 +40,7 @@ type RiderRow = {
   is_approved: boolean;
   is_online: boolean;
   vehicle_type: string;
+  vehicle_registration: string | null;
   national_id: string | null;
   notes: string | null;
   id_document_url: string | null;
@@ -46,6 +48,7 @@ type RiderRow = {
   payout_method: string;
   payout_account: string | null;
   payout_account_name: string | null;
+  commission_tier: number;
   verification_status: string;
   review_notes: string | null;
   created_at: string;
@@ -64,6 +67,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 function RiderApprovalQueue() {
   const qc = useQueryClient();
   const [rejectTarget, setRejectTarget] = useState<RiderRow | null>(null);
+  const [dossierId, setDossierId] = useState<string | null>(null);
 
   const { data: riders = [] } = useQuery({
     queryKey: ["admin-riders-full"],
@@ -145,7 +149,8 @@ function RiderApprovalQueue() {
 
               <div className="mt-3 grid gap-1 text-sm sm:grid-cols-2">
                 <p>
-                  <span className="text-muted-foreground">Vehicle:</span> {r.vehicle_type} ·{" "}
+                  <span className="text-muted-foreground">Vehicle:</span> {r.vehicle_type}
+                  {r.vehicle_registration ? ` (${r.vehicle_registration})` : ""} ·{" "}
                   <span className="text-muted-foreground">National ID:</span> {r.national_id || "—"}
                 </p>
                 <p>
@@ -183,7 +188,32 @@ function RiderApprovalQueue() {
                     <XCircle className="mr-2 h-4 w-4" /> Reject / request resubmission
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDossierId((cur) => (cur === r.id ? null : r.id))}
+                >
+                  {dossierId === r.id ? "Hide dossier" : "Dossier"}
+                </Button>
               </div>
+
+              {dossierId === r.id && (
+                <RiderDossier
+                  rider={r}
+                  onCommissionChange={async (tier) => {
+                    const { error } = await supabase
+                      .from("riders")
+                      .update({ commission_tier: tier })
+                      .eq("id", r.id);
+                    if (error) {
+                      toast.error(error.message);
+                      return;
+                    }
+                    void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
+                    toast.success(`Commission tier set to ${tier}%`);
+                  }}
+                />
+              )}
             </div>
           );
         })}
@@ -292,5 +322,167 @@ function RejectDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RiderDossier({
+  rider,
+  onCommissionChange,
+}: {
+  rider: RiderRow;
+  onCommissionChange: (tier: number) => Promise<void>;
+}) {
+  const [tier, setTier] = useState(String(rider.commission_tier ?? 100));
+  const [savingTier, setSavingTier] = useState(false);
+
+  const { data: stats } = useQuery({
+    queryKey: ["rider-dossier", rider.id],
+    queryFn: async () => {
+      const [{ data: orders }, { data: earnings }, { data: ratings }, { data: events }] =
+        await Promise.all([
+          supabase
+            .from("orders")
+            .select("id,order_code,status,total,created_at,cancel_reason")
+            .eq("rider_id", rider.id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("rider_earnings")
+            .select("amount,status,created_at")
+            .eq("rider_id", rider.id),
+          supabase
+            .from("rider_ratings")
+            .select("rating,comment,created_at")
+            .eq("rider_id", rider.id),
+          supabase
+            .from("order_events")
+            .select("id,event,reason,created_at,order_id")
+            .order("created_at", { ascending: false })
+            .limit(50),
+        ]);
+      const myOrders = orders ?? [];
+      const myOrderIds = new Set(myOrders.map((o) => o.id));
+      const delivered = myOrders.filter((o) => o.status === "delivered");
+      const cancelled = myOrders.filter((o) => o.status === "cancelled");
+      const totalEarnings = (earnings ?? [])
+        .filter((e) => e.status === "paid" || e.status === "pending")
+        .reduce((s, e) => s + Number(e.amount), 0);
+      const avgRating =
+        (ratings ?? []).length > 0
+          ? Math.round(
+              ((ratings ?? []).reduce((s, r) => s + r.rating, 0) / (ratings ?? []).length) * 100,
+            ) / 100
+          : null;
+      const disputes = (events ?? []).filter(
+        (e) => myOrderIds.has(e.order_id) && ["cancelled", "ops_message"].includes(e.event),
+      );
+      return {
+        totalOrders: myOrders.length,
+        delivered: delivered.length,
+        cancelled: cancelled.length,
+        totalEarnings,
+        avgRating,
+        ratingsCount: (ratings ?? []).length,
+        disputes,
+        recentOrders: myOrders.slice(0, 8),
+      };
+    },
+  });
+
+  if (!stats) return <p className="mt-3 text-sm text-muted-foreground">Loading dossier…</p>;
+
+  return (
+    <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MiniStat
+          label="Deliveries"
+          value={String(stats.delivered)}
+          sub={`${stats.totalOrders} total`}
+        />
+        <MiniStat label="Cancelled" value={String(stats.cancelled)} />
+        <MiniStat label="Total earnings" value={ETB(stats.totalEarnings)} />
+        <MiniStat
+          label="Rating"
+          value={stats.avgRating != null ? `${stats.avgRating} ★` : "—"}
+          sub={`${stats.ratingsCount} ratings`}
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Label htmlFor={`tier-${rider.id}`} className="text-xs">
+          Commission tier (% of delivery fee kept)
+        </Label>
+        <Input
+          id={`tier-${rider.id}`}
+          type="number"
+          min={0}
+          max={100}
+          step="5"
+          className="h-8 w-24"
+          value={tier}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTier(e.target.value)}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={savingTier}
+          onClick={async () => {
+            setSavingTier(true);
+            await onCommissionChange(Number(tier) || 100);
+            setSavingTier(false);
+          }}
+        >
+          {savingTier ? "Saving…" : "Save tier"}
+        </Button>
+      </div>
+
+      {stats.recentOrders.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Recent deliveries
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {stats.recentOrders.map((o) => (
+              <li
+                key={o.id}
+                className="flex justify-between border-b border-border pb-1 last:border-0"
+              >
+                <span className="font-medium">{o.order_code}</span>
+                <span className="text-xs text-muted-foreground">
+                  {STATUS_LABEL[o.status as OrderStatus] ?? o.status} · {ETB(o.total)} ·{" "}
+                  {formatDate(o.created_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {stats.disputes.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-destructive">
+            Dispute / cancellation log
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {stats.disputes.map((d) => (
+              <li key={d.id} className="rounded-md bg-destructive/5 p-2 text-xs">
+                <span className="font-semibold capitalize">{d.event}</span>
+                {d.reason ? ` — ${d.reason}` : ""}
+                <span className="ml-2 text-muted-foreground">{formatDate(d.created_at)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 font-display text-lg font-extrabold">{value}</p>
+      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+    </div>
   );
 }

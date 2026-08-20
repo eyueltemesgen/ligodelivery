@@ -722,8 +722,44 @@ export type Database = {
           },
         ];
       };
+      order_events: {
+        Row: {
+          actor_id: string | null;
+          created_at: string;
+          event: string;
+          id: string;
+          order_id: string;
+          reason: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          created_at?: string;
+          event: string;
+          id?: string;
+          order_id: string;
+          reason?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          created_at?: string;
+          event?: string;
+          id?: string;
+          order_id?: string;
+          reason?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       riders: {
         Row: {
+          commission_tier: number;
           created_at: string;
           id: string;
           battery: number | null;
@@ -742,10 +778,12 @@ export type Database = {
           review_notes: string | null;
           speed: number | null;
           updated_at: string;
+          vehicle_registration: string | null;
           vehicle_type: string;
           verification_status: string;
         };
         Insert: {
+          commission_tier?: number;
           created_at?: string;
           id: string;
           battery?: number | null;
@@ -764,10 +802,12 @@ export type Database = {
           review_notes?: string | null;
           speed?: number | null;
           updated_at?: string;
+          vehicle_registration?: string | null;
           vehicle_type?: string;
           verification_status?: string;
         };
         Update: {
+          commission_tier?: number;
           created_at?: string;
           id?: string;
           battery?: number | null;
@@ -786,6 +826,7 @@ export type Database = {
           review_notes?: string | null;
           speed?: number | null;
           updated_at?: string;
+          vehicle_registration?: string | null;
           vehicle_type?: string;
           verification_status?: string;
         };

@@ -27,6 +27,7 @@ import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
 import { Route as RiderIndexRouteImport } from './routes/rider.index'
@@ -124,6 +125,11 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
   path: '/riders',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
 const OrdersIndexRoute = OrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/support': typeof AdminSupportRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/support': typeof AdminSupportRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/support': typeof AdminSupportRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/admin/support'
     | '/orders/$orderId'
     | '/rider/join'
     | '/shops/$shopId'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/admin/support'
     | '/orders/$orderId'
     | '/rider/join'
     | '/shops/$shopId'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/admin/support'
     | '/orders/$orderId'
     | '/rider/join'
     | '/shops/$shopId'
@@ -463,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRidersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/orders/': {
       id: '/orders/'
       path: '/orders'
@@ -513,6 +532,7 @@ interface AdminRouteChildren {
   AdminMapRoute: typeof AdminMapRoute
   AdminOpsRoute: typeof AdminOpsRoute
   AdminRidersRoute: typeof AdminRidersRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -521,6 +541,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMapRoute: AdminMapRoute,
   AdminOpsRoute: AdminOpsRoute,
   AdminRidersRoute: AdminRidersRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

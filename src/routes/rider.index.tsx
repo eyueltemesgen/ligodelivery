@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { RiderGate } from "@/components/auth/guards";
 import { ETB, formatDate } from "@/lib/format";
+import { uploadImage } from "@/lib/media";
 import { publicSettingsQuery } from "@/lib/queries";
 import { STATUS_LABEL, notify, type OrderStatus } from "@/lib/orders";
 import { sounds, loadAudioSettings, primeAudio } from "@/lib/audio";
@@ -658,6 +659,8 @@ function DeliveryFlow({
 }) {
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [completed, setCompleted] = useState(false);
 
   const { data: shop } = useQuery({
     queryKey: ["flow-shop", order.shop_id],
@@ -690,17 +693,25 @@ function DeliveryFlow({
 
   const completeDelivery = async () => {
     setBusy(true);
-    const { error } = await supabase.rpc("complete_delivery", {
-      _order_id: order.id,
-      _pin: pin.trim(),
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { error } = await supabase.rpc("complete_delivery", {
+        _order_id: order.id,
+        _pin: pin.trim(),
+      });
+      if (error) throw error;
+      if (proofFile) await uploadImage(proofFile, `delivery-proofs/${order.id}`);
+      setCompleted(true);
+      sounds.payment();
+      navigator.vibrate?.([150, 80, 150]);
+      setTimeout(() => {
+        setPin("");
+        setProofFile(null);
+      }, 2200);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not complete delivery");
+    } finally {
+      setBusy(false);
     }
-    toast.success("Delivery completed — earnings updated!");
-    setPin("");
   };
 
   const stage =
@@ -826,26 +837,50 @@ function DeliveryFlow({
 
       {stage === 4 && (
         <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-card">
-          <p className="font-display text-lg font-bold">Stage 4 · Confirm delivery</p>
-          <p className="text-sm text-muted-foreground">
-            Ask the customer for their 4-digit delivery PIN to complete this order.
-          </p>
-          <input
-            inputMode="numeric"
-            maxLength={4}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-            placeholder="••••"
-            className="h-14 w-full rounded-xl border border-input bg-background text-center font-display text-2xl font-extrabold tracking-[0.5em] outline-none focus:border-primary"
-          />
-          <Button
-            size="lg"
-            className="h-14 w-full text-base font-extrabold"
-            disabled={busy || pin.length < 4}
-            onClick={() => void completeDelivery()}
-          >
-            {busy ? "Completing…" : "COMPLETE DELIVERY"}
-          </Button>
+          {completed ? (
+            <div className="py-6 text-center">
+              <div className="mx-auto flex h-20 w-20 animate-bounce items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
+              <p className="mt-4 font-display text-xl font-extrabold">Delivery complete!</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {ETB(order.rider_payout || order.delivery_fee)} added to your balance.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="font-display text-lg font-bold">Stage 4 · Confirm delivery</p>
+              <p className="text-sm text-muted-foreground">
+                Ask the customer for their 4-digit delivery PIN to complete this order.
+              </p>
+              <input
+                inputMode="numeric"
+                maxLength={4}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                placeholder="••••"
+                className="h-14 w-full rounded-xl border border-input bg-background text-center font-display text-2xl font-extrabold tracking-[0.5em] outline-none focus:border-primary"
+              />
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">Photo proof (optional)</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-2 file:text-xs file:font-semibold"
+                  onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <Button
+                size="lg"
+                className="h-14 w-full text-base font-extrabold"
+                disabled={busy || pin.length < 4}
+                onClick={() => void completeDelivery()}
+              >
+                {busy ? "Completing…" : "COMPLETE DELIVERY"}
+              </Button>
+            </>
+          )}
         </div>
       )}
     </div>

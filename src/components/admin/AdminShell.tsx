@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Gauge,
   LayoutDashboard,
+  LogOut,
   Map as MapIcon,
   Package,
   Percent,
@@ -16,14 +17,25 @@ import {
   ShieldCheck,
   Store,
   Tags,
+  User,
   Users,
   Wallet,
   Wrench,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { publicSettingsQuery } from "@/lib/queries";
 import { AdminCommandSearch } from "@/components/admin/CommandSearch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -59,15 +71,25 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/admin/ops?tab=offers", label: "Offers & Coupons", icon: Percent },
       { to: "/notifications", label: "Notifications", icon: Bell },
+      { to: "/admin/support", label: "Support", icon: ShieldCheck },
       { to: "/admin/ops?tab=settings", label: "Settings", icon: Settings },
       { to: "/admin/ops?tab=system", label: "System Users", icon: Wrench },
     ],
   },
 ];
 
+const DATE_RANGES = [
+  { id: "today", label: "Today" },
+  { id: "week", label: "Last 7 days" },
+  { id: "month", label: "Last 30 days" },
+  { id: "all", label: "All time" },
+] as const;
+
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<(typeof DATE_RANGES)[number]["id"]>("today");
+  const { user, profile, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const { data: settings = {} } = useQuery(publicSettingsQuery);
@@ -85,6 +107,32 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       return count ?? 0;
     },
   });
+
+  const { data: adminNotifications = [] } = useQuery({
+    queryKey: ["admin-shell-notifications", user?.id],
+    enabled: !!user,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("id,title,body,type,created_at,is_read")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(8);
+      return data ?? [];
+    },
+  });
+  const unreadCount = adminNotifications.filter((n) => !n.is_read).length;
+
+  const markAllRead = async () => {
+    if (!user) return;
+    await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id);
+  };
+
+  // Expose the selected date range globally for dashboard widgets
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("admin-date-range", { detail: dateRange }));
+  }, [dateRange]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -176,8 +224,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               ⌘K
             </kbd>
           </button>
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value as (typeof DATE_RANGES)[number]["id"])}
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            aria-label="Date range"
+          >
+            {DATE_RANGES.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+
           <span
-            className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
               dispatchPaused
                 ? "bg-destructive/10 text-destructive"
                 : "bg-primary-soft text-accent-foreground"
@@ -186,6 +247,81 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Gauge className="h-3.5 w-3.5" />
             {dispatchPaused ? "Dispatch Paused" : "All Systems Operational"}
           </span>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="relative rounded-md p-2 text-muted-foreground hover:bg-secondary"
+                aria-label="Notifications"
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">Notifications</p>
+                <button
+                  type="button"
+                  onClick={() => void markAllRead()}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Mark all read
+                </button>
+              </div>
+              <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto">
+                {adminNotifications.length === 0 && (
+                  <li className="py-4 text-center text-xs text-muted-foreground">
+                    No notifications.
+                  </li>
+                )}
+                {adminNotifications.map((n) => (
+                  <li
+                    key={n.id}
+                    className={`rounded-md p-2 text-sm ${n.is_read ? "opacity-60" : "bg-surface"}`}
+                  >
+                    <p className="font-medium">{n.title}</p>
+                    {n.body && <p className="text-xs text-muted-foreground">{n.body}</p>}
+                  </li>
+                ))}
+              </ul>
+            </PopoverContent>
+          </Popover>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-md p-1.5 hover:bg-secondary"
+                aria-label="Admin account"
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft font-display text-xs font-extrabold text-accent-foreground">
+                  {(profile?.full_name ?? "A").slice(0, 1).toUpperCase()}
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>
+                <p className="font-semibold">{profile?.full_name || "Admin"}</p>
+                <p className="text-xs font-normal text-muted-foreground">{user?.email}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/account">
+                  <User className="mr-2 h-4 w-4" /> My account
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => void signOut()}>
+                <LogOut className="mr-2 h-4 w-4" /> Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
         <AdminCommandSearch open={searchOpen} onOpenChange={setSearchOpen} />
         <main className="flex-1 p-4 lg:p-6">{children}</main>
