@@ -7,6 +7,7 @@ import { ETB, formatDate } from "@/lib/format";
 import { ORDER_STATUSES, STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
 import { ShopHoursEditor } from "@/components/ligo/ShopHoursEditor";
+import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
 import {
   BANNER_PLACEMENTS,
   CONTENT_FIELDS,
@@ -704,7 +705,7 @@ export function PayoutsAdmin() {
       const ids = [...new Set((data ?? []).map((p) => p.rider_id))];
       const [{ data: profiles }, { data: riderRows }] = ids.length
         ? await Promise.all([
-            supabase.from("profiles").select("id,full_name,phone").in("id", ids),
+            supabase.from("profiles").select("id,full_name,phone,avatar_url").in("id", ids),
             supabase
               .from("riders")
               .select("id,payout_method,payout_account,payout_account_name")
@@ -713,10 +714,12 @@ export function PayoutsAdmin() {
         : [{ data: [] }, { data: [] }];
       return (data ?? []).map((p) => {
         const riderRow = (riderRows ?? []).find((x) => x.id === p.rider_id);
+        const riderProfile = profiles?.find((x) => x.id === p.rider_id);
         return {
           ...p,
-          riderName: profiles?.find((x) => x.id === p.rider_id)?.full_name || "Rider",
-          riderPhone: profiles?.find((x) => x.id === p.rider_id)?.phone ?? "",
+          riderName: riderProfile?.full_name || "Rider",
+          riderPhone: riderProfile?.phone ?? "",
+          riderAvatar: riderProfile?.avatar_url ?? null,
           payoutDetails: riderRow
             ? `${riderRow.payout_method === "telebirr" ? "Telebirr" : "Bank"}: ${riderRow.payout_account ?? "—"} (${riderRow.payout_account_name ?? "—"})`
             : "",
@@ -782,15 +785,18 @@ export function PayoutsAdmin() {
           key={p.id}
           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-card"
         >
-          <div>
-            <p className="font-semibold">
-              {p.riderName} · {ETB(p.amount)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatDate(p.created_at)} · {p.riderPhone}
-              {p.payoutDetails ? ` · ${p.payoutDetails}` : ""}
-              {p.note ? ` · ${p.note}` : ""}
-            </p>
+          <div className="flex items-center gap-3">
+            <IdentityAvatar path={p.riderAvatar} name={p.riderName} className="h-9 w-9 text-xs" />
+            <div>
+              <p className="font-semibold">
+                {p.riderName} · {ETB(p.amount)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(p.created_at)} · {p.riderPhone}
+                {p.payoutDetails ? ` · ${p.payoutDetails}` : ""}
+                {p.note ? ` · ${p.note}` : ""}
+              </p>
+            </div>
           </div>
           {p.status === "pending" ? (
             <div className="flex gap-2">

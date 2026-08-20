@@ -14,7 +14,6 @@ import {
   PackageCheck,
   Pencil,
   Phone,
-  ShieldCheck,
   Star,
   Store,
   User,
@@ -25,7 +24,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { RiderGate } from "@/components/auth/guards";
 import { ETB, formatDate } from "@/lib/format";
-import { useMediaUrl, uploadImage } from "@/lib/media";
+import { uploadImage } from "@/lib/media";
+import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
+import { TierBadge } from "@/components/ligo/TierBadge";
 import { publicSettingsQuery } from "@/lib/queries";
 import { STATUS_LABEL, notify, type OrderStatus } from "@/lib/orders";
 import { sounds, loadAudioSettings, primeAudio } from "@/lib/audio";
@@ -113,6 +114,8 @@ const haversineKm = (aLat: number, aLng: number, bLat: number, bLng: number) => 
   return Math.round(6371 * 2 * Math.asin(Math.sqrt(h)) * 100) / 100;
 };
 
+const AVATAR_DIM = { lg: "h-12 w-12 text-base", xl: "h-20 w-20 text-2xl" } as const;
+
 function RiderAvatar({
   path,
   name,
@@ -122,40 +125,7 @@ function RiderAvatar({
   name: string | null | undefined;
   size: "lg" | "xl";
 }) {
-  const url = useMediaUrl(path);
-  const dim = size === "xl" ? "h-20 w-20 text-2xl" : "h-12 w-12 text-base";
-  if (url)
-    return (
-      <img
-        src={url}
-        alt={name || "Rider"}
-        className={`${dim} shrink-0 rounded-full border border-border object-cover`}
-      />
-    );
-  return (
-    <div
-      className={`flex ${dim} shrink-0 items-center justify-center rounded-full bg-primary-soft font-display font-extrabold text-accent-foreground`}
-    >
-      {(name ?? "R").slice(0, 1).toUpperCase()}
-    </div>
-  );
-}
-
-const TIER_META: Record<string, { label: string; className: string }> = {
-  standard: { label: "Standard", className: "bg-secondary text-secondary-foreground" },
-  silver: { label: "Silver tier", className: "bg-slate-200 text-slate-800" },
-  gold: { label: "Gold tier", className: "bg-warning/25 text-warning-foreground" },
-};
-
-function TierBadge({ tier }: { tier: string | null | undefined }) {
-  const meta = TIER_META[tier ?? "standard"] ?? TIER_META["standard"]!;
-  return (
-    <span
-      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.className}`}
-    >
-      <ShieldCheck className="h-3 w-3" /> {meta.label}
-    </span>
-  );
+  return <IdentityAvatar path={path} name={name} className={AVATAR_DIM[size]} />;
 }
 
 /** Compact trip summary pinned above the step-by-step delivery flow. */

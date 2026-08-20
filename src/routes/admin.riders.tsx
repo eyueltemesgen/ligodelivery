@@ -8,6 +8,8 @@ import { notify } from "@/lib/orders";
 import { useMediaUrl } from "@/lib/media";
 import { formatDate } from "@/lib/format";
 import { RiderDossier } from "@/components/admin/RiderDossier";
+import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
+import { TierBadge } from "@/components/ligo/TierBadge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -58,7 +60,9 @@ type RiderRow = {
   review_notes: string | null;
   commission_tier: string;
   created_at: string;
-  profile?: { full_name: string; phone: string | null; email: string | null } | undefined;
+  profile?:
+    | { full_name: string; phone: string | null; email: string | null; avatar_url: string | null }
+    | undefined;
 };
 
 const COMMISSION_TIERS = [
@@ -87,7 +91,10 @@ function RiderApprovalQueue() {
       const { data } = await supabase.from("riders").select("*");
       const ids = (data ?? []).map((r) => r.id);
       const { data: profiles } = ids.length
-        ? await supabase.from("profiles").select("id,full_name,phone,email").in("id", ids)
+        ? await supabase
+            .from("profiles")
+            .select("id,full_name,phone,email,avatar_url")
+            .in("id", ids)
         : { data: [] };
       return ((data ?? []) as RiderRow[])
         .map((r) => ({ ...r, profile: profiles?.find((p) => p.id === r.id) }))
@@ -162,21 +169,54 @@ function RiderApprovalQueue() {
             STATUS_BADGE[r.verification_status] ?? STATUS_BADGE["pending_verification"]!;
           return (
             <div key={r.id} className="rounded-xl border border-border bg-card p-4 shadow-card">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{r.profile?.full_name || "Rider"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {r.profile?.phone} · {r.profile?.email} · {formatDate(r.created_at)}
-                  </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <IdentityAvatar
+                      path={r.profile?.avatar_url}
+                      name={r.profile?.full_name}
+                      className="h-11 w-11 text-base"
+                    />
+                    <span
+                      aria-label={r.is_online ? "Online" : "Offline"}
+                      className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card ${
+                        r.is_online ? "bg-primary" : "bg-muted-foreground/40"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{r.profile?.full_name || "Rider"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {r.profile?.phone ?? "—"} · {r.profile?.email ?? "—"} · joined{" "}
+                      {formatDate(r.created_at)}
+                    </p>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span
+                        className={`inline-block h-2 w-2 rounded-full ${
+                          r.is_online ? "bg-primary" : "bg-muted-foreground/40"
+                        }`}
+                      />
+                      {r.is_online ? "Online now" : "Offline"} ·{" "}
+                      <span className="capitalize">{r.vehicle_type}</span>
+                    </p>
+                  </div>
                 </div>
-                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.className}`}>
-                  {badge.label}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.className}`}
+                  >
+                    {badge.label}
+                  </span>
+                  <DocTag ok={!!r.id_document_url} label="ID doc" />
+                  <DocTag ok={!!r.license_document_url} label="License" />
+                  <TierBadge tier={r.commission_tier} />
+                </div>
               </div>
 
               <div className="mt-3 grid gap-1 text-sm sm:grid-cols-2">
                 <p>
-                  <span className="text-muted-foreground">Vehicle:</span> {r.vehicle_type} ·{" "}
+                  <span className="text-muted-foreground">Vehicle:</span>{" "}
+                  <span className="capitalize">{r.vehicle_type}</span> ·{" "}
                   <span className="text-muted-foreground">National ID:</span> {r.national_id || "—"}
                 </p>
                 <p>
@@ -244,6 +284,13 @@ function RiderApprovalQueue() {
       <RiderDossier
         riderId={dossierTarget?.id ?? null}
         riderName={dossierTarget?.profile?.full_name || "Rider"}
+        identity={{
+          avatarUrl: dossierTarget?.profile?.avatar_url,
+          vehicleType: dossierTarget?.vehicle_type,
+          isOnline: dossierTarget?.is_online,
+          verificationStatus: dossierTarget?.verification_status,
+          commissionTier: dossierTarget?.commission_tier,
+        }}
         open={!!dossierTarget}
         onOpenChange={(open) => !open && setDossierTarget(null)}
       />
@@ -256,6 +303,19 @@ function RiderApprovalQueue() {
         }}
       />
     </div>
+  );
+}
+
+function DocTag({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <span
+      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+        ok ? "bg-primary-soft text-accent-foreground" : "bg-warning/20 text-warning-foreground"
+      }`}
+    >
+      {ok ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+      {label}
+    </span>
   );
 }
 
