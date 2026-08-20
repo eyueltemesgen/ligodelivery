@@ -83,7 +83,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Ligo Delivery — Bishoftu food & grocery delivery" },
-      { name: "description", content: "Order food, groceries and essentials from Bishoftu shops with fast local delivery." },
+      {
+        name: "description",
+        content:
+          "Order food, groceries and essentials from Bishoftu shops with fast local delivery.",
+      },
       { name: "author", content: "Ligo Delivery" },
       { property: "og:title", content: "Ligo Delivery — Bishoftu" },
       { property: "og:description", content: "Fast local delivery across Bishoftu." },

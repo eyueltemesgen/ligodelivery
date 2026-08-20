@@ -20,7 +20,9 @@ export function Logo({ compact = false }: { compact?: boolean }) {
         <span className="leading-none">
           <span className="block font-display text-xl font-extrabold tracking-tight">{short}</span>
           {c?.brand_tagline && (
-            <span className="block text-[11px] font-medium text-muted-foreground">{c.brand_tagline}</span>
+            <span className="block text-[11px] font-medium text-muted-foreground">
+              {c.brand_tagline}
+            </span>
           )}
         </span>
       )}

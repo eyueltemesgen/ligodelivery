@@ -50,7 +50,10 @@ export function StorageImage({
   if (!url) {
     return (
       <div
-        className={cn("flex items-center justify-center bg-surface text-muted-foreground", className)}
+        className={cn(
+          "flex items-center justify-center bg-surface text-muted-foreground",
+          className,
+        )}
         aria-label={alt}
       >
         {fallback ?? <span className="text-xs font-medium">{alt.slice(0, 18)}</span>}
@@ -64,9 +67,15 @@ const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_BYTES = 5 * 1024 * 1024;
 
 export async function uploadImage(file: File, folder: string, bucket = MEDIA_BUCKET) {
-  if (!ALLOWED.includes(file.type)) throw new Error("Only JPG, PNG, WEBP or GIF images are allowed.");
+  if (!ALLOWED.includes(file.type))
+    throw new Error("Only JPG, PNG, WEBP or GIF images are allowed.");
   if (file.size > MAX_BYTES) throw new Error("Image must be smaller than 5 MB.");
-  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const ext =
+    file.name
+      .split(".")
+      .pop()
+      ?.toLowerCase()
+      .replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(bucket).upload(path, file, {
     contentType: file.type,

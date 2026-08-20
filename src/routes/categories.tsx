@@ -8,7 +8,11 @@ export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
       { title: "Browse categories — Ligo Delivery Bishoftu" },
-      { name: "description", content: "Restaurants, groceries, pharmacy, bakery and more — browse every Ligo delivery category in Bishoftu." },
+      {
+        name: "description",
+        content:
+          "Restaurants, groceries, pharmacy, bakery and more — browse every Ligo delivery category in Bishoftu.",
+      },
       { property: "og:title", content: "Browse categories — Ligo Delivery" },
       { property: "og:description", content: "Every Ligo delivery category in Bishoftu." },
     ],

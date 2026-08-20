@@ -148,8 +148,8 @@ export const publicSettingsQuery = {
   queryKey: ["settings", "public"],
   queryFn: async () => {
     const { data } = await supabase.from("settings").select("key,value");
-    const map: Record<string, any> = {};
+    const map: Record<string, unknown> = {};
     for (const row of data ?? []) map[row.key] = row.value;
-    return map;
+    return map as Record<string, Record<string, unknown>>;
   },
 };

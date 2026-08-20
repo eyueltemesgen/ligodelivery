@@ -6,11 +6,15 @@ import { ShopCard } from "@/components/ligo/Cards";
 
 export const Route = createFileRoute("/shops/")({
   validateSearch: (s: Record<string, unknown>) =>
-    typeof s['category'] === "string" ? { category: s['category'] } : {},
+    typeof s["category"] === "string" ? { category: s["category"] } : {},
   head: () => ({
     meta: [
       { title: "Shops in Bishoftu — Ligo Delivery" },
-      { name: "description", content: "Order from restaurants, supermarkets, bakeries and pharmacies across Bishoftu with Ligo delivery." },
+      {
+        name: "description",
+        content:
+          "Order from restaurants, supermarkets, bakeries and pharmacies across Bishoftu with Ligo delivery.",
+      },
       { property: "og:title", content: "Shops in Bishoftu — Ligo Delivery" },
       { property: "og:description", content: "Browse local shops delivering across Bishoftu." },
     ],
@@ -28,7 +32,11 @@ function ShopsPage() {
       <BannerSlot placement="shops" className="px-0 py-4" />
       <h1 className="font-display text-3xl font-extrabold">Shops</h1>
       <div className="mt-5 flex flex-wrap gap-2">
-        <Link to="/shops" search={{}} className={`rounded-full border px-3 py-1.5 text-sm ${!category ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
+        <Link
+          to="/shops"
+          search={{}}
+          className={`rounded-full border px-3 py-1.5 text-sm ${!category ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+        >
           All
         </Link>
         {categories.map((c) => (
@@ -48,7 +56,9 @@ function ShopsPage() {
         <p className="mt-8 text-sm text-muted-foreground">No shops in this category yet.</p>
       ) : (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {shops.map((s) => <ShopCard key={s.id} shop={s} />)}
+          {shops.map((s) => (
+            <ShopCard key={s.id} shop={s} />
+          ))}
         </div>
       )}
     </div>

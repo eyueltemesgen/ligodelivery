@@ -45,7 +45,8 @@ export const DEFAULT_CONTENT = {
   how_step2_text: "Cash on delivery or upload your Telebirr/bank receipt.",
   how_step3_title: "3. Track",
   how_step3_text: "Follow your rider live until the order arrives.",
-  footer_tagline: "Ligo delivers food, groceries and essentials across Bishoftu — fast, local and reliable.",
+  footer_tagline:
+    "Ligo delivers food, groceries and essentials across Bishoftu — fast, local and reliable.",
   contact_phone: "+251942578001",
   contact_email: "hello@ligo.et",
   contact_address: "Bishoftu, Oromia",
@@ -87,7 +88,11 @@ export const CONTENT_FIELDS: { key: keyof SiteContent; label: string; long?: boo
 export const siteContentQuery = {
   queryKey: ["site-content"],
   queryFn: async (): Promise<SiteContent> => {
-    const { data } = await supabase.from("settings").select("value").eq("key", "site_content").maybeSingle();
+    const { data } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "site_content")
+      .maybeSingle();
     return { ...DEFAULT_CONTENT, ...((data?.value ?? {}) as Partial<SiteContent>) };
   },
   placeholderData: DEFAULT_CONTENT,

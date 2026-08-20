@@ -41,7 +41,12 @@ export default function OrderMap({
     } else {
       riderMarker.current.setLatLng([riderLat, riderLng]);
     }
-    map.fitBounds(L.latLngBounds([[lat, lng], [riderLat, riderLng]]).pad(0.3));
+    map.fitBounds(
+      L.latLngBounds([
+        [lat, lng],
+        [riderLat, riderLng],
+      ]).pad(0.3),
+    );
   }, [riderLat, riderLng, lat, lng]);
 
   return <div ref={ref} className="h-72 w-full rounded-xl border border-border" />;
