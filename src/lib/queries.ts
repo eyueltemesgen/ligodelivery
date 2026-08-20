@@ -91,12 +91,27 @@ export const shopQuery = (id: string) => ({
   },
 });
 
+/**
+ * Shop operating hours are auxiliary data: a missing shop_hours table or a
+ * failed query must never block checkout. Falls back to an empty schedule,
+ * which makes isShopOpenNow() use the shop-level opens_at/closes_at.
+ */
 export const shopHoursQuery = (shopId: string) => ({
   queryKey: ["shop-hours", shopId],
-  queryFn: async () =>
-    unwrap<ShopHoursRow[]>(
-      await supabase.from("shop_hours").select("*").eq("shop_id", shopId).order("day_of_week"),
-    ),
+  queryFn: async (): Promise<ShopHoursRow[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("shop_hours")
+        .select("*")
+        .eq("shop_id", shopId)
+        .order("day_of_week");
+      if (error) throw error;
+      return (data ?? []) as ShopHoursRow[];
+    } catch (err) {
+      console.warn("shop_hours unavailable, falling back to shop-level hours", err);
+      return [] as ShopHoursRow[];
+    }
+  },
 });
 
 export const shopProductsQuery = (shopId: string) => ({

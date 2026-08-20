@@ -64,12 +64,20 @@ function OrderDetail() {
     queryKey: ["rider", order?.rider_id],
     enabled: !!order?.rider_id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("riders")
-        .select("id,lat,lng,vehicle_type")
-        .eq("id", order!.rider_id!)
-        .maybeSingle();
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from("riders")
+          .select("id,lat,lng,vehicle_type")
+          .eq("id", order!.rider_id!)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        // Rider telemetry is a live-tracking nicety — the order timeline and
+        // payment flow must keep working even when it is unavailable.
+        console.warn("rider telemetry unavailable, tracking shows timeline only", err);
+        return null;
+      }
     },
   });
   const { data: settings = {} } = useQuery(publicSettingsQuery);
