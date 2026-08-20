@@ -303,7 +303,10 @@ export type Database = {
           payment_method: string;
           payment_status: string;
           accepted_at: string | null;
+          cancel_reason: string | null;
+          delivery_pin: string | null;
           dispatched_at: string | null;
+          refunded: boolean;
           rider_id: string | null;
           rider_payout: number;
           shop_id: string | null;
@@ -315,6 +318,7 @@ export type Database = {
         };
         Insert: {
           accepted_at?: string | null;
+          cancel_reason?: string | null;
           created_at?: string;
           customer_id: string;
           customer_name?: string | null;
@@ -322,6 +326,7 @@ export type Database = {
           delivery_address?: string | null;
           delivery_fee?: number;
           delivery_instructions?: string | null;
+          delivery_pin?: string | null;
           discount?: number;
           dispatched_at?: string | null;
           id?: string;
@@ -330,6 +335,7 @@ export type Database = {
           order_code?: string;
           payment_method?: string;
           payment_status?: string;
+          refunded?: boolean;
           rider_id?: string | null;
           rider_payout?: number;
           shop_id?: string | null;
@@ -341,6 +347,7 @@ export type Database = {
         };
         Update: {
           accepted_at?: string | null;
+          cancel_reason?: string | null;
           created_at?: string;
           customer_id?: string;
           customer_name?: string | null;
@@ -348,6 +355,7 @@ export type Database = {
           delivery_address?: string | null;
           delivery_fee?: number;
           delivery_instructions?: string | null;
+          delivery_pin?: string | null;
           discount?: number;
           dispatched_at?: string | null;
           id?: string;
@@ -356,6 +364,7 @@ export type Database = {
           order_code?: string;
           payment_method?: string;
           payment_status?: string;
+          refunded?: boolean;
           rider_id?: string | null;
           rider_payout?: number;
           shop_id?: string | null;
@@ -575,6 +584,8 @@ export type Database = {
           base_fare: number;
           bonus: number;
           created_at: string;
+          distance_incentive: number;
+          distance_km: number;
           id: string;
           order_id: string | null;
           payout_request_id: string | null;
@@ -587,6 +598,8 @@ export type Database = {
           base_fare?: number;
           bonus?: number;
           created_at?: string;
+          distance_incentive?: number;
+          distance_km?: number;
           id?: string;
           order_id?: string | null;
           payout_request_id?: string | null;
@@ -599,6 +612,8 @@ export type Database = {
           base_fare?: number;
           bonus?: number;
           created_at?: string;
+          distance_incentive?: number;
+          distance_km?: number;
           id?: string;
           order_id?: string | null;
           payout_request_id?: string | null;
@@ -711,6 +726,7 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          battery: number | null;
           id_document_url: string | null;
           is_approved: boolean;
           is_online: boolean;
@@ -724,6 +740,7 @@ export type Database = {
           payout_account_name: string | null;
           payout_method: string;
           review_notes: string | null;
+          speed: number | null;
           updated_at: string;
           vehicle_type: string;
           verification_status: string;
@@ -731,6 +748,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           id: string;
+          battery?: number | null;
           id_document_url?: string | null;
           is_approved?: boolean;
           is_online?: boolean;
@@ -744,6 +762,7 @@ export type Database = {
           payout_account_name?: string | null;
           payout_method?: string;
           review_notes?: string | null;
+          speed?: number | null;
           updated_at?: string;
           vehicle_type?: string;
           verification_status?: string;
@@ -751,6 +770,7 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
+          battery?: number | null;
           id_document_url?: string | null;
           is_approved?: boolean;
           is_online?: boolean;
@@ -764,6 +784,7 @@ export type Database = {
           payout_account_name?: string | null;
           payout_method?: string;
           review_notes?: string | null;
+          speed?: number | null;
           updated_at?: string;
           vehicle_type?: string;
           verification_status?: string;
@@ -944,6 +965,10 @@ export type Database = {
       };
       approve_and_dispatch: {
         Args: { _order_id: string };
+        Returns: Database["public"]["Tables"]["orders"]["Row"];
+      };
+      complete_delivery: {
+        Args: { _order_id: string; _pin: string };
         Returns: Database["public"]["Tables"]["orders"]["Row"];
       };
       has_role: {

@@ -224,6 +224,19 @@ function OrderDetail() {
           <p>
             {order.customer_name} · {order.customer_phone}
           </p>
+          {order.delivery_pin &&
+            !["delivered", "cancelled"].includes(order.status) &&
+            user?.id === order.customer_id && (
+              <p className="mt-2 rounded-lg bg-primary-soft p-2 text-center">
+                Delivery PIN:{" "}
+                <span className="font-display text-base font-extrabold tracking-widest text-accent-foreground">
+                  {order.delivery_pin}
+                </span>
+                <span className="block text-xs">
+                  Share this with your rider to confirm delivery
+                </span>
+              </p>
+            )}
         </div>
       </aside>
     </div>

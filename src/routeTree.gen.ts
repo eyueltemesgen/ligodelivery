@@ -23,6 +23,9 @@ import { Route as OffersRouteImport } from './routes/offers'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
+import { Route as AdminMapRouteImport } from './routes/admin.map'
+import { Route as AdminOpsRouteImport } from './routes/admin.ops'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
@@ -101,6 +104,21 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFinancialsRoute = AdminFinancialsRouteImport.update({
+  id: '/financials',
+  path: '/financials',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMapRoute = AdminMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOpsRoute = AdminOpsRouteImport.update({
+  id: '/ops',
+  path: '/ops',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRidersRoute = AdminRidersRouteImport.update({
   id: '/riders',
   path: '/riders',
@@ -151,6 +169,9 @@ export interface FileRoutesByFullPath {
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
+  '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/map': typeof AdminMapRoute
+  '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -173,6 +194,9 @@ export interface FileRoutesByTo {
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
+  '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/map': typeof AdminMapRoute
+  '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -197,6 +221,9 @@ export interface FileRoutesById {
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
+  '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/map': typeof AdminMapRoute
+  '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -222,6 +249,9 @@ export interface FileRouteTypes {
     | '/offers'
     | '/register'
     | '/search'
+    | '/admin/financials'
+    | '/admin/map'
+    | '/admin/ops'
     | '/admin/riders'
     | '/orders/$orderId'
     | '/rider/join'
@@ -244,6 +274,9 @@ export interface FileRouteTypes {
     | '/offers'
     | '/register'
     | '/search'
+    | '/admin/financials'
+    | '/admin/map'
+    | '/admin/ops'
     | '/admin/riders'
     | '/orders/$orderId'
     | '/rider/join'
@@ -267,6 +300,9 @@ export interface FileRouteTypes {
     | '/offers'
     | '/register'
     | '/search'
+    | '/admin/financials'
+    | '/admin/map'
+    | '/admin/ops'
     | '/admin/riders'
     | '/orders/$orderId'
     | '/rider/join'
@@ -399,6 +435,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/financials': {
+      id: '/admin/financials'
+      path: '/financials'
+      fullPath: '/admin/financials'
+      preLoaderRoute: typeof AdminFinancialsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/map': {
+      id: '/admin/map'
+      path: '/map'
+      fullPath: '/admin/map'
+      preLoaderRoute: typeof AdminMapRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ops': {
+      id: '/admin/ops'
+      path: '/ops'
+      fullPath: '/admin/ops'
+      preLoaderRoute: typeof AdminOpsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/riders': {
       id: '/admin/riders'
       path: '/riders'
@@ -452,11 +509,17 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminFinancialsRoute: typeof AdminFinancialsRoute
+  AdminMapRoute: typeof AdminMapRoute
+  AdminOpsRoute: typeof AdminOpsRoute
   AdminRidersRoute: typeof AdminRidersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminFinancialsRoute: AdminFinancialsRoute,
+  AdminMapRoute: AdminMapRoute,
+  AdminOpsRoute: AdminOpsRoute,
   AdminRidersRoute: AdminRidersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
