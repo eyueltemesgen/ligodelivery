@@ -4,9 +4,8 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
     mode: s["mode"] === "register" ? ("register" as const) : ("login" as const),
-    role: (["customer", "merchant", "rider"].includes(String(s["role"]))
-      ? s["role"]
-      : "customer") as "customer" | "merchant" | "rider",
+    role: (["customer", "rider"].includes(String(s["role"])) ? s["role"] : "customer") as
+      "customer" | "rider",
   }),
   component: AuthRedirect,
 });

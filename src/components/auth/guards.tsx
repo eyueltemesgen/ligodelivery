@@ -132,12 +132,10 @@ export function MerchantGate({ children }: { children: React.ReactNode }) {
       <Message
         icon={ShieldAlert}
         title="Merchants only"
-        body="Register your shop to manage menus, hours and availability."
+        body="Shop accounts are set up by the Ligo team — contact us to onboard your store."
         action={
-          <Button asChild>
-            <Link to="/register" search={{ role: "merchant" }}>
-              Register your shop
-            </Link>
+          <Button asChild variant="outline">
+            <Link to="/">Back to the app</Link>
           </Button>
         }
       />
@@ -148,14 +146,7 @@ export function MerchantGate({ children }: { children: React.ReactNode }) {
         <Message
           icon={Store}
           title="No shop linked to your account"
-          body="Complete your shop registration and our team will link it to your account."
-          action={
-            <Button asChild>
-              <Link to="/register" search={{ role: "merchant" }}>
-                Register a shop
-              </Link>
-            </Button>
-          }
+          body="The Ligo team will link your shop after onboarding. Contact us if you think this is a mistake."
         />
       );
     if (!shops.some((s) => s.is_active))
