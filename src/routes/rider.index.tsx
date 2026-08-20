@@ -4,14 +4,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Bike,
+  Camera,
   CheckCircle2,
   ClipboardList,
+  Clock,
   Home,
   MapPin,
   Navigation,
   PackageCheck,
+  Pencil,
   Phone,
+  ShieldCheck,
   Star,
+  Store,
   User,
   Wallet,
   X,
@@ -20,11 +25,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { RiderGate } from "@/components/auth/guards";
 import { ETB, formatDate } from "@/lib/format";
+import { useMediaUrl, uploadImage } from "@/lib/media";
 import { publicSettingsQuery } from "@/lib/queries";
 import { STATUS_LABEL, notify, type OrderStatus } from "@/lib/orders";
 import { sounds, loadAudioSettings, primeAudio } from "@/lib/audio";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/rider/")({
   head: () => ({
@@ -90,6 +112,118 @@ const haversineKm = (aLat: number, aLng: number, bLat: number, bLng: number) => 
     Math.sin(dLat / 2) ** 2 + Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLng / 2) ** 2;
   return Math.round(6371 * 2 * Math.asin(Math.sqrt(h)) * 100) / 100;
 };
+
+function RiderAvatar({
+  path,
+  name,
+  size,
+}: {
+  path: string | null | undefined;
+  name: string | null | undefined;
+  size: "lg" | "xl";
+}) {
+  const url = useMediaUrl(path);
+  const dim = size === "xl" ? "h-20 w-20 text-2xl" : "h-12 w-12 text-base";
+  if (url)
+    return (
+      <img
+        src={url}
+        alt={name || "Rider"}
+        className={`${dim} shrink-0 rounded-full border border-border object-cover`}
+      />
+    );
+  return (
+    <div
+      className={`flex ${dim} shrink-0 items-center justify-center rounded-full bg-primary-soft font-display font-extrabold text-accent-foreground`}
+    >
+      {(name ?? "R").slice(0, 1).toUpperCase()}
+    </div>
+  );
+}
+
+const TIER_META: Record<string, { label: string; className: string }> = {
+  standard: { label: "Standard", className: "bg-secondary text-secondary-foreground" },
+  silver: { label: "Silver tier", className: "bg-slate-200 text-slate-800" },
+  gold: { label: "Gold tier", className: "bg-warning/25 text-warning-foreground" },
+};
+
+function TierBadge({ tier }: { tier: string | null | undefined }) {
+  const meta = TIER_META[tier ?? "standard"] ?? TIER_META["standard"]!;
+  return (
+    <span
+      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.className}`}
+    >
+      <ShieldCheck className="h-3 w-3" /> {meta.label}
+    </span>
+  );
+}
+
+/** Compact trip summary pinned above the step-by-step delivery flow. */
+function ActiveTripCard({ order }: { order: OrderRow }) {
+  const { data: shop } = useQuery({
+    queryKey: ["trip-shop", order.shop_id],
+    enabled: !!order.shop_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("shops")
+        .select("name,address,lat,lng")
+        .eq("id", order.shop_id!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const distanceKm =
+    shop?.lat != null && shop?.lng != null && order.lat != null && order.lng != null
+      ? haversineKm(shop.lat, shop.lng, order.lat, order.lng)
+      : null;
+  const pay = Number(order.rider_payout) || Number(order.delivery_fee) + Number(order.tip ?? 0);
+
+  return (
+    <div className="rounded-2xl border border-primary/30 bg-card p-4 shadow-card">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Active trip
+        </p>
+        <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-bold text-accent-foreground">
+          {STATUS_LABEL[order.status as OrderStatus] ?? order.status}
+        </span>
+      </div>
+      <div className="mt-3 space-y-2.5">
+        <p className="flex items-start gap-2 text-sm">
+          <Store className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <span>
+            <span className="block text-xs text-muted-foreground">Pickup</span>
+            <span className="font-semibold">{shop?.name ?? "Merchant"}</span>
+          </span>
+        </p>
+        <p className="flex items-start gap-2 text-sm">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <span>
+            <span className="block text-xs text-muted-foreground">Drop-off</span>
+            <span className="font-semibold">{order.delivery_address ?? "—"}</span>
+          </span>
+        </p>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3 text-center">
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Distance</p>
+          <p className="font-display text-sm font-bold">
+            {distanceKm != null ? `${distanceKm} km` : "—"}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Est. pay</p>
+          <p className="font-display text-sm font-bold text-primary">{ETB(pay)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Order</p>
+          <p className="font-display text-sm font-bold">{order.order_code}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function RiderPortal() {
   const { user, isRider, profile } = useAuth();
@@ -379,23 +513,44 @@ function RiderPortal() {
   const todayTotal = todayEarnings.reduce((s, e) => s + Number(e.amount), 0);
   const todayKm = todayEarnings.reduce((s, e) => s + Number(e.distance_km), 0);
 
+  const deliveredCount = orders.filter((o) => o.status === "delivered").length;
+
   return (
     <div className="mx-auto min-h-screen max-w-lg bg-surface pb-24">
-      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-extrabold text-accent-foreground">
-          {(profile?.full_name ?? "R").slice(0, 1).toUpperCase()}
+      <header className="sticky top-0 z-20 border-b border-border bg-card px-4 pb-3 pt-3">
+        <div className="flex items-center gap-3">
+          <RiderAvatar path={profile?.avatar_url} name={profile?.full_name} size="lg" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-display text-base font-bold">
+              {profile?.full_name || "Rider"}
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <span className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
+                <Star className="h-3 w-3 fill-warning text-warning" />
+                {avgRating != null ? `${avgRating.toFixed(2)} (${ratings.length})` : "New rider"}
+              </span>
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-secondary-foreground">
+                {deliveredCount} trip{deliveredCount === 1 ? "" : "s"}
+              </span>
+              {rider?.vehicle_type && (
+                <span className="flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold capitalize text-secondary-foreground">
+                  <Bike className="h-3 w-3" /> {rider.vehicle_type}
+                </span>
+              )}
+              <TierBadge tier={rider?.commission_tier} />
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span
+              className={`text-[10px] font-extrabold tracking-wide ${
+                rider?.is_online ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              {rider?.is_online ? "ONLINE" : "OFFLINE"}
+            </span>
+            <Switch checked={!!rider?.is_online} onCheckedChange={(v) => void toggleOnline(v)} />
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-sm font-bold">{profile?.full_name || "Rider"}</p>
-          <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Star className="h-3 w-3 fill-warning text-warning" />
-            {avgRating != null ? `${avgRating} ★` : "No ratings yet"}
-          </p>
-        </div>
-        <label className="flex items-center gap-2 text-xs font-semibold">
-          {rider?.is_online ? "ONLINE" : "OFFLINE"}
-          <Switch checked={!!rider?.is_online} onCheckedChange={(v) => void toggleOnline(v)} />
-        </label>
       </header>
 
       {dispatchPaused && (
@@ -407,7 +562,10 @@ function RiderPortal() {
       <main className="px-4 py-4">
         {tab === "home" &&
           (activeOrder ? (
-            <DeliveryFlow order={activeOrder} onStatus={(s) => void setStatus(activeOrder, s)} />
+            <div className="space-y-4">
+              <ActiveTripCard order={activeOrder} />
+              <DeliveryFlow order={activeOrder} onStatus={(s) => void setStatus(activeOrder, s)} />
+            </div>
           ) : (
             <IdleDashboard
               online={!!rider?.is_online}
@@ -424,6 +582,7 @@ function RiderPortal() {
             active={activeOrders}
             online={!!rider?.is_online}
             onAccept={(o) => setOffer(o)}
+            onOpenTrip={() => setTab("home")}
           />
         )}
         {tab === "earnings" && (
@@ -857,11 +1016,13 @@ function OrdersTab({
   active,
   online,
   onAccept,
+  onOpenTrip,
 }: {
   available: OrderRow[];
   active: OrderRow[];
   online: boolean;
   onAccept: (o: OrderRow) => void;
+  onOpenTrip: () => void;
 }) {
   return (
     <div className="space-y-4">
@@ -869,13 +1030,18 @@ function OrdersTab({
         <div>
           <h2 className="font-display text-base font-bold">Active delivery</h2>
           {active.map((o) => (
-            <p
+            <div
               key={o.id}
-              className="mt-2 rounded-xl border border-primary/40 bg-primary-soft p-3 text-sm"
+              className="mt-2 rounded-xl border border-primary/40 bg-primary-soft p-3"
             >
-              <span className="font-semibold">{o.order_code}</span> —{" "}
-              {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
-            </p>
+              <p className="text-sm">
+                <span className="font-semibold">{o.order_code}</span> —{" "}
+                {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
+              </p>
+              <Button size="sm" className="mt-2 w-full" onClick={onOpenTrip}>
+                Resume trip
+              </Button>
+            </div>
           ))}
         </div>
       )}
@@ -924,6 +1090,14 @@ const startOfWeek = (d: Date) => {
   return new Date(day.getTime() - ((day.getDay() + 6) % 7) * 86400000);
 };
 
+const WALLET_PERIODS = [
+  { key: "day", label: "Today" },
+  { key: "week", label: "This week" },
+  { key: "month", label: "This month" },
+] as const;
+
+type WalletPeriod = (typeof WALLET_PERIODS)[number]["key"];
+
 function EarningsTab({
   earnings,
   payouts,
@@ -941,6 +1115,7 @@ function EarningsTab({
 }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const [period, setPeriod] = useState<WalletPeriod>("day");
 
   const now = new Date();
   const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -953,11 +1128,14 @@ function EarningsTab({
   ) => list.reduce((s, e) => s + Number(e[key]), 0);
   const inRange = (from: Date) => earnings.filter((e) => new Date(e.created_at) >= from);
 
-  const periods = [
-    { label: "Today", list: inRange(dayStart) },
-    { label: "This week", list: inRange(weekStart) },
-    { label: "This month", list: inRange(monthStart) },
-  ];
+  const periodStart = period === "day" ? dayStart : period === "week" ? weekStart : monthStart;
+  const inPeriod = inRange(periodStart);
+  const periodTrips = inPeriod.length;
+  const tips = sum(inPeriod, "tip");
+  const bonus = sum(inPeriod, "bonus");
+  // Commission = slice of base fare + distance incentive retained by the platform
+  const commission = sum(inPeriod, "base_fare") + sum(inPeriod, "distance_incentive");
+  const netPay = sum(inPeriod, "amount") - tips - bonus;
 
   const pendingPayout = earnings
     .filter((e) => e.status === "pending")
@@ -990,17 +1168,49 @@ function EarningsTab({
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-2">
-        {periods.map((p) => (
-          <div
-            key={p.label}
-            className="rounded-xl border border-border bg-card p-3 text-center shadow-card"
-          >
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{p.label}</p>
-            <p className="mt-1 font-display text-sm font-extrabold">{ETB(sum(p.list, "amount"))}</p>
-            <p className="text-[10px] text-muted-foreground">{p.list.length} trips</p>
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+        <div className="grid grid-cols-3 gap-1 rounded-xl bg-surface p-1">
+          {WALLET_PERIODS.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => setPeriod(p.key)}
+              className={`rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                period === p.key
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 text-center">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Net pay</p>
+          <p className="mt-1 font-display text-3xl font-extrabold">{ETB(netPay)}</p>
+          <p className="text-xs text-muted-foreground">
+            {periodTrips} trip{periodTrips === 1 ? "" : "s"} ·{" "}
+            {WALLET_PERIODS.find((p) => p.key === period)!.label.toLowerCase()}
+          </p>
+        </div>
+        <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
+          <div className="rounded-xl bg-surface p-3">
+            <dt className="text-xs text-muted-foreground">Tips</dt>
+            <dd className="mt-0.5 font-display font-bold">{ETB(tips)}</dd>
           </div>
-        ))}
+          <div className="rounded-xl bg-surface p-3">
+            <dt className="text-xs text-muted-foreground">Bonuses</dt>
+            <dd className="mt-0.5 font-display font-bold">{ETB(bonus)}</dd>
+          </div>
+          <div className="rounded-xl bg-surface p-3">
+            <dt className="text-xs text-muted-foreground">Base + distance</dt>
+            <dd className="mt-0.5 font-display font-bold">{ETB(commission)}</dd>
+          </div>
+          <div className="rounded-xl bg-surface p-3">
+            <dt className="text-xs text-muted-foreground">Gross total</dt>
+            <dd className="mt-0.5 font-display font-bold">{ETB(sum(inPeriod, "amount"))}</dd>
+          </div>
+        </dl>
       </div>
 
       <div className="flex items-center justify-between rounded-2xl bg-primary p-5 text-primary-foreground">
@@ -1079,6 +1289,8 @@ function EarningsTab({
 
 function ProfileTab({ rider, name }: { rider: Record<string, unknown> | null; name: string }) {
   const { profile } = useAuth();
+  const [editOpen, setEditOpen] = useState(false);
+
   if (!rider) return <p className="text-sm text-muted-foreground">Loading…</p>;
   const rows: [string, string][] = [
     ["Name", name],
@@ -1098,15 +1310,19 @@ function ProfileTab({ rider, name }: { rider: Record<string, unknown> | null; na
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft font-display text-lg font-extrabold text-accent-foreground">
-            {(name || "R").slice(0, 1).toUpperCase()}
-          </div>
-          <div>
-            <p className="font-display text-lg font-bold">{name}</p>
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+          <RiderAvatar path={profile?.avatar_url} name={name} size="xl" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-display text-lg font-bold">{name}</p>
+            <p className="flex items-center gap-1 text-xs capitalize text-muted-foreground">
               <Bike className="h-3.5 w-3.5" /> {String(rider["vehicle_type"] ?? "")} rider
             </p>
+            <div className="mt-1.5">
+              <TierBadge tier={rider["commission_tier"] as string | null} />
+            </div>
           </div>
+          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+            <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit
+          </Button>
         </div>
       </div>
       <dl className="divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
@@ -1117,6 +1333,207 @@ function ProfileTab({ rider, name }: { rider: Record<string, unknown> | null; na
           </div>
         ))}
       </dl>
+
+      <EditProfileDrawer rider={rider} open={editOpen} onOpenChange={setEditOpen} />
     </div>
+  );
+}
+
+const VEHICLE_TYPES = [
+  { value: "motorcycle", label: "Motorcycle" },
+  { value: "bicycle", label: "Bicycle" },
+  { value: "car", label: "Car" },
+];
+
+function EditProfileDrawer({
+  rider,
+  open,
+  onOpenChange,
+}: {
+  rider: Record<string, unknown>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { user, profile, refresh } = useAuth();
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [vehicleType, setVehicleType] = useState("motorcycle");
+  const [payoutMethod, setPayoutMethod] = useState("telebirr");
+  const [payoutAccount, setPayoutAccount] = useState("");
+  const [payoutAccountName, setPayoutAccountName] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setFullName(profile?.full_name ?? "");
+    setPhone(profile?.phone ?? "");
+    setVehicleType(String(rider["vehicle_type"] ?? "motorcycle"));
+    setPayoutMethod(String(rider["payout_method"] ?? "telebirr"));
+    setPayoutAccount(String(rider["payout_account"] ?? ""));
+    setPayoutAccountName(String(rider["payout_account_name"] ?? ""));
+  }, [open, profile, rider]);
+
+  const uploadAvatar = async (file: File) => {
+    if (!user) return;
+    try {
+      const path = await uploadImage(file, "avatars");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: path })
+        .eq("id", user.id);
+      if (error) throw error;
+      await refresh();
+      toast.success("Profile photo updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not upload photo");
+    }
+  };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!fullName.trim()) {
+      toast.error("Your name is required");
+      return;
+    }
+    setBusy(true);
+    const [{ error: profileError }, { error: riderError }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .update({ full_name: fullName.trim(), phone: phone.trim() || null })
+        .eq("id", user.id),
+      supabase
+        .from("riders")
+        .update({
+          vehicle_type: vehicleType,
+          payout_method: payoutMethod,
+          payout_account: payoutAccount.trim() || null,
+          payout_account_name: payoutAccountName.trim() || null,
+        })
+        .eq("id", user.id),
+    ]);
+    setBusy(false);
+    if (profileError || riderError) {
+      toast.error(profileError?.message ?? riderError?.message ?? "Could not save profile");
+      return;
+    }
+    await refresh();
+    void qc.invalidateQueries({ queryKey: ["rider-me"] });
+    toast.success("Profile updated");
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto rounded-t-3xl">
+        <SheetHeader>
+          <SheetTitle>Edit profile</SheetTitle>
+          <SheetDescription>Update your details, vehicle and payout preferences.</SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-4 flex items-center gap-3">
+          <RiderAvatar path={profile?.avatar_url} name={profile?.full_name} size="lg" />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void uploadAvatar(file);
+              e.target.value = "";
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileRef.current?.click()}
+          >
+            <Camera className="mr-1.5 h-4 w-4" /> Change photo
+          </Button>
+        </div>
+
+        <form onSubmit={save} className="mt-5 space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="full-name">Full name</Label>
+            <Input
+              id="full-name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Your full name"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="phone">Phone number</Label>
+            <Input
+              id="phone"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+251 …"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Vehicle type</Label>
+            <Select value={vehicleType} onValueChange={setVehicleType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {VEHICLE_TYPES.map((v) => (
+                  <SelectItem key={v.value} value={v.value}>
+                    {v.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-border p-4">
+            <p className="text-sm font-semibold">Payout preferences</p>
+            <div className="space-y-1.5">
+              <Label>Payout method</Label>
+              <Select value={payoutMethod} onValueChange={setPayoutMethod}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="telebirr">Telebirr</SelectItem>
+                  <SelectItem value="bank_account">CBE / bank account</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="payout-account">
+                {payoutMethod === "telebirr" ? "Telebirr number" : "Account number"}
+              </Label>
+              <Input
+                id="payout-account"
+                value={payoutAccount}
+                onChange={(e) => setPayoutAccount(e.target.value)}
+                placeholder={payoutMethod === "telebirr" ? "09…" : "1000…"}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="payout-account-name">Account holder name</Label>
+              <Input
+                id="payout-account-name"
+                value={payoutAccountName}
+                onChange={(e) => setPayoutAccountName(e.target.value)}
+                placeholder="Name on the account"
+              />
+            </div>
+          </div>
+
+          <Button type="submit" size="lg" className="h-12 w-full font-extrabold" disabled={busy}>
+            {busy ? "Saving…" : "Save changes"}
+          </Button>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }
