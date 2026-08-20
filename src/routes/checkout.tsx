@@ -5,7 +5,9 @@ import { Lock } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { ETB } from "@/lib/format";
+import { supabaseErrorMessage } from "@/lib/supa-error";
 import { closedReason, isShopOpenNow } from "@/lib/hours";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,44 +112,45 @@ function CheckoutPage() {
     }
     setBusy(true);
     try {
+      // Only schema-defined order columns — no client-only or undefined keys.
+      const payload: TablesInsert<"orders"> = {
+        customer_id: user.id,
+        shop_id: shopId ?? null,
+        status: "pending_payment",
+        payment_method: method,
+        delivery_pin: String(Math.floor(1000 + Math.random() * 9000)),
+        payment_status: "unpaid",
+        subtotal,
+        delivery_fee: deliveryFee,
+        total,
+        customer_name: name.trim() || null,
+        customer_phone: phone.trim() || null,
+        delivery_address: address.trim() || null,
+        delivery_instructions: instructions.trim() || null,
+      };
       const { data: order, error } = await supabase
         .from("orders")
-        .insert({
-          customer_id: user.id,
-          shop_id: shopId,
-          status: "pending_payment",
-          payment_method: method,
-          delivery_pin: String(Math.floor(1000 + Math.random() * 9000)),
-          payment_status: "unpaid",
-          subtotal,
-          delivery_fee: deliveryFee,
-          total,
-          customer_name: name,
-          customer_phone: phone,
-          delivery_address: address,
-          delivery_instructions: instructions,
-        })
+        .insert(payload)
         .select("id")
         .single();
       if (error) throw error;
 
-      const { error: itemsError } = await supabase.from("order_items").insert(
-        items.map((i) => ({
-          order_id: order.id,
-          product_id: i.productId,
-          product_name: i.name,
-          image_url: i.imagePath,
-          unit_price: i.unitPrice,
-          quantity: i.quantity,
-        })),
-      );
+      const itemsPayload: TablesInsert<"order_items">[] = items.map((i) => ({
+        order_id: order.id,
+        product_id: i.productId,
+        product_name: i.name,
+        image_url: i.imagePath ?? null,
+        unit_price: i.unitPrice,
+        quantity: i.quantity,
+      }));
+      const { error: itemsError } = await supabase.from("order_items").insert(itemsPayload);
       if (itemsError) throw itemsError;
 
       clear();
       toast.success("Order placed — awaiting payment verification");
       await navigate({ to: "/orders/$orderId", params: { orderId: order.id } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not place order");
+      toast.error(supabaseErrorMessage(err));
     } finally {
       setBusy(false);
     }

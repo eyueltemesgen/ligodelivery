@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
 import { ORDER_STATUSES, STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
+import { isMissingRpc, supabaseErrorMessage } from "@/lib/supa-error";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
 import { ShopHoursEditor } from "@/components/ligo/ShopHoursEditor";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
@@ -518,7 +519,7 @@ function OrdersAdmin() {
   const approveDispatch = async (id: string, customerId: string, code: string) => {
     const { error } = await dispatchOrder(id);
     if (error) {
-      toast.error(error.message);
+      toast.error(supabaseErrorMessage(error));
       return;
     }
     await notify(
@@ -631,8 +632,22 @@ function OrdersAdmin() {
 
 const DISPATCHABLE_STATUSES = ["pending_payment", "pending", "payment_verification"];
 
-function dispatchOrder(orderId: string) {
-  return supabase.rpc("approve_and_dispatch", { _order_id: orderId });
+/**
+ * Dispatch via the approve_and_dispatch RPC; if the function is missing from
+ * the live project (404/PGRST202), fall back to a direct status update so
+ * admin dispatch never blocks.
+ */
+async function dispatchOrder(orderId: string) {
+  const { error } = await supabase.rpc("approve_and_dispatch", { _order_id: orderId });
+  if (!error) return { error: null };
+  if (isMissingRpc(error)) {
+    const { error: fallbackError } = await supabase
+      .from("orders")
+      .update({ status: "dispatched", dispatched_at: new Date().toISOString(), rider_id: null })
+      .eq("id", orderId);
+    return { error: fallbackError };
+  }
+  return { error };
 }
 
 function PaymentsAdmin() {
@@ -665,7 +680,7 @@ function PaymentsAdmin() {
     if (status === "approved") {
       const { error: dispatchError } = await dispatchOrder(orderId);
       if (dispatchError) {
-        toast.error(dispatchError.message);
+        toast.error(supabaseErrorMessage(dispatchError));
         return;
       }
     }
