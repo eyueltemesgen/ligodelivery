@@ -18,11 +18,14 @@ import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
 
 const METHODS = [
   { id: "cash", label: "Cash on delivery" },
+  { id: "mobile_money", label: "Mobile Money" },
   { id: "telebirr", label: "Telebirr" },
   { id: "cbe", label: "CBE Birr" },
   { id: "chapa", label: "Chapa" },
   { id: "boa", label: "Bank of Abyssinia" },
 ];
+
+const TIP_PRESETS = [0, 10, 20, 30, 50];
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -46,11 +49,13 @@ function CheckoutPage() {
   const { data: shop } = useQuery({ ...shopQuery(shopId ?? ""), enabled: !!shopId });
   const { data: hours = [] } = useQuery({ ...shopHoursQuery(shopId ?? ""), enabled: !!shopId });
   const { data: publicSettings } = useQuery(publicSettingsQuery);
+  const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState(profile?.full_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [address, setAddress] = useState("");
   const [instructions, setInstructions] = useState("");
   const [method, setMethod] = useState("cash");
+  const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const platform = (publicSettings?.["platform"] ?? {}) as {
@@ -61,7 +66,7 @@ function CheckoutPage() {
   const deliveryFee = Math.round(
     Number(shop?.delivery_fee ?? platform.base_delivery_fee ?? 50) * surge,
   );
-  const total = subtotal + deliveryFee;
+  const total = subtotal + deliveryFee + tip;
   const shopLoaded = !shopId || !!shop;
   const shopOpen = shopLoaded ? isShopOpenNow(shop ?? {}, hours) : false;
 
@@ -122,6 +127,7 @@ function CheckoutPage() {
         payment_status: "unpaid",
         subtotal,
         delivery_fee: deliveryFee,
+        tip,
         total,
         customer_name: name.trim() || null,
         customer_phone: phone.trim() || null,
@@ -156,66 +162,119 @@ function CheckoutPage() {
     }
   };
 
+  const canProceed = name.trim() && phone.trim() && address.trim();
+
   return (
     <form
       onSubmit={placeOrder}
       className="container-ligo grid gap-8 py-10 lg:grid-cols-[1fr_340px]"
     >
       <div className="space-y-6">
-        <h1 className="font-display text-3xl font-extrabold">Checkout</h1>
-        <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold">Delivery details</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="n">Full name</Label>
-              <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="p">Phone</Label>
-              <Input id="p" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="a">Delivery address in Bishoftu</Label>
-            <Input
-              id="a"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-              placeholder="Kebele, landmark, house no."
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="i">Instructions (optional)</Label>
-            <Textarea
-              id="i"
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-            />
-          </div>
-        </section>
+        <div>
+          <h1 className="font-display text-3xl font-extrabold">Checkout</h1>
+          <ol className="mt-3 flex items-center gap-2 text-xs font-semibold">
+            <li className={step === 1 ? "text-primary" : "text-muted-foreground"}>
+              1 · Delivery details
+            </li>
+            <li className="text-muted-foreground">→</li>
+            <li className={step === 2 ? "text-primary" : "text-muted-foreground"}>
+              2 · Payment & tip
+            </li>
+          </ol>
+        </div>
 
-        <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold">Payment method</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {METHODS.map((m) => (
-              <button
-                type="button"
-                key={m.id}
-                onClick={() => setMethod(m.id)}
-                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium ${method === m.id ? "border-primary bg-primary-soft" : "border-border"}`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-          {method !== "cash" && (
-            <p className="text-xs text-muted-foreground">
-              After placing the order you'll see the account details and can upload your payment
-              receipt for verification.
-            </p>
-          )}
-        </section>
+        {step === 1 && (
+          <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
+            <h2 className="font-display text-lg font-bold">Delivery details</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="n">Full name</Label>
+                <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="p">Phone</Label>
+                <Input id="p" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="a">Delivery address in Bishoftu</Label>
+              <Input
+                id="a"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+                placeholder="Kebele, landmark, house no."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="i">Rider delivery notes (optional)</Label>
+              <Textarea
+                id="i"
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="e.g. call when you arrive, gate code…"
+              />
+            </div>
+            <Button
+              type="button"
+              className="w-full"
+              disabled={!canProceed}
+              onClick={() => setStep(2)}
+            >
+              Continue to payment
+            </Button>
+          </section>
+        )}
+
+        {step === 2 && (
+          <>
+            <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+              <h2 className="font-display text-lg font-bold">Payment method</h2>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {METHODS.map((m) => (
+                  <button
+                    type="button"
+                    key={m.id}
+                    onClick={() => setMethod(m.id)}
+                    className={`rounded-lg border px-4 py-3 text-left text-sm font-medium ${method === m.id ? "border-primary bg-primary-soft" : "border-border"}`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              {method !== "cash" && (
+                <p className="text-xs text-muted-foreground">
+                  After placing the order you'll see the account details and can upload your payment
+                  receipt for verification.
+                </p>
+              )}
+            </section>
+
+            <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+              <h2 className="font-display text-lg font-bold">Rider tip</h2>
+              <div className="flex flex-wrap gap-2">
+                {TIP_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTip(t)}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                      tip === t
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border hover:bg-secondary"
+                    }`}
+                  >
+                    {t === 0 ? "No tip" : ETB(t)}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <Button type="button" variant="ghost" onClick={() => setStep(1)}>
+              ← Back to delivery details
+            </Button>
+          </>
+        )}
       </div>
 
       <aside className="h-fit space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
@@ -240,14 +299,22 @@ function CheckoutPage() {
             <span>Delivery{surge > 1 ? ` (surge ×${surge})` : ""}</span>
             <span>{ETB(deliveryFee)}</span>
           </div>
+          {tip > 0 && (
+            <div className="flex justify-between">
+              <span>Rider tip</span>
+              <span>{ETB(tip)}</span>
+            </div>
+          )}
           <div className="mt-2 flex justify-between font-display text-base font-bold">
             <span>Total</span>
             <span>{ETB(total)}</span>
           </div>
         </div>
-        <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? "Placing order…" : "Place order"}
-        </Button>
+        {step === 2 && (
+          <Button type="submit" className="w-full" disabled={busy}>
+            {busy ? "Placing order…" : "Place order"}
+          </Button>
+        )}
       </aside>
     </form>
   );

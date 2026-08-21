@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Bike, Clock, ShieldCheck, Search } from "lucide-react";
 import heroImage from "@/assets/hero-rider.jpg";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
+import {
+  FALLBACK_CATEGORIES,
+  FALLBACK_PRODUCTS,
+  FALLBACK_SHOPS,
+  withFallback,
+} from "@/lib/fallbacks";
 import { bannersQuery, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
@@ -33,9 +39,18 @@ export const Route = createFileRoute("/")({
 function Home() {
   const navigate = useNavigate();
   const [quickCategory, setQuickCategory] = useState<string | null>(null);
-  const { data: categories = [] } = useQuery(categoriesQuery);
-  const { data: shops = [] } = useQuery(shopsQuery());
-  const { data: popular = [] } = useQuery(featuredProductsQuery);
+  const { data: categories = [] } = useQuery({
+    ...categoriesQuery,
+    queryFn: () => withFallback(() => categoriesQuery.queryFn(), FALLBACK_CATEGORIES),
+  });
+  const { data: shops = [] } = useQuery({
+    ...shopsQuery(),
+    queryFn: () => withFallback(() => shopsQuery().queryFn(), FALLBACK_SHOPS),
+  });
+  const { data: popular = [] } = useQuery({
+    ...featuredProductsQuery,
+    queryFn: () => withFallback(() => featuredProductsQuery.queryFn(), FALLBACK_PRODUCTS),
+  });
   const { data: offers = [] } = useQuery(offersQuery);
   const { data: c } = useQuery(siteContentQuery);
   const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));

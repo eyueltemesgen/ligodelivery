@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/lib/cart";
+import { CartDrawer, CartTrigger } from "@/components/ligo/CartDrawer";
 import { useQuery } from "@tanstack/react-query";
 import { siteContentQuery } from "@/lib/content";
 import {
@@ -39,11 +40,11 @@ const NAV = [
 
 export function SiteHeader() {
   const { user, profile, isAdmin, isRider, isMerchant, signOut } = useAuth();
-  const { count } = useCart();
   const { data: content } = useQuery(siteContentQuery);
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,14 +81,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <Link to="/cart" className="relative rounded-md p-2 hover:bg-secondary" aria-label="Cart">
-            <ShoppingCart className="h-5 w-5" />
-            {count > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
-                {count}
-              </span>
-            )}
-          </Link>
+          <CartTrigger onOpen={() => setCartOpen(true)} />
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -204,6 +198,7 @@ export function SiteHeader() {
           </div>
         </nav>
       )}
+      <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
     </header>
   );
 }

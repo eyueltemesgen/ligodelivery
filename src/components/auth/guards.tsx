@@ -32,7 +32,7 @@ function Message({
   );
 }
 
-/** Requires any authenticated user; everyone else is sent to /login. */
+/** Requires any authenticated user; everyone else is sent to the customer sign-in. */
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <Loading />;
@@ -44,7 +44,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 export function AdminGate({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
   if (loading) return <Loading />;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/admin/login" />;
   if (!isAdmin)
     return (
       <Message
@@ -74,7 +74,7 @@ export function RiderGate({ children }: { children: React.ReactNode }) {
   });
 
   if (loading || (isRider && isLoading)) return <Loading />;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/rider/login" />;
   if (!isRider)
     return (
       <Message
@@ -126,7 +126,7 @@ export function MerchantGate({ children }: { children: React.ReactNode }) {
   });
 
   if (loading || isLoading) return <Loading />;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/merchant/login" />;
   if (!isMerchant && !isAdmin)
     return (
       <Message

@@ -423,6 +423,18 @@ function RiderPortal() {
   if (!user || !isRider)
     return <div className="py-16 text-center text-muted-foreground">Loading…</div>;
 
+  const setVehicle = async (vehicle: string) => {
+    const { error } = await supabase
+      .from("riders")
+      .update({ vehicle_type: vehicle })
+      .eq("id", user.id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success(`Vehicle set to ${vehicle}`);
+      void qc.invalidateQueries({ queryKey: ["rider-me"] });
+    }
+  };
+
   const toggleOnline = async (value: boolean) => {
     await supabase.from("riders").update({ is_online: value }).eq("id", user.id);
     void qc.invalidateQueries({ queryKey: ["rider-me"] });
@@ -502,11 +514,21 @@ function RiderPortal() {
               <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-secondary-foreground">
                 {deliveredCount} trip{deliveredCount === 1 ? "" : "s"}
               </span>
-              {rider?.vehicle_type && (
-                <span className="flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold capitalize text-secondary-foreground">
-                  <Bike className="h-3 w-3" /> {rider.vehicle_type}
-                </span>
-              )}
+              {rider?.vehicle_type ? (
+                <Select value={rider.vehicle_type} onValueChange={(v) => void setVehicle(v)}>
+                  <SelectTrigger className="h-6 w-auto gap-1 rounded-full border-none bg-secondary px-2 py-0.5 text-[11px] font-semibold capitalize text-secondary-foreground">
+                    <Bike className="h-3 w-3" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bicycle">Bicycle</SelectItem>
+                    <SelectItem value="motorbike">Motorbike</SelectItem>
+                    <SelectItem value="scooter">Scooter</SelectItem>
+                    <SelectItem value="car">Car</SelectItem>
+                    <SelectItem value="foot">On foot</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : null}
               <TierBadge tier={rider?.commission_tier} />
             </div>
           </div>

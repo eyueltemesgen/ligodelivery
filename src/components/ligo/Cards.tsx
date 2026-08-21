@@ -61,15 +61,23 @@ export function ProductCard({
   product,
   shopName,
   orderingDisabled,
+  onSelect,
 }: {
   product: Product;
   shopName?: string;
   orderingDisabled?: boolean;
+  onSelect?: (product: Product) => void;
 }) {
   const { add } = useCart();
   const price = discounted(Number(product.price), product.discount_percent);
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div
+      className="flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-pop"
+      onClick={() => !orderingDisabled && onSelect?.(product)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && !orderingDisabled && onSelect?.(product)}
+    >
       <StorageImage
         path={product.image_url}
         alt={product.name}
@@ -90,7 +98,12 @@ export function ProductCard({
           <Button
             size="sm"
             disabled={!product.in_stock || orderingDisabled}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSelect) {
+                onSelect(product);
+                return;
+              }
               add({
                 productId: product.id,
                 shopId: product.shop_id,

@@ -24,13 +24,16 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
+import { Route as MerchantLoginRouteImport } from './routes/merchant.login'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
 import { Route as RiderIndexRouteImport } from './routes/rider.index'
 import { Route as RiderJoinRouteImport } from './routes/rider.join'
+import { Route as RiderLoginRouteImport } from './routes/rider.login'
 import { Route as ShopsIndexRouteImport } from './routes/shops.index'
 import { Route as ShopsShopIdRouteImport } from './routes/shops.$shopId'
 
@@ -109,6 +112,11 @@ const AdminFinancialsRoute = AdminFinancialsRouteImport.update({
   path: '/financials',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMapRoute = AdminMapRouteImport.update({
   id: '/map',
   path: '/map',
@@ -123,6 +131,11 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
   id: '/riders',
   path: '/riders',
   getParentRoute: () => AdminRoute,
+} as any)
+const MerchantLoginRoute = MerchantLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => MerchantRoute,
 } as any)
 const OrdersIndexRoute = OrdersIndexRouteImport.update({
   id: '/orders/',
@@ -142,6 +155,11 @@ const RiderIndexRoute = RiderIndexRouteImport.update({
 const RiderJoinRoute = RiderJoinRouteImport.update({
   id: '/rider/join',
   path: '/rider/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RiderLoginRoute = RiderLoginRouteImport.update({
+  id: '/rider/login',
+  path: '/rider/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopsIndexRoute = ShopsIndexRouteImport.update({
@@ -164,17 +182,20 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/login': typeof LoginRoute
-  '/merchant': typeof MerchantRoute
+  '/merchant': typeof MerchantRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
+  '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
@@ -189,17 +210,20 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/login': typeof LoginRoute
-  '/merchant': typeof MerchantRoute
+  '/merchant': typeof MerchantRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
+  '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin': typeof AdminIndexRoute
   '/orders': typeof OrdersIndexRoute
@@ -216,17 +240,20 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/login': typeof LoginRoute
-  '/merchant': typeof MerchantRoute
+  '/merchant': typeof MerchantRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
+  '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
@@ -250,11 +277,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/admin/financials'
+    | '/admin/login'
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
+    | '/rider/login'
     | '/shops/$shopId'
     | '/admin/'
     | '/orders/'
@@ -275,11 +305,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/admin/financials'
+    | '/admin/login'
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
+    | '/rider/login'
     | '/shops/$shopId'
     | '/admin'
     | '/orders'
@@ -301,11 +334,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/admin/financials'
+    | '/admin/login'
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
+    | '/rider/login'
     | '/shops/$shopId'
     | '/admin/'
     | '/orders/'
@@ -322,13 +358,14 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   LoginRoute: typeof LoginRoute
-  MerchantRoute: typeof MerchantRoute
+  MerchantRoute: typeof MerchantRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   OffersRoute: typeof OffersRoute
   RegisterRoute: typeof RegisterRoute
   SearchRoute: typeof SearchRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   RiderJoinRoute: typeof RiderJoinRoute
+  RiderLoginRoute: typeof RiderLoginRoute
   ShopsShopIdRoute: typeof ShopsShopIdRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   RiderIndexRoute: typeof RiderIndexRoute
@@ -442,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinancialsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/map': {
       id: '/admin/map'
       path: '/map'
@@ -462,6 +506,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/riders'
       preLoaderRoute: typeof AdminRidersRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/merchant/login': {
+      id: '/merchant/login'
+      path: '/login'
+      fullPath: '/merchant/login'
+      preLoaderRoute: typeof MerchantLoginRouteImport
+      parentRoute: typeof MerchantRoute
     }
     '/orders/': {
       id: '/orders/'
@@ -491,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderJoinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rider/login': {
+      id: '/rider/login'
+      path: '/rider/login'
+      fullPath: '/rider/login'
+      preLoaderRoute: typeof RiderLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shops/': {
       id: '/shops/'
       path: '/shops'
@@ -510,6 +568,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminFinancialsRoute: typeof AdminFinancialsRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   AdminMapRoute: typeof AdminMapRoute
   AdminOpsRoute: typeof AdminOpsRoute
   AdminRidersRoute: typeof AdminRidersRoute
@@ -518,6 +577,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminFinancialsRoute: AdminFinancialsRoute,
+  AdminLoginRoute: AdminLoginRoute,
   AdminMapRoute: AdminMapRoute,
   AdminOpsRoute: AdminOpsRoute,
   AdminRidersRoute: AdminRidersRoute,
@@ -525,6 +585,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface MerchantRouteChildren {
+  MerchantLoginRoute: typeof MerchantLoginRoute
+}
+
+const MerchantRouteChildren: MerchantRouteChildren = {
+  MerchantLoginRoute: MerchantLoginRoute,
+}
+
+const MerchantRouteWithChildren = MerchantRoute._addFileChildren(
+  MerchantRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -535,13 +607,14 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   LoginRoute: LoginRoute,
-  MerchantRoute: MerchantRoute,
+  MerchantRoute: MerchantRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   OffersRoute: OffersRoute,
   RegisterRoute: RegisterRoute,
   SearchRoute: SearchRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   RiderJoinRoute: RiderJoinRoute,
+  RiderLoginRoute: RiderLoginRoute,
   ShopsShopIdRoute: ShopsShopIdRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   RiderIndexRoute: RiderIndexRoute,
