@@ -28,7 +28,6 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as MerchantLoginRouteImport } from './routes/merchant.login'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
@@ -133,11 +132,6 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
   path: '/riders',
   getParentRoute: () => AdminRoute,
 } as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
-} as any)
 const MerchantLoginRoute = MerchantLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -183,7 +177,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -198,7 +192,6 @@ export interface FileRoutesByFullPath {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -212,7 +205,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -227,7 +220,6 @@ export interface FileRoutesByTo {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -243,7 +235,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -258,7 +250,6 @@ export interface FileRoutesById {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -290,7 +281,6 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
-    | '/auth/callback'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
@@ -319,7 +309,6 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
-    | '/auth/callback'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
@@ -349,7 +338,6 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
-    | '/auth/callback'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
@@ -365,7 +353,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRouteWithChildren
-  AuthRoute: typeof AuthRouteWithChildren
+  AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -519,13 +507,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRidersRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/merchant/login': {
       id: '/merchant/login'
       path: '/login'
@@ -605,16 +586,6 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface AuthRouteChildren {
-  AuthCallbackRoute: typeof AuthCallbackRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthCallbackRoute: AuthCallbackRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 interface MerchantRouteChildren {
   MerchantLoginRoute: typeof MerchantLoginRoute
 }
@@ -631,7 +602,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRouteWithChildren,
-  AuthRoute: AuthRouteWithChildren,
+  AuthRoute: AuthRoute,
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,

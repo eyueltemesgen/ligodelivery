@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Bike, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadImage } from "@/lib/media";
-import { GoogleAuthButton, SocialDivider } from "@/components/auth/GoogleButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -400,13 +399,6 @@ function RegisterPage() {
                 {busy ? "Please wait…" : "Send verification code"}
               </Button>
             </div>
-
-            {role === "customer" && (
-              <>
-                <SocialDivider />
-                <GoogleAuthButton label="Sign up with Google" />
-              </>
-            )}
           </div>
         )}
 

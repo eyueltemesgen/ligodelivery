@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Role } from "@/hooks/useAuth";
 import { portalPathFor } from "@/components/auth/guards";
-import { GoogleAuthButton, SocialDivider } from "@/components/auth/GoogleButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export type PortalKind = "customer" | "merchant" | "rider" | "admin";
 
@@ -36,13 +36,6 @@ const COPY: Record<PortalKind, PortalCopy | { title: string; subtitle: string; r
   },
 };
 
-const HOME: Record<PortalKind, string> = {
-  customer: "/",
-  merchant: "/merchant",
-  rider: "/rider",
-  admin: "/admin",
-};
-
 function PortalShell({ kind, children }: { kind: PortalKind; children: ReactNode }) {
   const copy = COPY[kind];
   return (
@@ -59,10 +52,9 @@ function PortalShell({ kind, children }: { kind: PortalKind; children: ReactNode
 export function AuthPortal({ kind }: { kind: PortalKind }) {
   const navigate = useNavigate();
   const { user, roles, loading } = useAuth();
-  const [channel, setChannel] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // Once authenticated, push users straight to their role home without a refresh.
@@ -70,48 +62,105 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
     if (!loading && user) void navigate({ to: portalPathFor(roles) });
   }, [user, roles, loading, navigate]);
 
-  const signIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const trimmedEmail = email.trim();
+
+  const sendCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!trimmedEmail.includes("@")) {
+      toast.error("Enter a valid email address");
+      return;
+    }
     setBusy(true);
     try {
-      const { error } =
-        channel === "email"
-          ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
-          : await supabase.auth.signInWithPassword({ phone: phone.trim(), password });
+      const { error } = await supabase.auth.signInWithOtp({
+        email: trimmedEmail,
+        options: {
+          shouldCreateUser: true, // automatically creates new accounts
+        },
+      });
       if (error) throw error;
-      toast.success("Signed in");
+      setCodeSent(true);
+      setOtp("");
+      toast.success("Verification code sent — check your inbox.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Invalid credentials");
+      toast.error(err instanceof Error ? err.message : "Could not send code");
     } finally {
       setBusy(false);
     }
   };
 
-  const canSubmit =
-    password.length >= 6 &&
-    (channel === "email" ? email.trim().includes("@") : phone.trim().length >= 9);
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length < 6) {
+      toast.error("Enter the 6-digit code");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: trimmedEmail,
+        token: otp,
+        type: "email",
+      });
+      if (error) throw error;
+      if (!data.user) throw new Error("Verification failed — please try again");
+      toast.success("Signed in");
+      // The useEffect above navigates to the correct portal once the session lands.
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invalid code");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const showRegister = kind !== "admin";
 
   return (
     <PortalShell kind={kind}>
-      <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm">
-        {(["email", "phone"] as const).map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setChannel(c)}
-            className={`rounded-md py-1.5 font-medium capitalize transition-colors ${
-              channel === c ? "bg-background text-foreground shadow" : "text-muted-foreground"
-            }`}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
-
-      <form onSubmit={signIn} className="mt-4 space-y-4">
-        {channel === "email" ? (
+      {codeSent ? (
+        <form onSubmit={verifyCode} className="mt-5 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Enter the 6-digit code we sent to{" "}
+            <span className="font-medium text-foreground">{trimmedEmail}</span>.
+          </p>
+          <div className="flex justify-center">
+            <InputOTP maxLength={6} value={otp} onChange={(v) => setOtp(v)}>
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+          <Button type="submit" className="w-full" disabled={busy || otp.length < 6}>
+            {busy ? "Verifying…" : "Verify & sign in"}
+          </Button>
+          <div className="flex items-center justify-between text-xs">
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setCodeSent(false);
+                setOtp("");
+              }}
+            >
+              Use a different email
+            </button>
+            <button
+              type="button"
+              className="font-medium text-primary disabled:opacity-50"
+              disabled={busy}
+              onClick={() => void sendCode()}
+            >
+              Resend code
+            </button>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={sendCode} className="mt-5 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -121,39 +170,17 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              placeholder="you@example.com"
             />
           </div>
-        ) : (
-          <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone number</Label>
-            <Input
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+2519…"
-              required
-            />
-          </div>
-        )}
-        <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            autoComplete="current-password"
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={busy || !canSubmit}>
-          {busy ? "Signing in…" : "Sign in"}
-        </Button>
-      </form>
-
-      <SocialDivider />
-      <GoogleAuthButton />
+          <Button type="submit" className="w-full" disabled={busy || !trimmedEmail.includes("@")}>
+            {busy ? "Sending…" : "Email me a sign-in code"}
+          </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            No password needed — we email you a one-time code.
+          </p>
+        </form>
+      )}
 
       {showRegister && (
         <p className="mt-5 text-center text-sm text-muted-foreground">
