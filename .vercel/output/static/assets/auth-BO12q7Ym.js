@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-B-hcVAMW.js";import{t}from"./useNavigate-BJHsLbso.js";import{d as n}from"./index-BBiYpL4w.js";var r=e();function i(){let{mode:e,role:i}=n.useSearch();return e===`register`?(0,r.jsx)(t,{to:`/register`,search:{role:i},replace:!0}):(0,r.jsx)(t,{to:`/login`,replace:!0})}export{i as component};
