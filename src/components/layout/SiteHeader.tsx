@@ -15,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -52,7 +53,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-md dark:bg-zinc-950/80">
       <div className="container-ligo flex h-16 items-center gap-4">
         <Logo />
         <div className="hidden items-center gap-1 text-sm text-muted-foreground lg:flex">
@@ -81,6 +82,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           <CartTrigger onOpen={() => setCartOpen(true)} />
           {user ? (
             <DropdownMenu>
@@ -155,7 +157,7 @@ export function SiteHeader() {
             </div>
           )}
           <button
-            className="rounded-md p-2 hover:bg-secondary lg:hidden"
+            className="rounded-md p-2 transition-all duration-100 hover:bg-secondary active:scale-95 lg:hidden"
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
           >

@@ -8,7 +8,9 @@ import { StorageImage } from "@/lib/media";
 import { ETB } from "@/lib/format";
 import { closedReason, isShopOpenNow } from "@/lib/hours";
 import { ProductCard } from "@/components/ligo/Cards";
+import { ProductGridSkeleton } from "@/components/ligo/Skeletons";
 import { ProductModal } from "@/components/ligo/ProductModal";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/shops/$shopId")({
   head: () => ({
@@ -64,7 +66,21 @@ function ShopDetail() {
   }, [shop, sections]);
 
   if (isLoading)
-    return <div className="container-ligo py-16 text-muted-foreground">Loading shop…</div>;
+    return (
+      <div>
+        <Skeleton className="h-56 w-full rounded-none" />
+        <div className="container-ligo -mt-10 pb-12">
+          <div className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-pop">
+            <Skeleton className="h-7 w-1/3" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+          <div className="mt-8">
+            <ProductGridSkeleton count={6} />
+          </div>
+        </div>
+      </div>
+    );
   if (!shop) return <div className="container-ligo py-16">Shop not found.</div>;
 
   const open = isShopOpenNow(shop, hours);

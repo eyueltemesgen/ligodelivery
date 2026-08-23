@@ -13,6 +13,11 @@ import {
 import { bannersQuery, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
+import {
+  CategoryCardSkeleton,
+  ProductGridSkeleton,
+  ShopGridSkeleton,
+} from "@/components/ligo/Skeletons";
 import { ActiveOrderBanner } from "@/components/ligo/ActiveOrderBanner";
 import { StorageImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
@@ -39,15 +44,15 @@ export const Route = createFileRoute("/")({
 function Home() {
   const navigate = useNavigate();
   const [quickCategory, setQuickCategory] = useState<string | null>(null);
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     ...categoriesQuery,
     queryFn: () => withFallback(() => categoriesQuery.queryFn(), FALLBACK_CATEGORIES),
   });
-  const { data: shops = [] } = useQuery({
+  const { data: shops = [], isLoading: shopsLoading } = useQuery({
     ...shopsQuery(),
     queryFn: () => withFallback(() => shopsQuery().queryFn(), FALLBACK_SHOPS),
   });
-  const { data: popular = [] } = useQuery({
+  const { data: popular = [], isLoading: popularLoading } = useQuery({
     ...featuredProductsQuery,
     queryFn: () => withFallback(() => featuredProductsQuery.queryFn(), FALLBACK_PRODUCTS),
   });
@@ -126,19 +131,31 @@ function Home() {
             See all
           </Link>
         </div>
-        <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-          {categories.slice(0, 12).map((c) => (
-            <Link
-              key={c.id}
-              to="/shops"
-              search={{ category: c.id }}
-              className="overflow-hidden rounded-xl border border-border bg-card text-center shadow-card hover:shadow-pop"
-            >
-              <StorageImage path={c.image_url} alt={c.name} className="h-20 w-full object-cover" />
-              <p className="p-2 text-xs font-semibold">{c.name}</p>
-            </Link>
-          ))}
-        </div>
+        {categoriesLoading ? (
+          <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            {Array.from({ length: 6 }, (_, i) => (
+              <CategoryCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            {categories.slice(0, 12).map((c) => (
+              <Link
+                key={c.id}
+                to="/shops"
+                search={{ category: c.id }}
+                className="overflow-hidden rounded-xl border border-border bg-card text-center shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+              >
+                <StorageImage
+                  path={c.image_url}
+                  alt={c.name}
+                  className="h-20 w-full object-cover"
+                />
+                <p className="p-2 text-xs font-semibold">{c.name}</p>
+              </Link>
+            ))}
+          </div>
+        )}
 
         <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Quick category filter">
           <button
@@ -192,7 +209,7 @@ function Home() {
             {offers.slice(0, 3).map((o) => (
               <div
                 key={o.id}
-                className="overflow-hidden rounded-xl border border-border bg-card shadow-card"
+                className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
               >
                 <StorageImage
                   path={o.image_url}
@@ -216,27 +233,42 @@ function Home() {
             See all
           </Link>
         </div>
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredShops.map((s) => (
-            <ShopCard key={s.id} shop={s} />
-          ))}
-        </div>
-        {featuredShops.length === 0 && (
+        {shopsLoading ? (
+          <div className="mt-5">
+            <ShopGridSkeleton />
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredShops.map((s) => (
+              <ShopCard key={s.id} shop={s} />
+            ))}
+          </div>
+        )}
+        {!shopsLoading && featuredShops.length === 0 && (
           <p className="mt-5 text-sm text-muted-foreground">
             No shops in this category yet — try another one.
           </p>
         )}
       </section>
 
-      {popular.length > 0 && (
+      {popularLoading ? (
         <section className="container-ligo pb-12">
           <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
-          <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {popular.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+          <div className="mt-5">
+            <ProductGridSkeleton count={4} />
           </div>
         </section>
+      ) : (
+        popular.length > 0 && (
+          <section className="container-ligo pb-12">
+            <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
+            <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {popular.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )
       )}
 
       <BannerSlot placement="home_bottom" />

@@ -1,7 +1,16 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Bike, ShoppingBag } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bike,
+  CheckCircle2,
+  KeyRound,
+  Mail,
+  ShoppingBag,
+  Smartphone,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
@@ -10,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 type SignupRole = "customer" | "rider";
-type Channel = "email" | "phone";
 
 const ROLE_CARDS: {
   id: SignupRole;
@@ -44,6 +52,18 @@ const PAYOUT_METHODS = [
   { value: "bank_account", label: "Bank account" },
 ];
 
+/** Friendly messages for the common Supabase OTP failure modes. */
+function otpErrorMessage(err: unknown, fallback: string): string {
+  const msg = err instanceof Error ? err.message : "";
+  const lower = msg.toLowerCase();
+  if (lower.includes("rate limit") || lower.includes("too many requests"))
+    return "Too many attempts — please wait a minute before requesting another code.";
+  if (lower.includes("expired")) return "That code has expired — request a new one.";
+  if (lower.includes("invalid") || lower.includes("token"))
+    return "Invalid code — double-check the 6 digits and try again.";
+  return msg || fallback;
+}
+
 export const Route = createFileRoute("/register")({
   validateSearch: (s: Record<string, unknown>) => {
     const out: { role?: SignupRole } = {};
@@ -70,12 +90,10 @@ function RegisterPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [role, setRole] = useState<SignupRole>(initialRole ?? "customer");
 
-  // Account credentials
-  const [channel, setChannel] = useState<Channel>("email");
+  // Account details (passwordless — email OTP only)
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
   // Rider onboarding
   const [vehicle, setVehicle] = useState("motorbike");
   const [nationalId, setNationalId] = useState("");
@@ -87,15 +105,21 @@ function RegisterPage() {
 
   const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
 
-  const identifier = channel === "email" ? email.trim() : phone.trim();
+  // 60-second resend cooldown.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
+  const trimmedEmail = email.trim();
 
   const step2Valid = (() => {
-    if (fullName.trim().length < 2 || password.length < 6) return false;
-    if (channel === "email") {
-      if (!email.trim().includes("@")) return false;
-    } else if (phone.trim().length < 9) return false;
+    if (fullName.trim().length < 2 || !trimmedEmail.includes("@")) return false;
     if (role === "rider") {
+      if (phone.trim().length < 9) return false;
       if (nationalId.trim().length < 3 || !licenseDoc) return false;
       if (payoutAccount.trim().length < 5 || payoutName.trim().length < 2) return false;
     }
@@ -133,25 +157,29 @@ function RegisterPage() {
     await navigate({ to: role === "rider" ? "/rider" : "/" });
   };
 
-  // Signup issues a 6-digit code (no email confirmation links)
-  const submitRegistration = async () => {
+  // Passwordless signup: email a 6-digit code and create the account on verify.
+  const sendCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!step2Valid) {
+      toast.error("Please complete the required fields");
+      return;
+    }
     setBusy(true);
     try {
-      const meta = { full_name: fullName.trim(), phone: phone.trim(), role };
-      const { data, error } =
-        channel === "email"
-          ? await supabase.auth.signUp({ email: email.trim(), password, options: { data: meta } })
-          : await supabase.auth.signUp({ phone: phone.trim(), password, options: { data: meta } });
+      const { error } = await supabase.auth.signInWithOtp({
+        email: trimmedEmail,
+        options: {
+          shouldCreateUser: true,
+          data: { full_name: fullName.trim(), phone: phone.trim(), role },
+        },
+      });
       if (error) throw error;
-      if (data.session && data.user) {
-        // Email/phone confirmation disabled in the project — account is live
-        await finishSignup(data.user.id);
-        return;
-      }
-      toast.success(`Verification code sent to your ${channel}.`);
+      toast.success("Verification code sent — check your inbox.");
+      setOtp("");
+      setResendIn(60);
       setStep(3);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create account");
+      toast.error(otpErrorMessage(err, "Could not send code"));
     } finally {
       setBusy(false);
     }
@@ -165,15 +193,16 @@ function RegisterPage() {
     }
     setBusy(true);
     try {
-      const { data, error } =
-        channel === "email"
-          ? await supabase.auth.verifyOtp({ email: email.trim(), token: otp, type: "signup" })
-          : await supabase.auth.verifyOtp({ phone: phone.trim(), token: otp, type: "sms" });
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: trimmedEmail,
+        token: otp,
+        type: "email",
+      });
       if (error) throw error;
       if (!data.user) throw new Error("Verification failed — please try again");
       await finishSignup(data.user.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Invalid code");
+      toast.error(otpErrorMessage(err, "Invalid code"));
     } finally {
       setBusy(false);
     }
@@ -203,7 +232,7 @@ function RegisterPage() {
                 key={r.id}
                 type="button"
                 onClick={() => setRole(r.id)}
-                className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
+                className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all duration-100 active:scale-95 ${
                   role === r.id
                     ? "border-primary bg-primary-soft"
                     : "border-border hover:border-primary/50"
@@ -224,21 +253,6 @@ function RegisterPage() {
 
         {step === 2 && (
           <div className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm">
-              {(["email", "phone"] as Channel[]).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setChannel(c)}
-                  className={`rounded-md py-1.5 font-medium capitalize transition-colors ${
-                    channel === c ? "bg-background text-foreground shadow" : "text-muted-foreground"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="name">Full name</Label>
               <Input
@@ -248,54 +262,37 @@ function RegisterPage() {
                 required
               />
             </div>
-            {channel === "email" ? (
-              <>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone-opt">Phone {role === "rider" ? "" : "(optional)"}</Label>
-                  <Input
-                    id="phone-opt"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+2519…"
-                    required={role === "rider"}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="space-y-1.5">
-                <Label htmlFor="reg-phone">Phone number</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  id="reg-phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+2519…"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="pl-9"
                   required
                 />
               </div>
-            )}
-            <div className="space-y-1.5">
-              <Label htmlFor="reg-password">Password</Label>
-              <Input
-                id="reg-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
               <p className="text-xs text-muted-foreground">
-                We'll send a 6-digit verification code to your {channel}.
+                No password needed — we'll email you a 6-digit verification code.
               </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">Phone {role === "rider" ? "" : "(optional)"}</Label>
+              <div className="relative">
+                <Smartphone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+2519…"
+                  className="pl-9"
+                  required={role === "rider"}
+                />
+              </div>
             </div>
 
             {role === "rider" && (
@@ -305,7 +302,7 @@ function RegisterPage() {
                   <Label htmlFor="v">Vehicle type</Label>
                   <select
                     id="v"
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    className="h-9 w-full rounded-md border border-input bg-input px-2 text-sm"
                     value={vehicle}
                     onChange={(e) => setVehicle(e.target.value)}
                   >
@@ -349,7 +346,7 @@ function RegisterPage() {
                   <Label htmlFor="pm">Payout method</Label>
                   <select
                     id="pm"
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    className="h-9 w-full rounded-md border border-input bg-input px-2 text-sm"
                     value={payoutMethod}
                     onChange={(e) => setPayoutMethod(e.target.value)}
                   >
@@ -394,9 +391,9 @@ function RegisterPage() {
               <Button
                 className="flex-1"
                 disabled={busy || !step2Valid}
-                onClick={() => void submitRegistration()}
+                onClick={() => void sendCode()}
               >
-                {busy ? "Please wait…" : "Send verification code"}
+                {busy ? "Sending code…" : "Send verification code"}
               </Button>
             </div>
           </div>
@@ -404,11 +401,15 @@ function RegisterPage() {
 
         {step === 3 && (
           <form onSubmit={verifyOtp} className="mt-6 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="otp">Enter verification code</Label>
-              <p className="text-xs text-muted-foreground">
-                We sent a 6-digit code to {identifier}.
+            <div className="flex items-start gap-3 rounded-lg border border-border bg-surface p-3">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <p className="text-sm text-muted-foreground">
+                Enter the 6-digit code we sent to{" "}
+                <span className="font-medium text-foreground">{trimmedEmail}</span>.
               </p>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <KeyRound className="h-4 w-4 text-muted-foreground" />
               <InputOTP maxLength={6} value={otp} onChange={(v) => setOtp(v)}>
                 <InputOTPGroup>
                   <InputOTPSlot index={0} />
@@ -423,16 +424,27 @@ function RegisterPage() {
             <Button type="submit" className="w-full" disabled={busy || otp.length < 6}>
               {busy ? "Verifying…" : "Verify & create account"}
             </Button>
-            <button
-              type="button"
-              className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                setStep(2);
-                setOtp("");
-              }}
-            >
-              Use a different {channel}
-            </button>
+            <div className="flex items-center justify-between text-xs">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => {
+                  setStep(2);
+                  setOtp("");
+                  setResendIn(0);
+                }}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Change email
+              </button>
+              <button
+                type="button"
+                className="font-medium text-primary disabled:opacity-50"
+                disabled={busy || resendIn > 0}
+                onClick={() => void sendCode()}
+              >
+                {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
+              </button>
+            </div>
           </form>
         )}
 

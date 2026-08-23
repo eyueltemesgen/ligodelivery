@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { Minus, Plus, ShoppingBag, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { ETB } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
@@ -120,10 +120,10 @@ export function CartTrigger({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="relative rounded-md p-2 hover:bg-secondary"
+      className="relative rounded-md p-2 transition-all duration-100 hover:bg-secondary active:scale-95"
       aria-label="Open cart"
     >
-      <ShoppingCart className="h-5 w-5" />
+      <ShoppingBag className="h-5 w-5" />
       {count > 0 && (
         <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
           {count}

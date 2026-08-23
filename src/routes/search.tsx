@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { searchQuery } from "@/lib/queries";
 import { ProductCard, ShopCard } from "@/components/ligo/Cards";
+import { ProductGridSkeleton, ShopGridSkeleton } from "@/components/ligo/Skeletons";
 
 export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>) => ({ q: typeof s["q"] === "string" ? s["q"] : "" }),
@@ -29,7 +30,12 @@ function SearchPage() {
       <p className="mt-2 text-muted-foreground">
         {q ? `Showing matches for “${q}”` : "Type something in the search bar above."}
       </p>
-      {isLoading && <p className="mt-6 text-sm text-muted-foreground">Searching…</p>}
+      {isLoading && q && (
+        <div className="mt-8 space-y-10">
+          <ShopGridSkeleton count={3} />
+          <ProductGridSkeleton count={4} />
+        </div>
+      )}
       {data && (
         <>
           {data.shops.length > 0 && (

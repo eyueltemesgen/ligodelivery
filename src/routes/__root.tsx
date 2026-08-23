@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { CartProvider } from "@/lib/cart";
 import { SiteHeader, MobileTabBar } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -102,6 +103,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+    scripts: [
+      {
+        // Apply the persisted theme before first paint to avoid a flash.
+        children: `(function(){try{var t=localStorage.getItem("ligo-theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.classList.toggle("dark",t==="dark");}catch(e){}})();`,
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -129,18 +136,20 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <CartProvider>
-          <div className="flex min-h-screen flex-col pb-16 md:pb-0">
-            <SiteHeader />
-            <main className="flex-1">
-              {/* Required: nested routes render here. */}
-              <Outlet />
-            </main>
-            <SiteFooter />
-            <MobileTabBar />
-          </div>
-          <Toaster position="top-center" richColors />
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <div className="flex min-h-screen flex-col pb-16 md:pb-0">
+              <SiteHeader />
+              <main className="flex-1">
+                {/* Required: nested routes render here. */}
+                <Outlet />
+              </main>
+              <SiteFooter />
+              <MobileTabBar />
+            </div>
+            <Toaster position="top-center" richColors />
+          </CartProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { ArrowLeft, CheckCircle2, KeyRound, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Role } from "@/hooks/useAuth";
 import { portalPathFor } from "@/components/auth/guards";
@@ -49,6 +50,18 @@ function PortalShell({ kind, children }: { kind: PortalKind; children: ReactNode
   );
 }
 
+/** Friendly messages for the common Supabase OTP failure modes. */
+function otpErrorMessage(err: unknown, fallback: string): string {
+  const msg = err instanceof Error ? err.message : "";
+  const lower = msg.toLowerCase();
+  if (lower.includes("rate limit") || lower.includes("too many requests"))
+    return "Too many attempts — please wait a minute before requesting another code.";
+  if (lower.includes("expired")) return "That code has expired — request a new one.";
+  if (lower.includes("invalid") || lower.includes("token"))
+    return "Invalid code — double-check the 6 digits and try again.";
+  return msg || fallback;
+}
+
 export function AuthPortal({ kind }: { kind: PortalKind }) {
   const navigate = useNavigate();
   const { user, roles, loading } = useAuth();
@@ -56,11 +69,19 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
   const [otp, setOtp] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
 
   // Once authenticated, push users straight to their role home without a refresh.
   useEffect(() => {
     if (!loading && user) void navigate({ to: portalPathFor(roles) });
   }, [user, roles, loading, navigate]);
+
+  // 60-second resend cooldown.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
 
   const trimmedEmail = email.trim();
 
@@ -81,9 +102,10 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
       if (error) throw error;
       setCodeSent(true);
       setOtp("");
+      setResendIn(60);
       toast.success("Verification code sent — check your inbox.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send code");
+      toast.error(otpErrorMessage(err, "Could not send code"));
     } finally {
       setBusy(false);
     }
@@ -107,7 +129,7 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
       toast.success("Signed in");
       // The useEffect above navigates to the correct portal once the session lands.
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Invalid code");
+      toast.error(otpErrorMessage(err, "Invalid code"));
     } finally {
       setBusy(false);
     }
@@ -119,11 +141,15 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
     <PortalShell kind={kind}>
       {codeSent ? (
         <form onSubmit={verifyCode} className="mt-5 space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Enter the 6-digit code we sent to{" "}
-            <span className="font-medium text-foreground">{trimmedEmail}</span>.
-          </p>
-          <div className="flex justify-center">
+          <div className="flex items-start gap-3 rounded-lg border border-border bg-surface p-3">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <p className="text-sm text-muted-foreground">
+              Enter the 6-digit code we sent to{" "}
+              <span className="font-medium text-foreground">{trimmedEmail}</span>.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <KeyRound className="h-4 w-4 text-muted-foreground" />
             <InputOTP maxLength={6} value={otp} onChange={(v) => setOtp(v)}>
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -141,21 +167,22 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
           <div className="flex items-center justify-between text-xs">
             <button
               type="button"
-              className="text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => {
                 setCodeSent(false);
                 setOtp("");
+                setResendIn(0);
               }}
             >
-              Use a different email
+              <ArrowLeft className="h-3.5 w-3.5" /> Change email
             </button>
             <button
               type="button"
               className="font-medium text-primary disabled:opacity-50"
-              disabled={busy}
+              disabled={busy || resendIn > 0}
               onClick={() => void sendCode()}
             >
-              Resend code
+              {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
             </button>
           </div>
         </form>
@@ -163,18 +190,22 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
         <form onSubmit={sendCode} className="mt-5 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="you@example.com"
+                className="pl-9"
+              />
+            </div>
           </div>
           <Button type="submit" className="w-full" disabled={busy || !trimmedEmail.includes("@")}>
-            {busy ? "Sending…" : "Email me a sign-in code"}
+            {busy ? "Sending code…" : "Email me a sign-in code"}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
             No password needed — we email you a one-time code.

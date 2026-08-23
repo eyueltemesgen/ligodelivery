@@ -2,6 +2,7 @@ import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { offersQuery } from "@/lib/queries";
+import { ShopGridSkeleton } from "@/components/ligo/Skeletons";
 import { StorageImage } from "@/lib/media";
 import { formatDate } from "@/lib/format";
 
@@ -29,7 +30,9 @@ function OffersPage() {
       <h1 className="font-display text-3xl font-extrabold">Offers</h1>
       <p className="mt-2 text-muted-foreground">Deals running right now in Bishoftu.</p>
       {isLoading ? (
-        <p className="mt-8 text-sm text-muted-foreground">Loading offers…</p>
+        <div className="mt-8">
+          <ShopGridSkeleton />
+        </div>
       ) : data.length === 0 ? (
         <p className="mt-8 text-sm text-muted-foreground">
           No active offers right now — check back soon.
@@ -39,7 +42,7 @@ function OffersPage() {
           {data.map((o) => (
             <article
               key={o.id}
-              className="overflow-hidden rounded-xl border border-border bg-card shadow-card"
+              className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
             >
               <StorageImage path={o.image_url} alt={o.title} className="h-32 w-full object-cover" />
               <div className="space-y-1 p-4">

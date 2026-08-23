@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery, shopsQuery } from "@/lib/queries";
 import { ShopCard } from "@/components/ligo/Cards";
+import { ShopGridSkeleton } from "@/components/ligo/Skeletons";
 
 export const Route = createFileRoute("/shops/")({
   validateSearch: (s: Record<string, unknown>) =>
@@ -51,7 +52,9 @@ function ShopsPage() {
         ))}
       </div>
       {isLoading ? (
-        <p className="mt-8 text-sm text-muted-foreground">Loading shops…</p>
+        <div className="mt-8">
+          <ShopGridSkeleton />
+        </div>
       ) : shops.length === 0 ? (
         <p className="mt-8 text-sm text-muted-foreground">No shops in this category yet.</p>
       ) : (

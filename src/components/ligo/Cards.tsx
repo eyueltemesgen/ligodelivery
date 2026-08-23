@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, Star, Bike } from "lucide-react";
+import { Clock, Plus, Star, Truck } from "lucide-react";
 import { StorageImage } from "@/lib/media";
 import { ETB, discounted, isShopOpen } from "@/lib/format";
 import type { Product, Shop } from "@/lib/queries";
@@ -19,7 +19,7 @@ export function ShopCard({ shop }: { shop: Shop }) {
     <Link
       to="/shops/$shopId"
       params={{ shopId: shop.id }}
-      className="group overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-pop"
+      className="group overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden">
         <StorageImage
@@ -48,7 +48,7 @@ export function ShopCard({ shop }: { shop: Shop }) {
             {Number(shop.rating) > 0 ? Number(shop.rating).toFixed(1) : "New"}
           </span>
           <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
-            <Bike className="h-3 w-3" />
+            <Truck className="h-3 w-3" />
             {Number(shop.delivery_fee) > 0 ? `${ETB(shop.delivery_fee)} fee` : "Free delivery"}
           </span>
         </div>
@@ -72,7 +72,7 @@ export function ProductCard({
   const price = discounted(Number(product.price), product.discount_percent);
   return (
     <div
-      className="flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-pop"
+      className="flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
       onClick={() => !orderingDisabled && onSelect?.(product)}
       role="button"
       tabIndex={0}
@@ -115,7 +115,15 @@ export function ProductCard({
               toast.success(`${product.name} added to cart`);
             }}
           >
-            {orderingDisabled ? "Closed" : product.in_stock ? "Add" : "Out"}
+            {orderingDisabled ? (
+              "Closed"
+            ) : product.in_stock ? (
+              <>
+                <Plus className="h-4 w-4" /> Add
+              </>
+            ) : (
+              "Out"
+            )}
           </Button>
         </div>
       </div>
