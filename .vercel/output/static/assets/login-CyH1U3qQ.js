@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-B-hcVAMW.js";import{t}from"./AuthPortal-BdgGYA8R.js";var n=e(),r=()=>(0,n.jsx)(t,{kind:`customer`});export{r as component};

@@ -1,0 +1,1 @@
+import{a as e,n as t,t as n}from"./jsx-runtime-B-hcVAMW.js";var r=e(t(),1),i=n();function a({children:e,fallback:t=null}){return o()?(0,i.jsx)(r.Fragment,{children:e}):(0,i.jsx)(r.Fragment,{children:t})}function o(){return r.useSyncExternalStore(s,()=>!0,()=>!1)}function s(){return()=>{}}export{o as n,a as t};
