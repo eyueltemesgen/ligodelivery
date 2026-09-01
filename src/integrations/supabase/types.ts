@@ -301,7 +301,9 @@ export type Database = {
           delivery_address: string | null
           delivery_fee: number
           delivery_instructions: string | null
+          delivery_pin: string | null
           discount: number
+          dispatched_at: string | null
           id: string
           lat: number | null
           lng: number | null
@@ -309,9 +311,11 @@ export type Database = {
           payment_method: string
           payment_status: string
           rider_id: string | null
+          rider_payout: number
           shop_id: string | null
           status: string
           subtotal: number
+          tip: number
           total: number
           updated_at: string
         }
@@ -323,7 +327,9 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
+          delivery_pin?: string | null
           discount?: number
+          dispatched_at?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -331,9 +337,11 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
+          rider_payout?: number
           shop_id?: string | null
           status?: string
           subtotal?: number
+          tip?: number
           total?: number
           updated_at?: string
         }
@@ -345,7 +353,9 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
+          delivery_pin?: string | null
           discount?: number
+          dispatched_at?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -353,9 +363,11 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
+          rider_payout?: number
           shop_id?: string | null
           status?: string
           subtotal?: number
+          tip?: number
           total?: number
           updated_at?: string
         }
@@ -723,9 +735,11 @@ export type Database = {
           commission_tier: string
           created_at: string
           id: string
+          id_document_url: string | null
           is_approved: boolean
           is_online: boolean
           lat: number | null
+          license_document_url: string | null
           lng: number | null
           location_updated_at: string | null
           national_id: string | null
@@ -744,9 +758,11 @@ export type Database = {
           commission_tier?: string
           created_at?: string
           id: string
+          id_document_url?: string | null
           is_approved?: boolean
           is_online?: boolean
           lat?: number | null
+          license_document_url?: string | null
           lng?: number | null
           location_updated_at?: string | null
           national_id?: string | null
@@ -765,9 +781,11 @@ export type Database = {
           commission_tier?: string
           created_at?: string
           id?: string
+          id_document_url?: string | null
           is_approved?: boolean
           is_online?: boolean
           lat?: number | null
+          license_document_url?: string | null
           lng?: number | null
           location_updated_at?: string | null
           national_id?: string | null
@@ -951,6 +969,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_order: { Args: { _order_id: string }; Returns: undefined }
+      approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
+      complete_delivery: {
+        Args: { _order_id: string; _pin: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
