@@ -301,7 +301,9 @@ export type Database = {
           delivery_address: string | null
           delivery_fee: number
           delivery_instructions: string | null
+          delivery_pin: string | null
           discount: number
+          dispatched_at: string | null
           id: string
           lat: number | null
           lng: number | null
@@ -309,9 +311,11 @@ export type Database = {
           payment_method: string
           payment_status: string
           rider_id: string | null
+          rider_payout: number
           shop_id: string | null
           status: string
           subtotal: number
+          tip: number
           total: number
           updated_at: string
         }
@@ -323,7 +327,9 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
+          delivery_pin?: string | null
           discount?: number
+          dispatched_at?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -331,9 +337,11 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
+          rider_payout?: number
           shop_id?: string | null
           status?: string
           subtotal?: number
+          tip?: number
           total?: number
           updated_at?: string
         }
@@ -345,7 +353,9 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
+          delivery_pin?: string | null
           discount?: number
+          dispatched_at?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -353,9 +363,11 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
+          rider_payout?: number
           shop_id?: string | null
           status?: string
           subtotal?: number
+          tip?: number
           total?: number
           updated_at?: string
         }
@@ -422,6 +434,47 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          processed_at: string | null
+          rider_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          processed_at?: string | null
+          rider_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          processed_at?: string | null
+          rider_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_requests_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "riders"
             referencedColumns: ["id"]
           },
         ]
@@ -522,45 +575,229 @@ export type Database = {
         }
         Relationships: []
       }
-      riders: {
+      rider_earnings: {
+        Row: {
+          amount: number
+          base_fare: number
+          bonus: number
+          created_at: string
+          distance_incentive: number
+          distance_km: number
+          id: string
+          order_id: string | null
+          payout_request_id: string | null
+          rider_id: string
+          status: string
+          tip: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          base_fare?: number
+          bonus?: number
+          created_at?: string
+          distance_incentive?: number
+          distance_km?: number
+          id?: string
+          order_id?: string | null
+          payout_request_id?: string | null
+          rider_id: string
+          status?: string
+          tip?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          base_fare?: number
+          bonus?: number
+          created_at?: string
+          distance_incentive?: number
+          distance_km?: number
+          id?: string
+          order_id?: string | null
+          payout_request_id?: string | null
+          rider_id?: string
+          status?: string
+          tip?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rider_earnings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rider_earnings_payout_request_id_fkey"
+            columns: ["payout_request_id"]
+            isOneToOne: false
+            referencedRelation: "payout_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rider_earnings_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rider_offer_events: {
         Row: {
           created_at: string
+          event: string
           id: string
+          order_id: string
+          rider_id: string
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          order_id: string
+          rider_id: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          order_id?: string
+          rider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rider_offer_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rider_offer_events_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rider_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          order_id: string
+          rating: number
+          rider_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          order_id: string
+          rating: number
+          rider_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          rider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rider_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rider_ratings_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      riders: {
+        Row: {
+          battery: number | null
+          commission_tier: string
+          created_at: string
+          id: string
+          id_document_url: string | null
           is_approved: boolean
           is_online: boolean
           lat: number | null
+          license_document_url: string | null
           lng: number | null
           location_updated_at: string | null
           national_id: string | null
           notes: string | null
+          payout_account: string | null
+          payout_account_name: string | null
+          payout_method: string
+          review_notes: string | null
+          speed: number | null
           updated_at: string
           vehicle_type: string
+          verification_status: string
         }
         Insert: {
+          battery?: number | null
+          commission_tier?: string
           created_at?: string
           id: string
+          id_document_url?: string | null
           is_approved?: boolean
           is_online?: boolean
           lat?: number | null
+          license_document_url?: string | null
           lng?: number | null
           location_updated_at?: string | null
           national_id?: string | null
           notes?: string | null
+          payout_account?: string | null
+          payout_account_name?: string | null
+          payout_method?: string
+          review_notes?: string | null
+          speed?: number | null
           updated_at?: string
           vehicle_type?: string
+          verification_status?: string
         }
         Update: {
+          battery?: number | null
+          commission_tier?: string
           created_at?: string
           id?: string
+          id_document_url?: string | null
           is_approved?: boolean
           is_online?: boolean
           lat?: number | null
+          license_document_url?: string | null
           lng?: number | null
           location_updated_at?: string | null
           national_id?: string | null
           notes?: string | null
+          payout_account?: string | null
+          payout_account_name?: string | null
+          payout_method?: string
+          review_notes?: string | null
+          speed?: number | null
           updated_at?: string
           vehicle_type?: string
+          verification_status?: string
         }
         Relationships: []
       }
@@ -585,6 +822,47 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_hours: {
+        Row: {
+          closes_at: string
+          created_at: string
+          day_of_week: number
+          id: string
+          is_closed: boolean
+          opens_at: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          closes_at?: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_closed?: boolean
+          opens_at?: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          closes_at?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_closed?: boolean
+          opens_at?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_hours_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           address: string | null
@@ -599,10 +877,12 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           is_featured: boolean
+          is_online: boolean
           lat: number | null
           lng: number | null
           name: string
           opens_at: string
+          owner_id: string | null
           phone: string | null
           rating: number
           updated_at: string
@@ -620,10 +900,12 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           is_featured?: boolean
+          is_online?: boolean
           lat?: number | null
           lng?: number | null
           name: string
           opens_at?: string
+          owner_id?: string | null
           phone?: string | null
           rating?: number
           updated_at?: string
@@ -641,10 +923,12 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           is_featured?: boolean
+          is_online?: boolean
           lat?: number | null
           lng?: number | null
           name?: string
           opens_at?: string
+          owner_id?: string | null
           phone?: string | null
           rating?: number
           updated_at?: string
@@ -685,6 +969,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_order: { Args: { _order_id: string }; Returns: undefined }
+      approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
+      complete_delivery: {
+        Args: { _order_id: string; _pin: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -695,7 +985,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "rider" | "customer"
+      app_role: "admin" | "rider" | "customer" | "merchant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -823,7 +1113,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "rider", "customer"],
+      app_role: ["admin", "rider", "customer", "merchant"],
     },
   },
 } as const
