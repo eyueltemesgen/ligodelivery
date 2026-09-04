@@ -122,10 +122,10 @@ function CheckoutPage() {
         p_shop_id: shopId!,
         p_items: items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
         p_payment_method: method,
-        p_customer_name: name.trim() || undefined,
-        p_customer_phone: phone.trim() || undefined,
-        p_delivery_address: address.trim() || undefined,
-        p_delivery_instructions: instructions.trim() || undefined,
+        p_customer_name: name.trim(),
+        p_customer_phone: phone.trim(),
+        p_delivery_address: address.trim(),
+        p_delivery_instructions: instructions.trim(),
         p_tip: tip,
       });
       if (error) throw error;
