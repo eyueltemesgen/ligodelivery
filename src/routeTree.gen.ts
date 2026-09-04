@@ -21,6 +21,7 @@ import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OffersRouteImport } from './routes/offers'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
@@ -95,6 +96,11 @@ const OffersRoute = OffersRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -275,6 +284,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/offers'
     | '/register'
+    | '/reset-password'
     | '/search'
     | '/admin/financials'
     | '/admin/login'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/offers'
     | '/register'
+    | '/reset-password'
     | '/search'
     | '/admin/financials'
     | '/admin/login'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/offers'
     | '/register'
+    | '/reset-password'
     | '/search'
     | '/admin/financials'
     | '/admin/login'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OffersRoute: typeof OffersRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   RiderJoinRoute: typeof RiderJoinRoute
@@ -456,6 +469,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -611,6 +631,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OffersRoute: OffersRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   RiderJoinRoute: RiderJoinRoute,
