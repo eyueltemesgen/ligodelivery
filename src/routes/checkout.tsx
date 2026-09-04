@@ -119,13 +119,13 @@ function CheckoutPage() {
     try {
       // Server-side placement: prices, fees and totals are recomputed in the database.
       const { data: orderId, error } = await supabase.rpc("place_order", {
-        p_shop_id: shopId,
+        p_shop_id: shopId!,
         p_items: items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
         p_payment_method: method,
-        p_customer_name: name.trim() || null,
-        p_customer_phone: phone.trim() || null,
-        p_delivery_address: address.trim() || null,
-        p_delivery_instructions: instructions.trim() || null,
+        p_customer_name: name.trim() || undefined,
+        p_customer_phone: phone.trim() || undefined,
+        p_delivery_address: address.trim() || undefined,
+        p_delivery_instructions: instructions.trim() || undefined,
         p_tip: tip,
       });
       if (error) throw error;
