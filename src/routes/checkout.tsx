@@ -5,7 +5,7 @@ import { Lock } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
+
 import { ETB } from "@/lib/format";
 import { supabaseErrorMessage } from "@/lib/supa-error";
 import { closedReason, isShopOpenNow } from "@/lib/hours";
@@ -117,44 +117,22 @@ function CheckoutPage() {
     }
     setBusy(true);
     try {
-      // Only schema-defined order columns — no client-only or undefined keys.
-      const payload: TablesInsert<"orders"> = {
-        customer_id: user.id,
-        shop_id: shopId ?? null,
-        status: "pending_payment",
-        payment_method: method,
-        delivery_pin: String(Math.floor(1000 + Math.random() * 9000)),
-        payment_status: "unpaid",
-        subtotal,
-        delivery_fee: deliveryFee,
-        tip,
-        total,
-        customer_name: name.trim() || null,
-        customer_phone: phone.trim() || null,
-        delivery_address: address.trim() || null,
-        delivery_instructions: instructions.trim() || null,
-      };
-      const { data: order, error } = await supabase
-        .from("orders")
-        .insert(payload)
-        .select("id")
-        .single();
+      // Server-side placement: prices, fees and totals are recomputed in the database.
+      const { data: orderId, error } = await supabase.rpc("place_order", {
+        p_shop_id: shopId!,
+        p_items: items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
+        p_payment_method: method,
+        p_customer_name: name.trim(),
+        p_customer_phone: phone.trim(),
+        p_delivery_address: address.trim(),
+        p_delivery_instructions: instructions.trim(),
+        p_tip: tip,
+      });
       if (error) throw error;
-
-      const itemsPayload: TablesInsert<"order_items">[] = items.map((i) => ({
-        order_id: order.id,
-        product_id: i.productId,
-        product_name: i.name,
-        image_url: i.imagePath ?? null,
-        unit_price: i.unitPrice,
-        quantity: i.quantity,
-      }));
-      const { error: itemsError } = await supabase.from("order_items").insert(itemsPayload);
-      if (itemsError) throw itemsError;
 
       clear();
       toast.success("Order placed — awaiting payment verification");
-      await navigate({ to: "/orders/$orderId", params: { orderId: order.id } });
+      await navigate({ to: "/orders/$orderId", params: { orderId: orderId as string } });
     } catch (err) {
       toast.error(supabaseErrorMessage(err));
     } finally {

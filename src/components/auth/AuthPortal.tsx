@@ -120,7 +120,26 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!trimmedEmail.includes("@")) {
+                  toast.error("Enter your email first, then tap forgot password");
+                  return;
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                });
+                if (error) toast.error(friendlyError(error));
+                else toast.success("Password reset link sent — check your email");
+              }}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
