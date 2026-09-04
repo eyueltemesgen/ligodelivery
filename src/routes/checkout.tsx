@@ -5,7 +5,7 @@ import { Lock } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
+
 import { ETB } from "@/lib/format";
 import { supabaseErrorMessage } from "@/lib/supa-error";
 import { closedReason, isShopOpenNow } from "@/lib/hours";
