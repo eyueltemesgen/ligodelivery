@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bike, Clock, ShieldCheck, Search } from "lucide-react";
-import heroImage from "@/assets/hero-rider.jpg";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
 import {
   FALLBACK_CATEGORIES,
@@ -110,16 +109,9 @@ function Home() {
               className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
             />
           ) : (
-            <img
-              src={heroImage}
-              alt="Ligo rider delivering an order in Bishoftu"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-              width={800}
-              height={600}
-              className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
-            />
+            <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
+              <span className="font-display text-2xl font-bold text-primary/60">Ligo</span>
+            </div>
           )}
         </div>
       </section>
