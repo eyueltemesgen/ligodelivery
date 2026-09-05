@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bike, Clock, ShieldCheck, Search } from "lucide-react";
-import heroImage from "@/assets/hero-rider.jpg";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
 import {
   FALLBACK_CATEGORIES,
