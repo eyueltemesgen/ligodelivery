@@ -175,10 +175,10 @@ function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-xl font-extrabold">Dashboard · {rangeDef.label}</h1>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <h1 className="min-w-0 truncate font-display text-xl font-extrabold">Dashboard · {rangeDef.label}</h1>
         <div
-          className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-card"
+          className="grid grid-cols-[auto_repeat(3,1fr)] items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-card sm:flex"
           role="group"
           aria-label="Date range filter"
         >
@@ -194,7 +194,7 @@ function AdminDashboard() {
                   replace: true,
                 })
               }
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`min-w-0 rounded-md px-2 py-2 text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 ${
                 range === r.key
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-secondary"
