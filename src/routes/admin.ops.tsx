@@ -69,23 +69,25 @@ function AdminPage() {
       <Tabs
         value={tab ?? "orders"}
         onValueChange={(v) => void navigate({ search: { tab: v as OpsTab } })}
-        className="mt-8"
+        className="mt-5 sm:mt-8"
       >
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="payouts">Payouts</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="shops">Shops</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="offers">Offers</TabsTrigger>
-          <TabsTrigger value="banners">Banners</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="financials">Financials</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
-        </TabsList>
+        <div className="-mx-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
+          <TabsList className="h-auto w-max min-w-full justify-start gap-1">
+            <TabsTrigger value="orders" className="min-h-9">Orders</TabsTrigger>
+            <TabsTrigger value="payments" className="min-h-9">Payments</TabsTrigger>
+            <TabsTrigger value="payouts" className="min-h-9">Payouts</TabsTrigger>
+            <TabsTrigger value="customers" className="min-h-9">Customers</TabsTrigger>
+            <TabsTrigger value="shops" className="min-h-9">Shops</TabsTrigger>
+            <TabsTrigger value="products" className="min-h-9">Products</TabsTrigger>
+            <TabsTrigger value="categories" className="min-h-9">Categories</TabsTrigger>
+            <TabsTrigger value="offers" className="min-h-9">Offers</TabsTrigger>
+            <TabsTrigger value="banners" className="min-h-9">Banners</TabsTrigger>
+            <TabsTrigger value="content" className="min-h-9">Content</TabsTrigger>
+            <TabsTrigger value="financials" className="min-h-9">Financials</TabsTrigger>
+            <TabsTrigger value="settings" className="min-h-9">Settings</TabsTrigger>
+            <TabsTrigger value="system" className="min-h-9">System</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="orders">
           <OrdersAdmin />
         </TabsContent>
