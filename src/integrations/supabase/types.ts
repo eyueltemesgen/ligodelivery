@@ -143,6 +143,219 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_payouts: {
+        Row: {
+          commission_amount: number
+          created_at: string
+          gross_amount: number
+          id: string
+          merchant_id: string
+          net_amount: number
+          notes: string | null
+          paid_at: string | null
+          period_end: string | null
+          period_start: string | null
+          reference: string | null
+          status: string
+        }
+        Insert: {
+          commission_amount?: number
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          merchant_id: string
+          net_amount?: number
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          status?: string
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          merchant_id?: string
+          net_amount?: number
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_payouts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_profiles: {
+        Row: {
+          address: string | null
+          business_description: string | null
+          business_name: string
+          business_phone: string | null
+          category_id: string | null
+          city: string
+          closes_at: string
+          commission_percent: number | null
+          contact_email: string | null
+          contact_phone: string | null
+          cover_url: string | null
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          opens_at: string
+          owner_name: string
+          review_notes: string | null
+          shop_id: string | null
+          status: string
+          terms_accepted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          business_description?: string | null
+          business_name: string
+          business_phone?: string | null
+          category_id?: string | null
+          city?: string
+          closes_at?: string
+          commission_percent?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          cover_url?: string | null
+          created_at?: string
+          id: string
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          opens_at?: string
+          owner_name: string
+          review_notes?: string | null
+          shop_id?: string | null
+          status?: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          business_description?: string | null
+          business_name?: string
+          business_phone?: string | null
+          category_id?: string | null
+          city?: string
+          closes_at?: string
+          commission_percent?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          opens_at?: string
+          owner_name?: string
+          review_notes?: string | null
+          shop_id?: string | null
+          status?: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_profiles_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_profiles_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_promotions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          ends_at: string | null
+          id: string
+          kind: string
+          merchant_id: string
+          message: string | null
+          price: number | null
+          product_id: string | null
+          shop_id: string | null
+          starts_at: string | null
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          merchant_id: string
+          message?: string | null
+          price?: number | null
+          product_id?: string | null
+          shop_id?: string | null
+          starts_at?: string | null
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          merchant_id?: string
+          message?: string | null
+          price?: number | null
+          product_id?: string | null
+          shop_id?: string | null
+          starts_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_promotions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_promotions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_promotions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -294,6 +507,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          commission_amount: number
+          commission_percent: number
           created_at: string
           customer_id: string
           customer_name: string | null
@@ -307,6 +522,7 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          merchant_net: number
           order_code: string
           payment_method: string
           payment_status: string
@@ -320,6 +536,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          commission_amount?: number
+          commission_percent?: number
           created_at?: string
           customer_id: string
           customer_name?: string | null
@@ -333,6 +551,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          merchant_net?: number
           order_code?: string
           payment_method?: string
           payment_status?: string
@@ -346,6 +565,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          commission_amount?: number
+          commission_percent?: number
           created_at?: string
           customer_id?: string
           customer_name?: string | null
@@ -359,6 +580,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          merchant_net?: number
           order_code?: string
           payment_method?: string
           payment_status?: string
@@ -983,6 +1205,9 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_approved_merchant: { Args: { _uid: string }; Returns: boolean }
+      merchant_commission_percent: { Args: { _uid: string }; Returns: number }
+      owns_shop: { Args: { _shop: string }; Returns: boolean }
       place_order: {
         Args: {
           p_customer_name?: string
@@ -993,6 +1218,33 @@ export type Database = {
           p_payment_method: string
           p_shop_id: string
           p_tip?: number
+        }
+        Returns: string
+      }
+      review_merchant: {
+        Args: { _merchant: string; _notes?: string; _status: string }
+        Returns: undefined
+      }
+      set_merchant_commission: {
+        Args: { _merchant: string; _percent: number }
+        Returns: undefined
+      }
+      submit_merchant_application: {
+        Args: {
+          _address: string
+          _business_description: string
+          _business_name: string
+          _business_phone: string
+          _category_id: string
+          _city: string
+          _closes_at: string
+          _contact_phone: string
+          _cover_url: string
+          _lat: number
+          _lng: number
+          _logo_url: string
+          _opens_at: string
+          _owner_name: string
         }
         Returns: string
       }
