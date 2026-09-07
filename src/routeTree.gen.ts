@@ -29,6 +29,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
+import { Route as MerchantJoinRouteImport } from './routes/merchant.join'
 import { Route as MerchantLoginRouteImport } from './routes/merchant.login'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
@@ -138,6 +139,11 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
   path: '/riders',
   getParentRoute: () => AdminRoute,
 } as any)
+const MerchantJoinRoute = MerchantJoinRouteImport.update({
+  id: '/join',
+  path: '/join',
+  getParentRoute: () => MerchantRoute,
+} as any)
 const MerchantLoginRoute = MerchantLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
@@ -527,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRidersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/merchant/join': {
+      id: '/merchant/join'
+      path: '/join'
+      fullPath: '/merchant/join'
+      preLoaderRoute: typeof MerchantJoinRouteImport
+      parentRoute: typeof MerchantRoute
+    }
     '/merchant/login': {
       id: '/merchant/login'
       path: '/login'
@@ -607,10 +626,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface MerchantRouteChildren {
+  MerchantJoinRoute: typeof MerchantJoinRoute
   MerchantLoginRoute: typeof MerchantLoginRoute
 }
 
 const MerchantRouteChildren: MerchantRouteChildren = {
+  MerchantJoinRoute: MerchantJoinRoute,
   MerchantLoginRoute: MerchantLoginRoute,
 }
 
