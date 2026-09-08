@@ -379,12 +379,15 @@ function MerchantJoin() {
                 </div>
                 <StepNav
                   onBack={signedIn ? undefined : () => setStep(0)}
-                  onNext={() =>
-                    businessName.trim()
-                      ? setStep(2)
-                      : toast.error("Enter your business name to continue")
-                  }
+                  onNext={() => {
+                    if (!businessName.trim()) {
+                      toast.error("Enter your business name to continue");
+                      return;
+                    }
+                    setStep(2);
+                  }}
                 />
+
               </>
             )}
 
