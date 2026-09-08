@@ -62,6 +62,8 @@ export const sounds = {
   statusUpdate: () => playCue("status_update"),
 };
 
+export const playPing = () => playCue("new_order");
+
 export async function loadAudioSettings() {
   try {
     const { supabase } = await import("@/integrations/supabase/client");
