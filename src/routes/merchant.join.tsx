@@ -474,7 +474,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function StepNav({ onBack, onNext }: { onBack?: () => void; onNext: () => void }) {
+function StepNav({
+  onBack,
+  onNext,
+}: {
+  onBack?: (() => void) | undefined;
+  onNext: () => void;
+}) {
+
   return (
     <div className="flex flex-wrap gap-3 pt-2">
       {onBack && (
