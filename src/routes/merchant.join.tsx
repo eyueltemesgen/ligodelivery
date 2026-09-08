@@ -96,8 +96,14 @@ function MerchantJoin() {
   }, [existing]);
 
   const createAccount = async () => {
-    if (password.length < 6) return toast.error("Password must be at least 6 characters");
-    if (password !== confirm) return toast.error("Passwords do not match");
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (password !== confirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -108,14 +114,20 @@ function MerchantJoin() {
       },
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refresh();
     toast.success("Account created — continue with your business details");
     setStep(1);
   };
 
   const locate = () => {
-    if (!navigator.geolocation) return toast.error("Location is not available on this device");
+    if (!navigator.geolocation) {
+      toast.error("Location is not available on this device");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setLat(p.coords.latitude.toFixed(6));
@@ -127,15 +139,26 @@ function MerchantJoin() {
   };
 
   const submit = async () => {
-    if (!user) return toast.error("Sign in first");
-    if (!terms) return toast.error("Please accept the merchant terms");
-    if (!businessName.trim()) return toast.error("Business name is required");
+    if (!user) {
+      toast.error("Sign in first");
+      return;
+    }
+    if (!terms) {
+      toast.error("Please accept the merchant terms");
+      return;
+    }
+    if (!businessName.trim()) {
+      toast.error("Business name is required");
+      return;
+    }
     setBusy(true);
     try {
       const folder = `merchants/${user.id}`;
       const logoPath = logo ? await uploadImage(logo, folder) : (existing?.logo_url ?? null);
       const coverPath = cover ? await uploadImage(cover, folder) : (existing?.cover_url ?? null);
-      const { error } = await supabase.rpc("submit_merchant_application", {
+      // Nullable application fields are optional in the database function but the
+      // generated RPC types describe them as required non-null arguments.
+      const args = {
         _owner_name: ownerName.trim(),
         _contact_phone: phone.trim(),
         _business_name: businessName.trim(),
@@ -150,7 +173,9 @@ function MerchantJoin() {
         _closes_at: closesAt,
         _logo_url: logoPath,
         _cover_url: coverPath,
-      });
+      } as unknown as Parameters<typeof supabase.rpc<"submit_merchant_application">>[1];
+      const { error } = await supabase.rpc("submit_merchant_application", args);
+
       if (error) throw error;
       await Promise.all([refetch(), refresh()]);
       toast.success("Application submitted — our team will review it shortly");
@@ -354,12 +379,15 @@ function MerchantJoin() {
                 </div>
                 <StepNav
                   onBack={signedIn ? undefined : () => setStep(0)}
-                  onNext={() =>
-                    businessName.trim()
-                      ? setStep(2)
-                      : toast.error("Enter your business name to continue")
-                  }
+                  onNext={() => {
+                    if (!businessName.trim()) {
+                      toast.error("Enter your business name to continue");
+                      return;
+                    }
+                    setStep(2);
+                  }}
                 />
+
               </>
             )}
 
@@ -446,7 +474,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function StepNav({ onBack, onNext }: { onBack?: () => void; onNext: () => void }) {
+function StepNav({
+  onBack,
+  onNext,
+}: {
+  onBack?: (() => void) | undefined;
+  onNext: () => void;
+}) {
+
   return (
     <div className="flex flex-wrap gap-3 pt-2">
       {onBack && (
