@@ -20,7 +20,7 @@ import { isShopOpenNow } from "@/lib/hours";
 import { categoriesQuery, type Product, type Shop } from "@/lib/queries";
 import { ETB } from "@/lib/format";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders";
-import { playPing } from "@/lib/audio";
+import { sounds } from "@/lib/audio";
 import { uploadImage } from "@/lib/media";
 import {
   MERCHANT_NEXT_STATUS,
@@ -227,7 +227,7 @@ function MerchantDashboard() {
     if (lastCount !== null && activeOrders.length > lastCount) {
       const latest = activeOrders[0];
       if (latest) {
-        void playPing();
+        sounds.newOrder();
         toast.success(`New order ${latest.order_code}`, {
           description: `Total ${ETB(latest.total)}`,
         });
@@ -831,10 +831,10 @@ function ShopEditor({ shop }: { shop: Shop }) {
   const uploadShopImage = async (file: File, field: "image_url" | "cover_url") => {
     try {
       const path = await uploadImage(file, `merchants/${user!.id}`);
-      const { error } = await supabase
-        .from("shops")
-        .update({ [field]: path })
-        .eq("id", shop.id);
+      const { error } =
+        field === "image_url"
+          ? await supabase.from("shops").update({ image_url: path }).eq("id", shop.id)
+          : await supabase.from("shops").update({ cover_url: path }).eq("id", shop.id);
       if (error) throw error;
       toast.success("Image updated");
       void qc.invalidateQueries({ queryKey: ["merchant-shops"] });
