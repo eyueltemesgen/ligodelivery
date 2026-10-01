@@ -240,7 +240,7 @@ function MerchantDashboard() {
   useEffect(() => {
     if (shopIds.length === 0) return;
     const channel = supabase
-      .channel("merchant-orders-live")
+      .channel(`merchant-orders-live-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
         void qc.invalidateQueries({ queryKey: ["merchant-orders"] });
       })

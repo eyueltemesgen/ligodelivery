@@ -107,7 +107,7 @@ function RiderApprovalQueue() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("admin-riders-rt")
+      .channel(`admin-riders-rt-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "riders" }, () => {
         void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
       })

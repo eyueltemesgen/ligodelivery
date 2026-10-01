@@ -94,7 +94,7 @@ function OrderDetail() {
 
   useEffect(() => {
     const channel = supabase
-      .channel(`order-${orderId}`)
+      .channel(`order-${orderId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },

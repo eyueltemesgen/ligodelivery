@@ -37,7 +37,7 @@ export function ActiveOrderBanner() {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`active-order-banner-${user.id}`)
+      .channel(`active-order-banner-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

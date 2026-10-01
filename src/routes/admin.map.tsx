@@ -84,7 +84,7 @@ function LiveMapPage() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("admin-map-rt")
+      .channel(`admin-map-rt-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "riders" }, () => {
         void qc.invalidateQueries({ queryKey: ["admin-map-riders"] });
       })

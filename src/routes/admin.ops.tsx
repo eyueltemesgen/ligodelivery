@@ -423,7 +423,7 @@ function Stats() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("admin-stats-riders-rt")
+      .channel(`admin-stats-riders-rt-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "riders" }, () => {
         void qc.invalidateQueries({ queryKey: ["admin-stats"] });
       })
@@ -488,7 +488,7 @@ function OrdersAdmin() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("admin-orders-rt")
+      .channel(`admin-orders-rt-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
         void qc.invalidateQueries({ queryKey: ["admin-orders"] });
       })
@@ -663,7 +663,7 @@ function PaymentsAdmin() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("admin-proofs-rt")
+      .channel(`admin-proofs-rt-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "payment_proofs" }, () => {
         void qc.invalidateQueries({ queryKey: ["admin-proofs"] });
       })
@@ -791,7 +791,7 @@ export function PayoutsAdmin() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("admin-payouts-rt")
+      .channel(`admin-payouts-rt-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "payout_requests" }, () => {
         void qc.invalidateQueries({ queryKey: ["admin-payouts"] });
       })
