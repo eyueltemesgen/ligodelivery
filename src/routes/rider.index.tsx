@@ -343,7 +343,7 @@ function RiderPortal() {
   useEffect(() => {
     if (!user || !rider?.is_approved) return;
     const channel = supabase
-      .channel(`rider-dispatch-rt-${user.id}`)
+      .channel(`rider-dispatch-rt-${user.id}-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
         const next = (payload.new ?? {}) as Partial<OrderRow>;
         if (payload.eventType === "UPDATE" && next.status === "dispatched") {

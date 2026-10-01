@@ -28,7 +28,7 @@ export function NotificationsCenter() {
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase
-      .channel(`header-notif-${user.id}`)
+      .channel(`header-notif-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {
