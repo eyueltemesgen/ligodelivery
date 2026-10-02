@@ -109,6 +109,17 @@ function ShopDetail() {
             >
               {open ? "Open now" : "Closed"}
             </span>
+            <button
+              type="button"
+              className="ml-auto rounded-full border border-border px-3 py-1 text-xs font-semibold text-primary"
+              onClick={() => {
+                const url = window.location.href;
+                if (navigator.share) void navigator.share({ title: shop.name, url }).catch(() => {});
+                else void navigator.clipboard.writeText(url);
+              }}
+            >
+              Share shop link
+            </button>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">{shop.description}</p>
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
