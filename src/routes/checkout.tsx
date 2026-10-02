@@ -57,6 +57,9 @@ function CheckoutPage() {
   const [method, setMethod] = useState("cash");
   const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
 
   const platform = (publicSettings?.["platform"] ?? {}) as {
     base_delivery_fee?: number;
@@ -66,7 +69,32 @@ function CheckoutPage() {
   const deliveryFee = Math.round(
     Number(shop?.delivery_fee ?? platform.base_delivery_fee ?? 50) * surge,
   );
-  const total = subtotal + deliveryFee + tip;
+  const promoDiscount = promo?.discount ?? 0;
+  const total = Math.max(subtotal + deliveryFee + tip - promoDiscount, 0);
+
+  const applyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) return;
+    setCheckingPromo(true);
+    const { data, error } = await supabase.rpc("check_coupon", {
+      p_code: code,
+      p_subtotal: subtotal,
+      p_delivery_fee: deliveryFee,
+    });
+    setCheckingPromo(false);
+    if (error) {
+      toast.error(supabaseErrorMessage(error));
+      return;
+    }
+    const r = data as { valid: boolean; message: string; code?: string; discount?: number };
+    if (!r.valid) {
+      setPromo(null);
+      toast.error(r.message);
+      return;
+    }
+    setPromo({ code: r.code ?? code, discount: Number(r.discount ?? 0) });
+    toast.success(`Promo applied — you save ${ETB(Number(r.discount ?? 0))}`);
+  };
   const shopLoaded = !shopId || !!shop;
   const shopOpen = shopLoaded ? isShopOpenNow(shop ?? {}, hours) : false;
 
@@ -127,6 +155,7 @@ function CheckoutPage() {
         p_delivery_address: address.trim(),
         p_delivery_instructions: instructions.trim(),
         p_tip: tip,
+        p_coupon_code: promo?.code,
       });
       if (error) throw error;
 
@@ -283,6 +312,36 @@ function CheckoutPage() {
               <span>{ETB(tip)}</span>
             </div>
           )}
+          {promo && (
+            <div className="flex justify-between text-primary">
+              <span>Promo ({promo.code})</span>
+              <span>−{ETB(promoDiscount)}</span>
+            </div>
+          )}
+          <div className="mt-3 space-y-1.5">
+            <Label htmlFor="promo" className="text-xs">Have a promo code?</Label>
+            {promo ? (
+              <div className="flex items-center justify-between rounded-md border border-primary bg-primary-soft px-3 py-2 text-xs font-semibold">
+                <span>{promo.code} applied</span>
+                <button type="button" className="underline" onClick={() => setPromo(null)}>
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  id="promo"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  placeholder="ENTER CODE"
+                  className="h-9"
+                />
+                <Button type="button" size="sm" variant="outline" disabled={checkingPromo} onClick={applyPromo}>
+                  {checkingPromo ? "…" : "Apply"}
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="mt-2 flex justify-between font-display text-base font-bold">
             <span>Total</span>
             <span>{ETB(total)}</span>
