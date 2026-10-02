@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Clock, MapPin, Phone, Star } from "lucide-react";
+import { Clock, Heart, MapPin, Phone, Star } from "lucide-react";
 import { shopHoursQuery, shopProductsQuery, shopQuery } from "@/lib/queries";
 import type { Product } from "@/lib/queries";
 import { StorageImage } from "@/lib/media";
 import { ETB } from "@/lib/format";
 import { closedReason, isShopOpenNow } from "@/lib/hours";
+import { useSaved } from "@/lib/saved";
 import { ProductCard } from "@/components/ligo/Cards";
 import { ProductGridSkeleton } from "@/components/ligo/Skeletons";
 import { ProductModal } from "@/components/ligo/ProductModal";
@@ -32,6 +33,7 @@ function ShopDetail() {
   const { data: shop, isLoading } = useQuery(shopQuery(shopId));
   const { data: products = [] } = useQuery(shopProductsQuery(shopId));
   const { data: hours = [] } = useQuery(shopHoursQuery(shopId));
+  const { isFavoriteShop, toggleShop } = useSaved();
   const [selected, setSelected] = useState<Product | null>(null);
   const [activeSection, setActiveSection] = useState("all");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -84,6 +86,7 @@ function ShopDetail() {
   if (!shop) return <div className="container-ligo py-16">Shop not found.</div>;
 
   const open = isShopOpenNow(shop, hours);
+  const favorite = isFavoriteShop(shop.id);
 
   const scrollTo = (key: string) => {
     const el = sectionRefs.current[key];
@@ -111,10 +114,25 @@ function ShopDetail() {
             </span>
             <button
               type="button"
-              className="ml-auto rounded-full border border-border px-3 py-1 text-xs font-semibold text-primary"
+              aria-pressed={favorite}
+              aria-label={favorite ? "Remove shop from favorites" : "Save shop to favorites"}
+              className={`ml-auto flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                favorite
+                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                  : "border-border text-primary"
+              }`}
+              onClick={() => void toggleShop(shop.id)}
+            >
+              <Heart className={`h-3.5 w-3.5 ${favorite ? "fill-destructive" : ""}`} />
+              {favorite ? "Saved" : "Save shop"}
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-primary"
               onClick={() => {
                 const url = window.location.href;
-                if (navigator.share) void navigator.share({ title: shop.name, url }).catch(() => {});
+                if (navigator.share)
+                  void navigator.share({ title: shop.name, url }).catch(() => {});
                 else void navigator.clipboard.writeText(url);
               }}
             >

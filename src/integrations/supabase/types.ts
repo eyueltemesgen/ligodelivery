@@ -17,6 +17,8 @@ export type Database = {
       addresses: {
         Row: {
           address: string
+          area: string | null
+          city: string
           created_at: string
           full_name: string | null
           id: string
@@ -26,10 +28,13 @@ export type Database = {
           lat: number | null
           lng: number | null
           phone: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
           address: string
+          area?: string | null
+          city?: string
           created_at?: string
           full_name?: string | null
           id?: string
@@ -39,10 +44,13 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           phone?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
           address?: string
+          area?: string | null
+          city?: string
           created_at?: string
           full_name?: string | null
           id?: string
@@ -52,6 +60,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           phone?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1108,6 +1117,35 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          shop_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          shop_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          shop_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_favorites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_hours: {
         Row: {
           closes_at: string
@@ -1249,6 +1287,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wishlist: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
