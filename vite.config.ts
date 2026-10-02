@@ -12,4 +12,21 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // (TypeError: __exportAll is not a function). The SDK default server entry
 // keeps the chunk graph acyclic; SSR error handling lives in src/start.ts
 // request middleware instead.
-export default defineConfig({});
+
+// Public (browser-safe) backend URL + publishable key. Published builds have
+// shipped without these env vars, blanking the site, so bake them in as a
+// fallback. Real env values still win when present.
+const PUBLIC_SUPABASE_URL =
+  process.env["VITE_SUPABASE_URL"] || "https://kyfyljkxijmamnkhvqaw.supabase.co";
+const PUBLIC_SUPABASE_KEY =
+  process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+  "sb_publishable__-26UQR-hg8e3YE4RCgRiw_lIkghIy1";
+
+export default defineConfig({
+  vite: {
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(PUBLIC_SUPABASE_URL),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(PUBLIC_SUPABASE_KEY),
+    },
+  },
+});
