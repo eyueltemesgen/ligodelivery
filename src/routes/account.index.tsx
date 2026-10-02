@@ -26,10 +26,10 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/account/")({
   head: () => ({
     meta: [
-      { title: "Account overview — Ligo Delivery" },
+      { title: "Account overview — የኔ Go" },
       {
         name: "description",
-        content: "What's happening with your Ligo account: active orders, saved items and totals.",
+        content: "What's happening with your የኔ Go account: active orders, saved items and totals.",
       },
     ],
   }),

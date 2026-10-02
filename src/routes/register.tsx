@@ -61,13 +61,13 @@ export const Route = createFileRoute("/register")({
   },
   head: () => ({
     meta: [
-      { title: "Create your account — Ligo Delivery" },
+      { title: "Create your account — የኔ Go" },
       {
         name: "description",
-        content: "Join Ligo as a customer or rider in Bishoftu.",
+        content: "Join የኔ Go as a customer or rider in Bishoftu.",
       },
-      { property: "og:title", content: "Create your account — Ligo Delivery" },
-      { property: "og:description", content: "Join Ligo as a customer or rider." },
+      { property: "og:title", content: "Create your account — የኔ Go" },
+      { property: "og:description", content: "Join የኔ Go as a customer or rider." },
     ],
   }),
   component: RegisterPage,
@@ -156,7 +156,7 @@ function RegisterPage() {
       toast.success(
         role === "rider"
           ? "Rider application received — sit tight while we verify your documents."
-          : "Account created. Welcome to Ligo!",
+          : "Account created. Welcome to የኔ Go!",
       );
       await navigate({ to: role === "rider" ? "/rider" : "/" });
     } catch (err) {
@@ -170,7 +170,7 @@ function RegisterPage() {
     <div className="container-ligo flex justify-center py-12">
       <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-pop">
         <h1 className="font-display text-2xl font-extrabold">Create your account</h1>
-        <p className="mt-1 text-sm text-muted-foreground">How will you use Ligo?</p>
+        <p className="mt-1 text-sm text-muted-foreground">How will you use የኔ Go?</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           {ROLE_CARDS.map((r) => (
@@ -179,7 +179,9 @@ function RegisterPage() {
               type="button"
               onClick={() => setRole(r.id)}
               className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-100 active:scale-95 ${
-                role === r.id ? "border-primary bg-primary-soft" : "border-border hover:border-primary/50"
+                role === r.id
+                  ? "border-primary bg-primary-soft"
+                  : "border-border hover:border-primary/50"
               }`}
             >
               <r.icon className="h-5 w-5 shrink-0 text-primary" />

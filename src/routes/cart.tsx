@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
-      { title: "Your cart — Ligo Delivery" },
+      { title: "Your cart — የኔ Go" },
       {
         name: "description",
-        content: "Review the items in your Ligo delivery cart before checkout.",
+        content: "Review the items in your የኔ Go delivery cart before checkout.",
       },
-      { property: "og:title", content: "Your cart — Ligo Delivery" },
-      { property: "og:description", content: "Review your Ligo order before checkout." },
+      { property: "og:title", content: "Your cart — የኔ Go" },
+      { property: "og:description", content: "Review your የኔ Go order before checkout." },
     ],
   }),
   component: CartPage,

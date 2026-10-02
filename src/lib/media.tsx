@@ -70,7 +70,7 @@ export function StorageImage({
         }}
         aria-label={alt}
       >
-        {fallback ?? <span className="text-xs font-medium">{alt.slice(0, 18)}</span>}
+        {fallback ?? <span className="text-xs font-medium">{alt}</span>}
       </div>
     );
   }

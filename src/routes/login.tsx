@@ -9,13 +9,13 @@ export const Route = createFileRoute("/login")({
   },
   head: () => ({
     meta: [
-      { title: "Sign in — Ligo Delivery" },
+      { title: "Sign in — የኔ Go" },
       {
         name: "description",
-        content: "Sign in to your Ligo Delivery customer account to order in Bishoftu.",
+        content: "Sign in to your የኔ Go customer account to order in Bishoftu.",
       },
-      { property: "og:title", content: "Sign in — Ligo Delivery" },
-      { property: "og:description", content: "Access your Ligo Delivery customer account." },
+      { property: "og:title", content: "Sign in — የኔ Go" },
+      { property: "og:description", content: "Access your የኔ Go customer account." },
     ],
   }),
   component: () => <AuthPortal kind="customer" />,

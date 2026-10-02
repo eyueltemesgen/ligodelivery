@@ -45,13 +45,13 @@ export const Route = createFileRoute("/admin/")({
   },
   head: () => ({
     meta: [
-      { title: "Dashboard — Ligo Admin" },
+      { title: "Dashboard — የኔ Go Admin" },
       {
         name: "description",
-        content: "LIGO operations dashboard: revenue, orders, riders and merchants.",
+        content: "የኔ Go operations dashboard: revenue, orders, riders and merchants.",
       },
-      { property: "og:title", content: "Dashboard — Ligo Admin" },
-      { property: "og:description", content: "LIGO operations dashboard." },
+      { property: "og:title", content: "Dashboard — የኔ Go Admin" },
+      { property: "og:description", content: "የኔ Go operations dashboard." },
     ],
   }),
   component: AdminDashboard,
@@ -176,7 +176,9 @@ function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <h1 className="min-w-0 truncate font-display text-xl font-extrabold">Dashboard · {rangeDef.label}</h1>
+        <h1 className="min-w-0 truncate font-display text-xl font-extrabold">
+          Dashboard · {rangeDef.label}
+        </h1>
         <div
           className="grid grid-cols-[auto_repeat(3,1fr)] items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-card sm:flex"
           role="group"

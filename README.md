@@ -1,14 +1,14 @@
-# Ligo: Bishoftu Delivered
+# የኔ Go: Bishoftu Delivered
 
-LIGO DELIVERY — MASTER DEVELOPMENT PROMPT
+የኔ Go DELIVERY — MASTER DEVELOPMENT PROMPT
 
 Project Identity
 
-Build a professional, production-ready food, grocery, restaurant, and shop delivery platform called Ligo.
+Build a professional, production-ready food, grocery, restaurant, and shop delivery platform called የኔ Go.
 
 Brand
 
-Platform name: Ligo
+Platform name: የኔ Go
 
 Location: Bishoftu, Ethiopia
 
@@ -26,7 +26,7 @@ The website must look like a real commercial delivery company, not an AI-generat
 
 1. CORE PLATFORM STRUCTURE
 
-Ligo has THREE roles:
+የኔ Go has THREE roles:
 
 1. Customer
 
@@ -76,7 +76,7 @@ Receive notifications
 
 There is NO merchant portal.
 
-Riders register directly from the main Ligo website.
+Riders register directly from the main የኔ Go website.
 
 Riders can:
 
@@ -302,7 +302,7 @@ Homepage should contain:
 
 Header
 
-Ligo logo
+የኔ Go logo
 
 Location selector
 
@@ -456,21 +456,21 @@ Show complete order summary.
 
 Do NOT depend on Chapa.
 
-Ligo should support a manual/local payment workflow initially.
+የኔ Go should support a manual/local payment workflow initially.
 
 Payment options should include:
 
 Telebirr
 
-Customer sees the official Ligo Telebirr payment information configured by Admin.
+Customer sees the official የኔ Go Telebirr payment information configured by Admin.
 
 CBE
 
-Customer sees the official Ligo CBE payment information configured by Admin.
+Customer sees the official የኔ Go CBE payment information configured by Admin.
 
 BOA
 
-Customer sees the official Ligo BOA payment information configured by Admin.
+Customer sees the official የኔ Go BOA payment information configured by Admin.
 
 IMPORTANT SECURITY REQUIREMENT:
 
@@ -820,7 +820,7 @@ The design must feel like a real startup/company.
 
 Brand:
 
-LIGO
+የኔ Go
 
 Use a clean modern delivery identity.
 
@@ -1160,11 +1160,11 @@ Merchant order dashboard
 
 The Admin handles all merchant/shop operations.
 
-This keeps the first version simple and gives Ligo centralized control.
+This keeps the first version simple and gives የኔ Go centralized control.
 
 35. FUTURE ARCHITECTURE
 
-Build the backend so that later Ligo can add:
+Build the backend so that later የኔ Go can add:
 
 Dedicated Rider Android app
 
@@ -1218,9 +1218,9 @@ Special offers
 
 Recently added shops
 
-How Ligo works
+How የኔ Go works
 
-Become a Ligo Rider
+Become a የኔ Go Rider
 
 Customer testimonials
 
@@ -1232,7 +1232,7 @@ Footer
 
 Include:
 
-Ligo
+የኔ Go
 
 "Fast, simple delivery in Bishoftu."
 
@@ -1256,7 +1256,7 @@ Contact information should be configurable through Admin Settings.
 
 38. BRAND EXPERIENCE
 
-Ligo should feel:
+የኔ Go should feel:
 
 Fast
 
@@ -1272,7 +1272,7 @@ Professional
 
 Ethiopian
 
-The design should communicate that Ligo is built specifically for Bishoftu rather than being a generic international template.
+The design should communicate that የኔ Go is built specifically for Bishoftu rather than being a generic international template.
 
 39. DEVELOPMENT QUALITY
 
@@ -1394,11 +1394,11 @@ Login → Dashboard → Category → Shop → Product → Price → Image → Or
 
 Fix every broken button, route, API request, database relationship, validation error, responsive problem, and permission issue.
 
-The final Ligo platform must feel like a real production delivery business operating in Bishoftu, Ethiopia, not a demonstration project.
+The final የኔ Go platform must feel like a real production delivery business operating in Bishoftu, Ethiopia, not a demonstration project.
 
 Brand the application as:
 
-LIGO
+የኔ Go
 
 Fast. Local. Delivered.
 

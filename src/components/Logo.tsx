@@ -5,22 +5,28 @@ import { StorageImage } from "@/lib/media";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   const { data: c } = useQuery(siteContentQuery);
-  const short = c?.brand_short_name || c?.brand_name || "Ligo";
+  const short = c?.brand_short_name || c?.brand_name || "የኔ Go";
 
   return (
-    <Link to="/" className="flex items-center gap-2">
+    <Link to="/" className="flex min-w-0 items-center gap-2">
       {c?.logo_url ? (
-        <StorageImage path={c.logo_url} alt={short} className="h-9 w-9 rounded-lg object-cover" />
+        <StorageImage
+          path={c.logo_url}
+          alt={short}
+          className="h-9 w-9 shrink-0 rounded-lg object-cover"
+        />
       ) : (
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary font-display text-lg font-extrabold text-primary-foreground">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary font-display text-lg font-extrabold text-primary-foreground">
           {short.charAt(0).toUpperCase()}
         </span>
       )}
       {!compact && (
-        <span className="leading-none">
-          <span className="block font-display text-xl font-extrabold tracking-tight">{short}</span>
+        <span className="min-w-0 leading-none">
+          <span className="block truncate font-display text-xl font-extrabold tracking-tight">
+            {short}
+          </span>
           {c?.brand_tagline && (
-            <span className="block text-[11px] font-medium text-muted-foreground">
+            <span className="block truncate text-[11px] font-medium text-muted-foreground">
               {c.brand_tagline}
             </span>
           )}

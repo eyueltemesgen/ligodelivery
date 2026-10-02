@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/account/wishlist")({
   head: () => ({
     meta: [
-      { title: "Saved products & shops — Ligo Delivery" },
-      { name: "description", content: "Your saved products and favourite shops on Ligo." },
+      { title: "Saved products & shops — የኔ Go" },
+      { name: "description", content: "Your saved products and favourite shops on የኔ Go." },
     ],
   }),
   component: WishlistPage,

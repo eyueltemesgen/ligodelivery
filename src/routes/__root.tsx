@@ -85,16 +85,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ligo Delivery — Bishoftu food & grocery delivery" },
+      { title: "የኔ Go — Fast. Local. Delivered." },
       {
         name: "description",
         content:
           "Order food, groceries and essentials from Bishoftu shops with fast local delivery.",
       },
-      { name: "author", content: "Ligo Delivery" },
-      { property: "og:title", content: "Ligo Delivery — Bishoftu" },
+      { name: "author", content: "የኔ Go" },
+      { name: "application-name", content: "የኔ Go" },
+      { name: "apple-mobile-web-app-title", content: "የኔ Go" },
+      { name: "theme-color", content: "#059669" },
+      { property: "og:title", content: "የኔ Go — Fast. Local. Delivered." },
       { property: "og:description", content: "Fast local delivery across Bishoftu." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "የኔ Go" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
     ],
@@ -103,7 +107,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        // Ethiopic webfont so the Amharic brand "የኔ" renders identically across platforms.
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700;800&display=swap",
+      },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "64x64" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
     scripts: [
       {

@@ -52,7 +52,7 @@ const BISHOFTU: [number, number] = [8.7522, 38.9969];
 export const Route = createFileRoute("/account/orders/$orderId")({
   head: () => ({
     meta: [
-      { title: "Order details — Ligo Delivery" },
+      { title: "Order details — የኔ Go" },
       {
         name: "description",
         content: "Delivery timeline, payment and rider details for your order.",
@@ -488,7 +488,7 @@ function OrderDetails() {
             )}
             <p className="flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
               <ShieldCheck className="h-4 w-4" />
-              Payments are verified by the Ligo team
+              Payments are verified by the የኔ Go team
             </p>
           </section>
         </aside>

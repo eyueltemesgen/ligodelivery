@@ -14,10 +14,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/account/orders/")({
   head: () => ({
     meta: [
-      { title: "My orders — Ligo Delivery" },
+      { title: "My orders — የኔ Go" },
       {
         name: "description",
-        content: "Track current and past Ligo deliveries, reorder favourites and manage payments.",
+        content: "Track current and past የኔ Go deliveries, reorder favourites and manage payments.",
       },
     ],
   }),
@@ -36,7 +36,7 @@ function OrdersPage() {
     <>
       <AccountHeader
         title="My orders"
-        description="Every Ligo order you've placed, with live status and actions."
+        description="Every የኔ Go order you've placed, with live status and actions."
       />
 
       {/* Status filter — horizontally scrollable on mobile */}

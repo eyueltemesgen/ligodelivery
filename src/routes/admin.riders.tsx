@@ -32,13 +32,13 @@ import {
 export const Route = createFileRoute("/admin/riders")({
   head: () => ({
     meta: [
-      { title: "Rider approvals — Ligo Delivery" },
+      { title: "Rider approvals — የኔ Go" },
       {
         name: "description",
         content: "Review rider applications, verify documents and approve riders.",
       },
-      { property: "og:title", content: "Rider approvals — Ligo Delivery" },
-      { property: "og:description", content: "Rider verification queue for Ligo admins." },
+      { property: "og:title", content: "Rider approvals — የኔ Go" },
+      { property: "og:description", content: "Rider verification queue for የኔ Go admins." },
     ],
   }),
   component: RiderApprovalQueue,

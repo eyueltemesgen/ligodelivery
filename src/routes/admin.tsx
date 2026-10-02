@@ -5,10 +5,10 @@ import { AdminShell } from "@/components/admin/AdminShell";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin — LIGO Delivery" },
-      { name: "description", content: "Operations control center for LIGO Delivery." },
-      { property: "og:title", content: "Admin — LIGO Delivery" },
-      { property: "og:description", content: "Operations control center for LIGO Delivery." },
+      { title: "Admin — የኔ Go" },
+      { name: "description", content: "Operations control center for የኔ Go." },
+      { property: "og:title", content: "Admin — የኔ Go" },
+      { property: "og:description", content: "Operations control center for የኔ Go." },
     ],
   }),
   component: AdminLayout,

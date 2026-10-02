@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Reset password — Ligo Delivery" },
-      { name: "description", content: "Choose a new password for your Ligo account." },
+      { title: "Reset password — የኔ Go" },
+      { name: "description", content: "Choose a new password for your የኔ Go account." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

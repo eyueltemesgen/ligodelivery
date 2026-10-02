@@ -17,8 +17,8 @@ import { Separator } from "@/components/ui/separator";
 export const Route = createFileRoute("/account/profile")({
   head: () => ({
     meta: [
-      { title: "Profile & security — Ligo Delivery" },
-      { name: "description", content: "Manage your Ligo profile, contact details and password." },
+      { title: "Profile & security — የኔ Go" },
+      { name: "description", content: "Manage your የኔ Go profile, contact details and password." },
     ],
   }),
   component: ProfilePage,

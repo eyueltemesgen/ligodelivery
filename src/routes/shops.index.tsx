@@ -10,13 +10,13 @@ export const Route = createFileRoute("/shops/")({
     typeof s["category"] === "string" ? { category: s["category"] } : {},
   head: () => ({
     meta: [
-      { title: "Shops in Bishoftu — Ligo Delivery" },
+      { title: "Shops in Bishoftu — የኔ Go" },
       {
         name: "description",
         content:
-          "Order from restaurants, supermarkets, bakeries and pharmacies across Bishoftu with Ligo delivery.",
+          "Order from restaurants, supermarkets, bakeries and pharmacies across Bishoftu with የኔ Go delivery.",
       },
-      { property: "og:title", content: "Shops in Bishoftu — Ligo Delivery" },
+      { property: "og:title", content: "Shops in Bishoftu — የኔ Go" },
       { property: "og:description", content: "Browse local shops delivering across Bishoftu." },
     ],
   }),

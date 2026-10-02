@@ -31,13 +31,13 @@ const TIP_PRESETS = [0, 10, 20, 30, 50];
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Checkout — Ligo Delivery Bishoftu" },
+      { title: "Checkout — የኔ Go Bishoftu" },
       {
         name: "description",
-        content: "Confirm your delivery address and payment method to place your Ligo order.",
+        content: "Confirm your delivery address and payment method to place your የኔ Go order.",
       },
-      { property: "og:title", content: "Checkout — Ligo Delivery" },
-      { property: "og:description", content: "Place your Ligo Delivery order in Bishoftu." },
+      { property: "og:title", content: "Checkout — የኔ Go" },
+      { property: "og:description", content: "Place your የኔ Go order in Bishoftu." },
     ],
   }),
   component: CheckoutPage,

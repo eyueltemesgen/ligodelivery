@@ -23,8 +23,8 @@ export const BANNER_PLACEMENTS = [
 ] as const;
 
 export const DEFAULT_CONTENT = {
-  brand_name: "Ligo Delivery",
-  brand_short_name: "Ligo",
+  brand_name: "የኔ Go",
+  brand_short_name: "የኔ Go",
   brand_tagline: "Fast. Local. Delivered.",
   logo_url: "",
   city: "Bishoftu",
@@ -38,7 +38,7 @@ export const DEFAULT_CONTENT = {
   offers_title: "Today's offers",
   shops_title: "Popular shops",
   trending_title: "Trending items",
-  how_title: "How Ligo works",
+  how_title: "How የኔ Go works",
   how_step1_title: "1. Choose",
   how_step1_text: "Browse Bishoftu shops and add items to your cart.",
   how_step2_title: "2. Pay",
@@ -46,9 +46,9 @@ export const DEFAULT_CONTENT = {
   how_step3_title: "3. Track",
   how_step3_text: "Follow your rider live until the order arrives.",
   footer_tagline:
-    "Ligo delivers food, groceries and essentials across Bishoftu — fast, local and reliable.",
+    "የኔ Go delivers food, groceries and essentials across Bishoftu — fast, local and reliable.",
   contact_phone: "+251942578001",
-  contact_email: "hello@ligo.et",
+  contact_email: "hello@yenego.et",
   contact_address: "Bishoftu, Oromia",
   developer_name: "Eyuel Temesgen",
   company_name: "EYVORA Technologies",
@@ -85,6 +85,27 @@ export const CONTENT_FIELDS: { key: keyof SiteContent; label: string; long?: boo
   { key: "company_name", label: "Company name" },
 ];
 
+/**
+ * Rebrand shim: live `settings.site_content` may still hold legacy brand copy
+ * until the rebrand migration is applied. Normalize the user-facing brand
+ * fields so the storefront shows የኔ Go regardless of DB state.
+ */
+function normalizeLegacyBrand(content: SiteContent): SiteContent {
+  const fix = (value: string) =>
+    value.replace(/Ligo\s+Delivery/gi, "የኔ Go").replace(/Ligo/gi, "የኔ Go");
+  return {
+    ...content,
+    brand_name: fix(content.brand_name),
+    brand_short_name: fix(content.brand_short_name),
+    how_title: fix(content.how_title),
+    footer_tagline: fix(content.footer_tagline),
+    contact_email:
+      content.contact_email?.toLowerCase() === "hello@ligo.et"
+        ? "hello@yenego.et"
+        : content.contact_email,
+  };
+}
+
 export const siteContentQuery = {
   queryKey: ["site-content"],
   queryFn: async (): Promise<SiteContent> => {
@@ -93,7 +114,10 @@ export const siteContentQuery = {
       .select("value")
       .eq("key", "site_content")
       .maybeSingle();
-    return { ...DEFAULT_CONTENT, ...((data?.value ?? {}) as Partial<SiteContent>) };
+    return normalizeLegacyBrand({
+      ...DEFAULT_CONTENT,
+      ...((data?.value ?? {}) as Partial<SiteContent>),
+    });
   },
   placeholderData: DEFAULT_CONTENT,
 };

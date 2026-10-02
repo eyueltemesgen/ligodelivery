@@ -16,12 +16,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/shops/$shopId")({
   head: () => ({
     meta: [
-      { title: "Shop menu — Ligo Delivery Bishoftu" },
+      { title: "Shop menu — የኔ Go Bishoftu" },
       {
         name: "description",
-        content: "Browse the menu and order delivery from this Bishoftu shop on Ligo.",
+        content: "Browse the menu and order delivery from this Bishoftu shop on የኔ Go.",
       },
-      { property: "og:title", content: "Shop menu — Ligo Delivery" },
+      { property: "og:title", content: "Shop menu — የኔ Go" },
       { property: "og:description", content: "Order delivery from this Bishoftu shop." },
     ],
   }),

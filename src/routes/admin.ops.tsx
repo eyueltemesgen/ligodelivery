@@ -49,13 +49,13 @@ export const Route = createFileRoute("/admin/ops")({
   },
   head: () => ({
     meta: [
-      { title: "Operations — Ligo Admin" },
+      { title: "Operations — የኔ Go Admin" },
       {
         name: "description",
-        content: "Manage Ligo orders, payments, riders, shops, products and offers.",
+        content: "Manage የኔ Go orders, payments, riders, shops, products and offers.",
       },
-      { property: "og:title", content: "Operations — Ligo Admin" },
-      { property: "og:description", content: "Operations console for Ligo Delivery." },
+      { property: "og:title", content: "Operations — የኔ Go Admin" },
+      { property: "og:description", content: "Operations console for የኔ Go." },
     ],
   }),
   component: AdminPage,
@@ -75,20 +75,48 @@ function AdminPage() {
       >
         <div className="-mx-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           <TabsList className="h-auto w-max min-w-full justify-start gap-1">
-            <TabsTrigger value="orders" className="min-h-9">Orders</TabsTrigger>
-            <TabsTrigger value="payments" className="min-h-9">Payments</TabsTrigger>
-            <TabsTrigger value="payouts" className="min-h-9">Payouts</TabsTrigger>
-            <TabsTrigger value="customers" className="min-h-9">Customers</TabsTrigger>
-            <TabsTrigger value="shops" className="min-h-9">Shops</TabsTrigger>
-            <TabsTrigger value="products" className="min-h-9">Products</TabsTrigger>
-            <TabsTrigger value="categories" className="min-h-9">Categories</TabsTrigger>
-            <TabsTrigger value="offers" className="min-h-9">Offers</TabsTrigger>
-            <TabsTrigger value="marketing" className="min-h-9">Marketing</TabsTrigger>
-            <TabsTrigger value="banners" className="min-h-9">Banners</TabsTrigger>
-            <TabsTrigger value="content" className="min-h-9">Content</TabsTrigger>
-            <TabsTrigger value="financials" className="min-h-9">Financials</TabsTrigger>
-            <TabsTrigger value="settings" className="min-h-9">Settings</TabsTrigger>
-            <TabsTrigger value="system" className="min-h-9">System</TabsTrigger>
+            <TabsTrigger value="orders" className="min-h-9">
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="min-h-9">
+              Payments
+            </TabsTrigger>
+            <TabsTrigger value="payouts" className="min-h-9">
+              Payouts
+            </TabsTrigger>
+            <TabsTrigger value="customers" className="min-h-9">
+              Customers
+            </TabsTrigger>
+            <TabsTrigger value="shops" className="min-h-9">
+              Shops
+            </TabsTrigger>
+            <TabsTrigger value="products" className="min-h-9">
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="min-h-9">
+              Categories
+            </TabsTrigger>
+            <TabsTrigger value="offers" className="min-h-9">
+              Offers
+            </TabsTrigger>
+            <TabsTrigger value="marketing" className="min-h-9">
+              Marketing
+            </TabsTrigger>
+            <TabsTrigger value="banners" className="min-h-9">
+              Banners
+            </TabsTrigger>
+            <TabsTrigger value="content" className="min-h-9">
+              Content
+            </TabsTrigger>
+            <TabsTrigger value="financials" className="min-h-9">
+              Financials
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="min-h-9">
+              Settings
+            </TabsTrigger>
+            <TabsTrigger value="system" className="min-h-9">
+              System
+            </TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="orders">
@@ -835,7 +863,7 @@ export function PayoutsAdmin() {
       status === "paid" ? "Payout sent" : "Payout rejected",
       status === "paid"
         ? `${ETB(amount)} has been paid out to you.`
-        : "Your payout request was rejected. Contact the Ligo team.",
+        : "Your payout request was rejected. Contact the የኔ Go team.",
       "payout",
     );
     void qc.invalidateQueries({ queryKey: ["admin-payouts"] });
@@ -1638,8 +1666,7 @@ function BannersAdmin() {
   });
   const { data: bannerShops = [] } = useQuery({
     queryKey: ["admin-banner-shops"],
-    queryFn: async () =>
-      (await supabase.from("shops").select("id,name").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("shops").select("id,name").order("name")).data ?? [],
   });
 
   const create = async (e: React.FormEvent) => {

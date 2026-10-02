@@ -68,7 +68,7 @@ export function SiteHeader() {
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Search for burgers, milk, pharmacy…"
             className="h-10 pl-9"
-            aria-label="Search Ligo"
+            aria-label="Search የኔ Go"
           />
         </form>
         <nav className="hidden items-center gap-1 lg:flex">
@@ -184,9 +184,9 @@ export function SiteHeader() {
           <Input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Search Ligo"
+            placeholder="Search የኔ Go"
             className="h-10 pl-9"
-            aria-label="Search Ligo"
+            aria-label="Search የኔ Go"
           />
         </form>
       </div>
