@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Bell,
+  Heart,
   Home,
   LayoutDashboard,
   LogOut,
@@ -36,7 +37,7 @@ const NAV = [
   { to: "/categories", label: "Categories" },
   { to: "/shops", label: "Shops" },
   { to: "/offers", label: "Offers" },
-  { to: "/orders", label: "Track order" },
+  { to: "/account/orders", label: "Track order" },
 ];
 
 export function SiteHeader() {
@@ -104,13 +105,25 @@ export function SiteHeader() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/orders">
+                  <Link to="/account/orders">
                     <Package className="mr-2 h-4 w-4" />
                     My orders
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/notifications">
+                  <Link to="/account/wishlist">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Saved products
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/account/addresses">
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Addresses
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/account/notifications">
                     <Bell className="mr-2 h-4 w-4" />
                     Notifications
                   </Link>
@@ -211,7 +224,7 @@ export function MobileTabBar() {
     { to: "/", label: "Home", icon: Home },
     { to: "/shops", label: "Shops", icon: Store },
     { to: "/cart", label: "Cart", icon: ShoppingCart, badge: count },
-    { to: "/orders", label: "Orders", icon: Package },
+    { to: "/account/orders", label: "Orders", icon: Package },
     { to: "/account", label: "Account", icon: User },
   ];
   return (

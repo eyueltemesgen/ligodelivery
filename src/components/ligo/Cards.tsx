@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, Plus, Star, Truck } from "lucide-react";
+import { Clock, Heart, Plus, Star, Truck } from "lucide-react";
 import { StorageImage } from "@/lib/media";
 import { ETB, discounted, isShopOpen } from "@/lib/format";
 import type { Product, Shop } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
+import { useSaved } from "@/lib/saved";
 import { toast } from "sonner";
 
 /** Delivery window shown as a range, e.g. "15–25 min", with safe fallbacks. */
@@ -15,11 +16,13 @@ const deliveryWindow = (mins: number | null | undefined) => {
 
 export function ShopCard({ shop }: { shop: Shop }) {
   const open = shop.is_online !== false && isShopOpen(shop.opens_at, shop.closes_at);
+  const { isFavoriteShop, toggleShop } = useSaved();
+  const favorite = isFavoriteShop(shop.id);
   return (
     <Link
       to="/shops/$shopId"
       params={{ shopId: shop.id }}
-      className="group overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+      className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden">
         <StorageImage
@@ -32,6 +35,23 @@ export function ShopCard({ shop }: { shop: Shop }) {
         >
           {open ? "Open now" : "Closed"}
         </span>
+        <button
+          type="button"
+          aria-label={
+            favorite ? `Remove ${shop.name} from favorites` : `Save ${shop.name} to favorites`
+          }
+          aria-pressed={favorite}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            void toggleShop(shop.id);
+          }}
+          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-background/90 shadow-sm transition-transform active:scale-90"
+        >
+          <Heart
+            className={`h-4 w-4 ${favorite ? "fill-destructive text-destructive" : "text-muted-foreground"}`}
+          />
+        </button>
         <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[11px] font-semibold text-foreground shadow-sm">
           <Clock className="h-3 w-3 text-primary" />
           {deliveryWindow(shop.delivery_time_min)}
@@ -69,6 +89,8 @@ export function ProductCard({
   onSelect?: (product: Product) => void;
 }) {
   const { add } = useCart();
+  const { isSavedProduct, toggleProduct } = useSaved();
+  const saved = isSavedProduct(product.id);
   const price = discounted(Number(product.price), product.discount_percent);
   return (
     <div
@@ -78,11 +100,27 @@ export function ProductCard({
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && !orderingDisabled && onSelect?.(product)}
     >
-      <StorageImage
-        path={product.image_url}
-        alt={product.name}
-        className="h-32 w-full object-cover"
-      />
+      <div className="relative">
+        <StorageImage
+          path={product.image_url}
+          alt={product.name}
+          className="h-32 w-full object-cover"
+        />
+        <button
+          type="button"
+          aria-label={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
+          aria-pressed={saved}
+          onClick={(e) => {
+            e.stopPropagation();
+            void toggleProduct(product.id);
+          }}
+          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-background/90 shadow-sm transition-transform active:scale-90"
+        >
+          <Heart
+            className={`h-4 w-4 ${saved ? "fill-destructive text-destructive" : "text-muted-foreground"}`}
+          />
+        </button>
+      </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
         <h4 className="line-clamp-1 text-sm font-semibold">{product.name}</h4>
         <p className="line-clamp-2 text-xs text-muted-foreground">{product.description}</p>

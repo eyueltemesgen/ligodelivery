@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { CartProvider } from "@/lib/cart";
+import { SavedProvider } from "@/lib/saved";
 import { SiteHeader, MobileTabBar } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
@@ -139,16 +140,18 @@ function RootComponent() {
       <AuthProvider>
         <ThemeProvider>
           <CartProvider>
-            <div className="flex min-h-screen flex-col pb-16 md:pb-0">
-              <SiteHeader />
-              <main className="flex-1">
-                {/* Required: nested routes render here. */}
-                <Outlet />
-              </main>
-              <SiteFooter />
-              <MobileTabBar />
-            </div>
-            <Toaster position="top-center" richColors />
+            <SavedProvider>
+              <div className="flex min-h-screen flex-col pb-16 md:pb-0">
+                <SiteHeader />
+                <main className="flex-1">
+                  {/* Required: nested routes render here. */}
+                  <Outlet />
+                </main>
+                <SiteFooter />
+                <MobileTabBar />
+              </div>
+              <Toaster position="top-center" richColors />
+            </SavedProvider>
           </CartProvider>
         </ThemeProvider>
       </AuthProvider>

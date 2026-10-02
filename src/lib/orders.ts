@@ -70,6 +70,77 @@ export const statusTone = (status: string) => {
   return "bg-secondary text-secondary-foreground";
 };
 
+/** Statuses where the order is still being fulfilled (not final). */
+const OPEN_STATUSES = new Set<string>([
+  "pending",
+  "payment_verification",
+  "pending_payment",
+  "confirmed",
+  "preparing",
+  "ready_for_pickup",
+  "dispatched",
+  "accepted",
+  "rider_assigned",
+  "arrived_at_merchant",
+  "picked_up",
+  "on_the_way",
+]);
+
+export const isOrderOpen = (status: string) => OPEN_STATUSES.has(status);
+
+/** Customer-facing order tabs. Backend statuses are folded into these groups. */
+export const ORDER_TABS = [
+  { id: "all", label: "All" },
+  { id: "pending", label: "Pending" },
+  { id: "confirmed", label: "Confirmed" },
+  { id: "preparing", label: "Preparing" },
+  { id: "out_for_delivery", label: "Out for delivery" },
+  { id: "delivered", label: "Delivered" },
+  { id: "cancelled", label: "Cancelled" },
+] as const;
+
+export type OrderTab = (typeof ORDER_TABS)[number]["id"];
+
+const TAB_STATUSES: Record<Exclude<OrderTab, "all">, string[]> = {
+  pending: ["pending", "pending_payment", "payment_verification"],
+  confirmed: ["confirmed"],
+  preparing: ["preparing", "ready_for_pickup"],
+  out_for_delivery: [
+    "dispatched",
+    "accepted",
+    "rider_assigned",
+    "arrived_at_merchant",
+    "picked_up",
+    "on_the_way",
+  ],
+  delivered: ["delivered"],
+  cancelled: ["cancelled"],
+};
+
+export const matchesOrderTab = (status: string, tab: OrderTab) =>
+  tab === "all" ? true : TAB_STATUSES[tab].includes(status);
+
+/** A customer may cancel until the order is dispatched to a rider. */
+export const canCancelOrder = (status: string) =>
+  ["pending", "pending_payment", "payment_verification", "confirmed", "preparing"].includes(status);
+
+export const tabCounts = (statuses: string[]) =>
+  ORDER_TABS.reduce<Record<OrderTab, number>>(
+    (acc, t) => {
+      acc[t.id] = statuses.filter((s) => matchesOrderTab(s, t.id)).length;
+      return acc;
+    },
+    {
+      all: 0,
+      pending: 0,
+      confirmed: 0,
+      preparing: 0,
+      out_for_delivery: 0,
+      delivered: 0,
+      cancelled: 0,
+    },
+  );
+
 export async function notify(
   userId: string,
   title: string,

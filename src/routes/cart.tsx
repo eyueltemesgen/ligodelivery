@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Heart, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { ETB } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
@@ -21,19 +21,30 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { items, setQty, remove, subtotal, shopName, clear } = useCart();
+  const { items, setQty, remove, subtotal, count, shopName, clear } = useCart();
   const navigate = useNavigate();
 
   if (items.length === 0)
     return (
       <div className="container-ligo py-16 text-center">
-        <h1 className="font-display text-2xl font-extrabold">Your cart is empty</h1>
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary-soft">
+          <ShoppingCart className="h-6 w-6 text-primary" />
+        </div>
+        <h1 className="mt-4 font-display text-2xl font-extrabold">Your cart is empty</h1>
         <p className="mt-2 text-muted-foreground">
           Browse shops in Bishoftu and add something tasty.
         </p>
-        <Button asChild className="mt-6">
-          <Link to="/shops">Browse shops</Link>
-        </Button>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <Button asChild>
+            <Link to="/shops">Browse shops</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/account/wishlist">
+              <Heart className="mr-2 h-4 w-4" />
+              Saved products
+            </Link>
+          </Button>
+        </div>
       </div>
     );
 
@@ -41,7 +52,9 @@ function CartPage() {
     <div className="container-ligo grid gap-8 py-10 lg:grid-cols-[1fr_340px]">
       <div>
         <h1 className="font-display text-3xl font-extrabold">Your cart</h1>
-        <p className="mt-1 text-sm text-muted-foreground">From {shopName}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {count} {count === 1 ? "item" : "items"} from {shopName}
+        </p>
         <ul className="mt-6 space-y-3">
           {items.map((i) => (
             <li
@@ -53,14 +66,15 @@ function CartPage() {
                 alt={i.name}
                 className="h-16 w-16 rounded-lg object-cover"
               />
-              <div className="flex-1">
-                <p className="font-semibold">{i.name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{i.name}</p>
                 <p className="text-sm text-muted-foreground">{ETB(i.unitPrice)}</p>
               </div>
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Decrease quantity"
                   onClick={() => setQty(i.productId, i.quantity - 1)}
                 >
                   <Minus className="h-4 w-4" />
@@ -69,20 +83,34 @@ function CartPage() {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Increase quantity"
                   onClick={() => setQty(i.productId, i.quantity + 1)}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => remove(i.productId)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Remove ${i.name}`}
+                  onClick={() => remove(i.productId)}
+                >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </li>
           ))}
         </ul>
-        <Button variant="ghost" className="mt-4 text-destructive" onClick={clear}>
-          Clear cart
-        </Button>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Button asChild variant="outline">
+            <Link to="/shops">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Continue shopping
+            </Link>
+          </Button>
+          <Button variant="ghost" className="text-destructive" onClick={clear}>
+            Clear cart
+          </Button>
+        </div>
       </div>
       <aside className="h-fit rounded-xl border border-border bg-card p-5 shadow-card">
         <h2 className="font-display text-lg font-bold">Summary</h2>
@@ -95,6 +123,12 @@ function CartPage() {
         </p>
         <Button className="mt-5 w-full" onClick={() => navigate({ to: "/checkout" })}>
           Proceed to checkout
+        </Button>
+        <Button asChild variant="outline" className="mt-2 w-full">
+          <Link to="/account/wishlist">
+            <Heart className="mr-2 h-4 w-4" />
+            Saved products
+          </Link>
         </Button>
       </aside>
     </div>

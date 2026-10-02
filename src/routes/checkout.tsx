@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
 import { useCart } from "@/lib/cart";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ETB } from "@/lib/format";
 import { supabaseErrorMessage } from "@/lib/supa-error";
 import { closedReason, isShopOpenNow } from "@/lib/hours";
+import { addressesQuery } from "@/lib/account";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,7 +50,9 @@ function CheckoutPage() {
   const { data: shop } = useQuery({ ...shopQuery(shopId ?? ""), enabled: !!shopId });
   const { data: hours = [] } = useQuery({ ...shopHoursQuery(shopId ?? ""), enabled: !!shopId });
   const { data: publicSettings } = useQuery(publicSettingsQuery);
+  const { data: savedAddresses = [] } = useQuery(addressesQuery(user?.id));
   const [step, setStep] = useState<1 | 2>(1);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [name, setName] = useState(profile?.full_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [address, setAddress] = useState("");
@@ -60,6 +63,26 @@ function CheckoutPage() {
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
+
+  // Prefill from the customer's default saved address once it loads.
+  useEffect(() => {
+    if (selectedAddressId || savedAddresses.length === 0) return;
+    const def = savedAddresses.find((a) => a.is_default) ?? savedAddresses[0];
+    if (!def) return;
+    setSelectedAddressId(def.id);
+    setAddress([def.address, def.area, def.city].filter(Boolean).join(", "));
+    setInstructions(def.instructions ?? "");
+    if (def.full_name) setName(def.full_name);
+    if (def.phone) setPhone(def.phone);
+  }, [savedAddresses, selectedAddressId]);
+
+  const chooseAddress = (a: (typeof savedAddresses)[number]) => {
+    setSelectedAddressId(a.id);
+    setAddress([a.address, a.area, a.city].filter(Boolean).join(", "));
+    setInstructions(a.instructions ?? "");
+    if (a.full_name) setName(a.full_name);
+    if (a.phone) setPhone(a.phone);
+  };
 
   const platform = (publicSettings?.["platform"] ?? {}) as {
     base_delivery_fee?: number;
@@ -155,7 +178,7 @@ function CheckoutPage() {
         p_delivery_address: address.trim(),
         p_delivery_instructions: instructions.trim(),
         p_tip: tip,
-        p_coupon_code: promo?.code,
+        ...(promo ? { p_coupon_code: promo.code } : {}),
       });
       if (error) throw error;
 
@@ -193,6 +216,52 @@ function CheckoutPage() {
         {step === 1 && (
           <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
             <h2 className="font-display text-lg font-bold">Delivery details</h2>
+
+            {savedAddresses.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Saved addresses
+                  </Label>
+                  <Link
+                    to="/account/addresses"
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    Manage
+                  </Link>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {savedAddresses.map((a) => {
+                    const active = selectedAddressId === a.id;
+                    return (
+                      <button
+                        type="button"
+                        key={a.id}
+                        onClick={() => chooseAddress(a)}
+                        className={`rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
+                          active
+                            ? "border-primary bg-primary-soft"
+                            : "border-border hover:border-primary/40"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase">
+                            {a.label}
+                          </span>
+                          {a.is_default && (
+                            <span className="text-[10px] font-semibold text-primary">Default</span>
+                          )}
+                        </span>
+                        <span className="mt-1 block truncate text-muted-foreground">
+                          {a.address}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="n">Full name</Label>
@@ -208,7 +277,10 @@ function CheckoutPage() {
               <Input
                 id="a"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => {
+                  setAddress(e.target.value);
+                  setSelectedAddressId(null);
+                }}
                 required
                 placeholder="Kebele, landmark, house no."
               />
@@ -319,7 +391,9 @@ function CheckoutPage() {
             </div>
           )}
           <div className="mt-3 space-y-1.5">
-            <Label htmlFor="promo" className="text-xs">Have a promo code?</Label>
+            <Label htmlFor="promo" className="text-xs">
+              Have a promo code?
+            </Label>
             {promo ? (
               <div className="flex items-center justify-between rounded-md border border-primary bg-primary-soft px-3 py-2 text-xs font-semibold">
                 <span>{promo.code} applied</span>
@@ -336,7 +410,13 @@ function CheckoutPage() {
                   placeholder="ENTER CODE"
                   className="h-9"
                 />
-                <Button type="button" size="sm" variant="outline" disabled={checkingPromo} onClick={applyPromo}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={checkingPromo}
+                  onClick={applyPromo}
+                >
                   {checkingPromo ? "…" : "Apply"}
                 </Button>
               </div>
