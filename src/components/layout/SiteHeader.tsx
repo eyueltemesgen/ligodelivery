@@ -55,19 +55,19 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-md dark:bg-zinc-950/80">
-      <div className="container-ligo flex h-16 items-center gap-4">
+      <div className="container-ligo flex h-16 items-center gap-4 md:h-20">
         <Logo />
         <div className="hidden items-center gap-1 text-sm text-muted-foreground lg:flex">
           <MapPin className="h-4 w-4 text-primary" />
           <span className="font-medium text-foreground">{content?.city}</span>
         </div>
         <form onSubmit={submit} className="relative hidden flex-1 md:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Search for burgers, milk, pharmacy…"
-            className="h-10 pl-9"
+            className="h-11 pl-10 text-sm md:h-12 md:text-base"
             aria-label="Search Ligo"
           />
         </form>
@@ -180,12 +180,12 @@ export function SiteHeader() {
       </div>
       <div className="container-ligo pb-3 md:hidden">
         <form onSubmit={submit} className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Search Ligo"
-            className="h-10 pl-9"
+            className="h-11 pl-10 text-sm md:h-12 md:text-base"
             aria-label="Search Ligo"
           />
         </form>

@@ -24,7 +24,7 @@ export function ShopCard({ shop }: { shop: Shop }) {
       params={{ shopId: shop.id }}
       className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className="relative aspect-[16/9] w-full overflow-hidden">
+      <div className="relative aspect-[3/2] w-full overflow-hidden">
         <StorageImage
           path={shop.cover_url ?? shop.image_url}
           alt={shop.name}

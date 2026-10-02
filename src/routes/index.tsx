@@ -76,15 +76,17 @@ function Home() {
             <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
               {c?.hero_badge}
             </span>
-            <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
+            <h1 className="mt-4 font-display text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
               {c?.hero_title}
             </h1>
-            <p className="mt-4 max-w-lg text-muted-foreground">{c?.hero_subtitle}</p>
+            <p className="mt-4 max-w-lg text-base text-muted-foreground md:text-lg">
+              {c?.hero_subtitle}
+            </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild size="lg">
+              <Button asChild size="lg" className="h-12 px-6 py-3 text-base">
                 <Link to="/shops">{c?.hero_primary_cta}</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button asChild size="lg" variant="outline" className="h-12 px-6 py-3 text-base">
                 <Link to="/rider/join">{c?.hero_secondary_cta}</Link>
               </Button>
             </div>
@@ -95,7 +97,7 @@ function Home() {
                 { icon: ShieldCheck, t: "Verified payments" },
               ].map((f) => (
                 <div key={f.t} className="flex items-center gap-2 text-sm font-medium">
-                  <f.icon className="h-4 w-4 text-primary" />
+                  <f.icon className="h-5 w-5 text-primary" />
                   {f.t}
                 </div>
               ))}
@@ -118,7 +120,7 @@ function Home() {
 
       <section className="container-ligo py-10">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">{c?.categories_title}</h2>
+          <h2 className="font-display text-2xl font-bold md:text-3xl">{c?.categories_title}</h2>
           <Link to="/categories" className="text-sm font-medium text-primary">
             See all
           </Link>
@@ -141,9 +143,9 @@ function Home() {
                 <StorageImage
                   path={c.image_url}
                   alt={c.name}
-                  className="h-20 w-full object-cover"
+                  className="aspect-[4/3] w-full object-cover"
                 />
-                <p className="p-2 text-xs font-semibold">{c.name}</p>
+                <p className="p-2.5 text-sm font-medium">{c.name}</p>
               </Link>
             ))}
           </div>
@@ -153,7 +155,7 @@ function Home() {
           <button
             type="button"
             onClick={() => setQuickCategory(null)}
-            className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
               !quickCategory
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-card hover:border-primary/50"
@@ -166,7 +168,7 @@ function Home() {
               key={cat.id}
               type="button"
               onClick={() => setQuickCategory((cur) => (cur === cat.id ? null : cat.id))}
-              className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                 quickCategory === cat.id
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card hover:border-primary/50"
@@ -179,7 +181,7 @@ function Home() {
             <button
               type="button"
               onClick={() => void navigate({ to: "/shops", search: { category: quickCategory } })}
-              className="rounded-full border border-primary/40 bg-primary-soft px-3.5 py-1.5 text-sm font-semibold text-accent-foreground"
+              className="rounded-full border border-primary/40 bg-primary-soft px-4 py-2 text-sm font-semibold text-accent-foreground"
             >
               View all in {categories.find((x) => x.id === quickCategory)?.name ?? "category"} →
             </button>
@@ -192,7 +194,7 @@ function Home() {
       {offers.length > 0 && (
         <section className="container-ligo py-4">
           <div className="flex items-end justify-between">
-            <h2 className="font-display text-2xl font-bold">{c?.offers_title}</h2>
+            <h2 className="font-display text-2xl font-bold md:text-3xl">{c?.offers_title}</h2>
             <Link to="/offers" className="text-sm font-medium text-primary">
               See all
             </Link>
@@ -220,7 +222,7 @@ function Home() {
 
       <section className="container-ligo py-10">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">{c?.shops_title}</h2>
+          <h2 className="font-display text-2xl font-bold md:text-3xl">{c?.shops_title}</h2>
           <Link to="/shops" className="text-sm font-medium text-primary">
             See all
           </Link>
@@ -245,7 +247,7 @@ function Home() {
 
       {popularLoading ? (
         <section className="container-ligo pb-12">
-          <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
+          <h2 className="font-display text-2xl font-bold md:text-3xl">{c?.trending_title}</h2>
           <div className="mt-5">
             <ProductGridSkeleton count={4} />
           </div>
@@ -253,7 +255,7 @@ function Home() {
       ) : (
         popular.length > 0 && (
           <section className="container-ligo pb-12">
-            <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
+            <h2 className="font-display text-2xl font-bold md:text-3xl">{c?.trending_title}</h2>
             <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {popular.map((p) => (
                 <ProductCard key={p.id} product={p} />
@@ -267,7 +269,7 @@ function Home() {
 
       <section className="container-ligo pb-16">
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
-          <h2 className="font-display text-2xl font-bold">{c?.how_title}</h2>
+          <h2 className="font-display text-2xl font-bold md:text-3xl">{c?.how_title}</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
             {[
               { icon: Search, t: c?.how_step1_title, d: c?.how_step1_text },
