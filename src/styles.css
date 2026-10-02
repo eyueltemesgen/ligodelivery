@@ -188,6 +188,15 @@
   padding-inline: 1rem;
 }
 
+/* Widen the page on large monitors so content doesn't look shrunken/centered
+   with big empty side gutters. 80rem caps at 1280px, which fills only ~67% of
+   a 1920px screen and ~50% of a 2560px screen. */
+@media (min-width: 1536px) {
+  .container-ligo {
+    max-width: 96rem;
+  }
+}
+
 @layer components {
   .ligo-card {
     background-color: var(--color-card);
