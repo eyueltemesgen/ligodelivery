@@ -124,7 +124,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                       <item.icon className="h-4 w-4" />
                       {item.label}
                       {badge > 0 && (
-                        <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                           {badge}
                         </span>
                       )}

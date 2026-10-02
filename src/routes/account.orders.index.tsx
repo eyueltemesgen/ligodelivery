@@ -62,7 +62,7 @@ function OrdersPage() {
                 {count > 0 && (
                   <span
                     className={cn(
-                      "rounded-full px-1.5 text-[10px] font-bold",
+                      "rounded-full px-1.5 py-0.5 text-xs font-bold",
                       active ? "bg-primary-foreground/20" : "bg-secondary",
                     )}
                   >
