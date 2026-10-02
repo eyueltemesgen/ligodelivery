@@ -104,9 +104,12 @@ function ShopDetail() {
         />
       </div>
       <div className="container-ligo -mt-10 pb-12">
-        <div className="rounded-xl border border-border bg-card p-5 shadow-pop">
+        {/* relative + z-10 keeps the info card painting above the cover image it overlaps */}
+        <div className="relative z-10 rounded-xl border border-border bg-card p-5 shadow-pop">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-display text-2xl font-extrabold">{shop.name}</h1>
+            <h1 className="min-w-0 max-w-full break-words font-display text-2xl font-extrabold">
+              {shop.name}
+            </h1>
             <span
               className={`rounded-full px-2 py-1 text-xs font-semibold ${open ? "bg-primary-soft text-accent-foreground" : "bg-muted text-muted-foreground"}`}
             >
