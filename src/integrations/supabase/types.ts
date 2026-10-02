@@ -143,6 +143,57 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_discount: number | null
+          min_order_amount: number
+          starts_at: string | null
+          updated_at: string
+          usage_limit: number | null
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_order_amount?: number
+          starts_at?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_order_amount?: number
+          starts_at?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+        }
+        Relationships: []
+      }
       merchant_payouts: {
         Row: {
           commission_amount: number
@@ -509,6 +560,8 @@ export type Database = {
         Row: {
           commission_amount: number
           commission_percent: number
+          coupon_code: string | null
+          coupon_id: string | null
           created_at: string
           customer_id: string
           customer_name: string | null
@@ -538,6 +591,8 @@ export type Database = {
         Insert: {
           commission_amount?: number
           commission_percent?: number
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_id: string
           customer_name?: string | null
@@ -567,6 +622,8 @@ export type Database = {
         Update: {
           commission_amount?: number
           commission_percent?: number
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_id?: string
           customer_name?: string | null
@@ -594,6 +651,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_rider_id_fkey"
             columns: ["rider_id"]
@@ -1193,6 +1257,10 @@ export type Database = {
     Functions: {
       accept_order: { Args: { _order_id: string }; Returns: undefined }
       approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
+      check_coupon: {
+        Args: { p_code: string; p_delivery_fee: number; p_subtotal: number }
+        Returns: Json
+      }
       complete_delivery: {
         Args: { _order_id: string; _pin: string }
         Returns: undefined
@@ -1210,6 +1278,7 @@ export type Database = {
       owns_shop: { Args: { _shop: string }; Returns: boolean }
       place_order: {
         Args: {
+          p_coupon_code?: string
           p_customer_name?: string
           p_customer_phone?: string
           p_delivery_address?: string
