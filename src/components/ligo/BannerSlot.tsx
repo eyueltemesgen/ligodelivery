@@ -29,7 +29,12 @@ export function BannerSlot({ placement, className }: { placement: string; classN
             </div>
           );
           return b.link_url ? (
-            <a key={b.id} href={b.link_url} className="block">
+            <a
+              key={b.id}
+              href={b.link_url}
+              className="block"
+              {...(/^https?:/.test(b.link_url) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            >
               {inner}
             </a>
           ) : (

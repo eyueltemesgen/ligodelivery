@@ -1125,6 +1125,16 @@ function ShopsAdmin() {
                     onCheckedChange={(v) => void toggle(s.id, { is_active: v })}
                   />
                 </label>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(`${window.location.origin}/shops/${s.id}`);
+                    toast.success("Shop link copied — paste it in a banner or ad");
+                  }}
+                >
+                  Copy promo link
+                </Button>
               </div>
             </div>
             <details className="mt-3">
@@ -1620,6 +1630,11 @@ function BannersAdmin() {
       (await supabase.from("banners").select("*").order("placement").order("sort_order")).data ??
       [],
   });
+  const { data: bannerShops = [] } = useQuery({
+    queryKey: ["admin-banner-shops"],
+    queryFn: async () =>
+      (await supabase.from("shops").select("id,name").order("name")).data ?? [],
+  });
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1696,6 +1711,27 @@ function BannersAdmin() {
           value={form.cta_label}
           onChange={(e) => setForm({ ...form, cta_label: e.target.value })}
         />
+        <select
+          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+          value=""
+          onChange={(e) => {
+            const s = bannerShops.find((x) => x.id === e.target.value);
+            if (!s) return;
+            setForm({
+              ...form,
+              link_url: `/shops/${s.id}`,
+              title: form.title || s.name,
+              cta_label: form.cta_label || "Order now",
+            });
+          }}
+        >
+          <option value="">Promote a shop (auto-fill link)…</option>
+          {bannerShops.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
         <Input
           placeholder="Link (/shops or https://…)"
           value={form.link_url}
