@@ -254,8 +254,8 @@ function AccountOverview() {
               to={a.to}
               className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-sm font-medium shadow-card transition-colors hover:border-primary/40"
             >
-              <a.icon className="h-4 w-4 text-primary" />
-              <span className="truncate">{a.label}</span>
+              <a.icon className="h-4 w-4 shrink-0 text-primary" />
+              <span className="min-w-0 leading-tight">{a.label}</span>
             </Link>
           ))}
         </div>
