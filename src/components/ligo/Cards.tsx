@@ -58,7 +58,7 @@ export function ShopCard({ shop }: { shop: Shop }) {
         </span>
       </div>
       <div className="space-y-2 p-4">
-        <h3 className="font-display text-base font-bold">{shop.name}</h3>
+        <h3 className="break-words font-display text-base font-bold">{shop.name}</h3>
         <p className="line-clamp-1 text-sm text-muted-foreground">
           {shop.description ?? shop.address}
         </p>

@@ -157,7 +157,7 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
           alt={product.name}
           className="h-28 w-full object-cover"
         />
-        <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+        <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
           {product.shops?.name ?? "Shop"}
         </span>
       </Link>

@@ -58,7 +58,7 @@ function ShopsPage() {
       ) : shops.length === 0 ? (
         <p className="mt-8 text-sm text-muted-foreground">No shops in this category yet.</p>
       ) : (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {shops.map((s) => (
             <ShopCard key={s.id} shop={s} />
           ))}

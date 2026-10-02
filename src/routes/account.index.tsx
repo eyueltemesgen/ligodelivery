@@ -105,14 +105,14 @@ function AccountOverview() {
               </p>
               <p className="font-display text-base font-bold">{ETB(activeOrder.total)}</p>
             </div>
-            <div className="flex flex-wrap items-start gap-2 sm:justify-end">
-              <Button asChild>
+            <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-start sm:justify-end">
+              <Button asChild className="w-full sm:w-auto">
                 <Link to="/account/orders/$orderId" params={{ orderId: activeOrder.id }}>
                   Track order
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="w-full sm:w-auto">
                 <Link to="/account/orders">All orders</Link>
               </Button>
             </div>
@@ -178,12 +178,15 @@ function AccountOverview() {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display text-sm font-bold">{o.order_code}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(o.created_at)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatDate(o.created_at)}</p>
+                    <span className="mt-1.5 inline-block sm:hidden">
+                      <StatusBadge status={o.status} />
+                    </span>
                   </div>
-                  <span className="hidden sm:block">
+                  <span className="hidden shrink-0 sm:block">
                     <StatusBadge status={o.status} />
                   </span>
-                  <span className="text-sm font-semibold">{ETB(o.total)}</span>
+                  <span className="shrink-0 text-sm font-semibold">{ETB(o.total)}</span>
                 </Link>
               </li>
             ))}
@@ -252,10 +255,10 @@ function AccountOverview() {
             <Link
               key={a.label}
               to={a.to}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-sm font-medium shadow-card transition-colors hover:border-primary/40"
+              className="flex items-center gap-2 rounded-xl border border-border bg-card p-3 text-[13px] font-medium shadow-card transition-colors hover:border-primary/40 sm:gap-3 sm:p-4 sm:text-sm"
             >
-              <a.icon className="h-4 w-4 text-primary" />
-              <span className="truncate">{a.label}</span>
+              <a.icon className="h-4 w-4 shrink-0 text-primary" />
+              <span className="min-w-0 leading-tight">{a.label}</span>
             </Link>
           ))}
         </div>
