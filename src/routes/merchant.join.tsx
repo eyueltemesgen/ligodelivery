@@ -63,7 +63,7 @@ function MerchantJoin() {
   const [lat, setLat] = useState<string>("");
   const [lng, setLng] = useState<string>("");
   const [opensAt, setOpensAt] = useState("08:00");
-  const [closesAt, setClosesAt] = useState("22:00");
+  const [closesAt, setClosesAt] = useState("21:00");
 
   // Step 3 — images
   const [logo, setLogo] = useState<File | null>(null);

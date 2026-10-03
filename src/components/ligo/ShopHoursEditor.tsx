@@ -26,7 +26,7 @@ const buildDraft = (
 export function ShopHoursEditor({
   shopId,
   fallbackOpen = "08:00",
-  fallbackClose = "22:00",
+  fallbackClose = "21:00",
 }: {
   shopId: string;
   fallbackOpen?: string;
