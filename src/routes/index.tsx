@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bike, Clock, ShieldCheck, Search } from "lucide-react";
+import { ArrowRight, Bike, Clock, ShieldCheck, Search } from "lucide-react";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
+import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
+import { ServiceCategoryCard } from "@/components/special-moments/ServiceCards";
 import {
   FALLBACK_CATEGORIES,
   FALLBACK_PRODUCTS,
@@ -59,6 +61,11 @@ function Home() {
   const { data: c } = useQuery(siteContentQuery);
   const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
   const heroBanner = heroBanners[0];
+  const { data: serviceCategories = [] } = useQuery(serviceCategoriesQuery);
+  const { data: momentServices = [] } = useQuery({
+    ...servicesQuery(),
+    enabled: serviceCategories.length > 0,
+  });
 
   const featuredShops = (
     quickCategory ? shops.filter((s) => s.category_id === quickCategory) : shops
@@ -188,6 +195,32 @@ function Home() {
       </section>
 
       <BannerSlot placement="home_middle" />
+
+      {serviceCategories.length > 0 && (
+        <section className="container-ligo py-8">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="font-display text-2xl font-bold">Make every moment count.</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Gifts, surprises, catering and decoration — arranged from one place.
+              </p>
+            </div>
+            <Link
+              to="/special-moments"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary"
+            >
+              Explore Special Moments
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {serviceCategories.slice(0, 5).map((cat) => {
+              const count = momentServices.filter((s) => s.service_category_id === cat.id).length;
+              return <ServiceCategoryCard key={cat.id} category={cat} count={count} />;
+            })}
+          </div>
+        </section>
+      )}
 
       {offers.length > 0 && (
         <section className="container-ligo py-4">

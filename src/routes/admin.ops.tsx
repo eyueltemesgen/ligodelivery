@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { MarketingHub } from "@/components/admin/MarketingHub";
+import { SpecialMomentsAdmin } from "@/components/admin/SpecialMomentsAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const OPS_TABS = [
@@ -31,6 +32,7 @@ const OPS_TABS = [
   "customers",
   "products",
   "categories",
+  "special-moments",
   "offers",
   "marketing",
   "banners",
@@ -82,6 +84,7 @@ function AdminPage() {
             <TabsTrigger value="shops" className="min-h-9">Shops</TabsTrigger>
             <TabsTrigger value="products" className="min-h-9">Products</TabsTrigger>
             <TabsTrigger value="categories" className="min-h-9">Categories</TabsTrigger>
+            <TabsTrigger value="special-moments" className="min-h-9">Special Moments</TabsTrigger>
             <TabsTrigger value="offers" className="min-h-9">Offers</TabsTrigger>
             <TabsTrigger value="marketing" className="min-h-9">Marketing</TabsTrigger>
             <TabsTrigger value="banners" className="min-h-9">Banners</TabsTrigger>
@@ -111,6 +114,9 @@ function AdminPage() {
         </TabsContent>
         <TabsContent value="categories">
           <CategoriesAdmin />
+        </TabsContent>
+        <TabsContent value="special-moments">
+          <SpecialMomentsAdmin />
         </TabsContent>
         <TabsContent value="offers">
           <OffersAdmin />

@@ -913,10 +913,13 @@ export type Database = {
           lng: number | null
           merchant_net: number
           order_code: string
+          order_type: string
           payment_method: string
           payment_status: string
           rider_id: string | null
           rider_payout: number
+          scheduled_for: string | null
+          service_request_id: string | null
           shop_id: string | null
           status: string
           subtotal: number
@@ -944,10 +947,13 @@ export type Database = {
           lng?: number | null
           merchant_net?: number
           order_code?: string
+          order_type?: string
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
           rider_payout?: number
+          scheduled_for?: string | null
+          service_request_id?: string | null
           shop_id?: string | null
           status?: string
           subtotal?: number
@@ -975,10 +981,13 @@ export type Database = {
           lng?: number | null
           merchant_net?: number
           order_code?: string
+          order_type?: string
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
           rider_payout?: number
+          scheduled_for?: string | null
+          service_request_id?: string | null
           shop_id?: string | null
           status?: string
           subtotal?: number
@@ -1423,6 +1432,290 @@ export type Database = {
         }
         Relationships: []
       }
+      service_addons: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          service_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          service_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          service_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_addons_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_requests: {
+        Row: {
+          addons: Json
+          admin_notes: string | null
+          budget: number | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          event_date: string | null
+          event_time: string | null
+          event_type: string | null
+          food_preferences: string | null
+          guest_count: number | null
+          id: string
+          is_anonymous: boolean
+          location: string | null
+          message: string | null
+          occasion: string | null
+          order_id: string | null
+          quote_amount: number | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          request_code: string
+          request_type: string
+          service_id: string | null
+          special_instructions: string | null
+          status: string
+          surprise_type: string | null
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          addons?: Json
+          admin_notes?: string | null
+          budget?: number | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          event_date?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          food_preferences?: string | null
+          guest_count?: number | null
+          id?: string
+          is_anonymous?: boolean
+          location?: string | null
+          message?: string | null
+          occasion?: string | null
+          order_id?: string | null
+          quote_amount?: number | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          request_code?: string
+          request_type?: string
+          service_id?: string | null
+          special_instructions?: string | null
+          status?: string
+          surprise_type?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          addons?: Json
+          admin_notes?: string | null
+          budget?: number | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          event_date?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          food_preferences?: string | null
+          guest_count?: number | null
+          id?: string
+          is_anonymous?: boolean
+          location?: string | null
+          message?: string | null
+          occasion?: string | null
+          order_id?: string | null
+          quote_amount?: number | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          request_code?: string
+          request_type?: string
+          service_id?: string | null
+          special_instructions?: string | null
+          status?: string
+          surprise_type?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          available_from: string | null
+          available_to: string | null
+          created_at: string
+          description: string | null
+          gallery: string[]
+          id: string
+          image_url: string | null
+          included_items: string[]
+          is_active: boolean
+          is_featured: boolean
+          lead_time_hours: number
+          name: string
+          occasion: string | null
+          price: number | null
+          pricing_type: string
+          service_area: string | null
+          service_category_id: string | null
+          shop_id: string | null
+          slug: string
+          sort_order: number
+          starting_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          available_from?: string | null
+          available_to?: string | null
+          created_at?: string
+          description?: string | null
+          gallery?: string[]
+          id?: string
+          image_url?: string | null
+          included_items?: string[]
+          is_active?: boolean
+          is_featured?: boolean
+          lead_time_hours?: number
+          name: string
+          occasion?: string | null
+          price?: number | null
+          pricing_type?: string
+          service_area?: string | null
+          service_category_id?: string | null
+          shop_id?: string | null
+          slug: string
+          sort_order?: number
+          starting_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          available_from?: string | null
+          available_to?: string | null
+          created_at?: string
+          description?: string | null
+          gallery?: string[]
+          id?: string
+          image_url?: string | null
+          included_items?: string[]
+          is_active?: boolean
+          is_featured?: boolean
+          lead_time_hours?: number
+          name?: string
+          occasion?: string | null
+          price?: number | null
+          pricing_type?: string
+          service_area?: string | null
+          service_category_id?: string | null
+          shop_id?: string | null
+          slug?: string
+          sort_order?: number
+          starting_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           is_public: boolean
@@ -1650,6 +1943,7 @@ export type Database = {
     }
     Functions: {
       accept_order: { Args: { _order_id: string }; Returns: undefined }
+      accept_service_quote: { Args: { p_request: string }; Returns: undefined }
       ad_stats: {
         Args: never
         Returns: {
@@ -1691,6 +1985,26 @@ export type Database = {
           p_tip?: number
         }
         Returns: string
+      }
+      place_service_order: {
+        Args: {
+          p_customer_name?: string
+          p_customer_phone?: string
+          p_delivery_address?: string
+          p_delivery_instructions?: string
+          p_payment_method?: string
+          p_request_id: string
+        }
+        Returns: string
+      }
+      review_service_request: {
+        Args: {
+          p_notes?: string
+          p_quote_amount?: number
+          p_request: string
+          p_status: string
+        }
+        Returns: undefined
       }
       review_merchant: {
         Args: { _merchant: string; _notes?: string; _status: string }

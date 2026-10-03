@@ -12,6 +12,7 @@ import {
   Search,
   ShoppingBag,
   ShoppingCart,
+  Sparkles,
   Store,
   User,
 } from "lucide-react";
@@ -36,6 +37,7 @@ import {
 const NAV = [
   { to: "/categories", label: "Categories" },
   { to: "/shops", label: "Shops" },
+  { to: "/special-moments", label: "Special Moments" },
   { to: "/offers", label: "Offers" },
   { to: "/account/orders", label: "Track order" },
 ];
@@ -108,6 +110,12 @@ export function SiteHeader() {
                   <Link to="/account/orders">
                     <Package className="mr-2 h-4 w-4" />
                     My orders
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/account/service-requests">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Special Moments
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

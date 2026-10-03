@@ -44,8 +44,14 @@ import { Route as RiderJoinRouteImport } from './routes/rider.join'
 import { Route as RiderLoginRouteImport } from './routes/rider.login'
 import { Route as ShopsIndexRouteImport } from './routes/shops.index'
 import { Route as ShopsShopIdRouteImport } from './routes/shops.$shopId'
+import { Route as SpecialMomentsIndexRouteImport } from './routes/special-moments.index'
+import { Route as SpecialMomentsSearchRouteImport } from './routes/special-moments.search'
 import { Route as AccountOrdersIndexRouteImport } from './routes/account.orders.index'
 import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.orders.$orderId'
+import { Route as AccountServiceRequestsIndexRouteImport } from './routes/account.service-requests.index'
+import { Route as AccountServiceRequestsRequestIdRouteImport } from './routes/account.service-requests.$requestId'
+import { Route as SpecialMomentsCategorySlugRouteImport } from './routes/special-moments.category.$slug'
+import { Route as SpecialMomentsServiceServiceIdRouteImport } from './routes/special-moments.service.$serviceId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -222,6 +228,16 @@ const ShopsShopIdRoute = ShopsShopIdRouteImport.update({
   path: '/shops/$shopId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpecialMomentsIndexRoute = SpecialMomentsIndexRouteImport.update({
+  id: '/special-moments/',
+  path: '/special-moments/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpecialMomentsSearchRoute = SpecialMomentsSearchRouteImport.update({
+  id: '/special-moments/search',
+  path: '/special-moments/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountOrdersIndexRoute = AccountOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -232,6 +248,30 @@ const AccountOrdersOrderIdRoute = AccountOrdersOrderIdRouteImport.update({
   path: '/orders/$orderId',
   getParentRoute: () => AccountRoute,
 } as any)
+const AccountServiceRequestsIndexRoute =
+  AccountServiceRequestsIndexRouteImport.update({
+    id: '/service-requests/',
+    path: '/service-requests/',
+    getParentRoute: () => AccountRoute,
+  } as any)
+const AccountServiceRequestsRequestIdRoute =
+  AccountServiceRequestsRequestIdRouteImport.update({
+    id: '/service-requests/$requestId',
+    path: '/service-requests/$requestId',
+    getParentRoute: () => AccountRoute,
+  } as any)
+const SpecialMomentsCategorySlugRoute =
+  SpecialMomentsCategorySlugRouteImport.update({
+    id: '/special-moments/category/$slug',
+    path: '/special-moments/category/$slug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SpecialMomentsServiceServiceIdRoute =
+  SpecialMomentsServiceServiceIdRouteImport.update({
+    id: '/special-moments/service/$serviceId',
+    path: '/special-moments/service/$serviceId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -264,13 +304,19 @@ export interface FileRoutesByFullPath {
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
+  '/special-moments/search': typeof SpecialMomentsSearchRoute
   '/account/': typeof AccountIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/shops/': typeof ShopsIndexRoute
+  '/special-moments/': typeof SpecialMomentsIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
+  '/account/service-requests/$requestId': typeof AccountServiceRequestsRequestIdRoute
+  '/special-moments/category/$slug': typeof SpecialMomentsCategorySlugRoute
+  '/special-moments/service/$serviceId': typeof SpecialMomentsServiceServiceIdRoute
   '/account/orders/': typeof AccountOrdersIndexRoute
+  '/account/service-requests/': typeof AccountServiceRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -301,13 +347,19 @@ export interface FileRoutesByTo {
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
+  '/special-moments/search': typeof SpecialMomentsSearchRoute
   '/account': typeof AccountIndexRoute
   '/admin': typeof AdminIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/rider': typeof RiderIndexRoute
   '/shops': typeof ShopsIndexRoute
+  '/special-moments': typeof SpecialMomentsIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
+  '/account/service-requests/$requestId': typeof AccountServiceRequestsRequestIdRoute
+  '/special-moments/category/$slug': typeof SpecialMomentsCategorySlugRoute
+  '/special-moments/service/$serviceId': typeof SpecialMomentsServiceServiceIdRoute
   '/account/orders': typeof AccountOrdersIndexRoute
+  '/account/service-requests': typeof AccountServiceRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -341,13 +393,19 @@ export interface FileRoutesById {
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
+  '/special-moments/search': typeof SpecialMomentsSearchRoute
   '/account/': typeof AccountIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/shops/': typeof ShopsIndexRoute
+  '/special-moments/': typeof SpecialMomentsIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
+  '/account/service-requests/$requestId': typeof AccountServiceRequestsRequestIdRoute
+  '/special-moments/category/$slug': typeof SpecialMomentsCategorySlugRoute
+  '/special-moments/service/$serviceId': typeof SpecialMomentsServiceServiceIdRoute
   '/account/orders/': typeof AccountOrdersIndexRoute
+  '/account/service-requests/': typeof AccountServiceRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -382,13 +440,19 @@ export interface FileRouteTypes {
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
+    | '/special-moments/search'
     | '/account/'
     | '/admin/'
     | '/orders/'
     | '/rider/'
     | '/shops/'
+    | '/special-moments/'
     | '/account/orders/$orderId'
+    | '/account/service-requests/$requestId'
+    | '/special-moments/category/$slug'
+    | '/special-moments/service/$serviceId'
     | '/account/orders/'
+    | '/account/service-requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -419,13 +483,19 @@ export interface FileRouteTypes {
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
+    | '/special-moments/search'
     | '/account'
     | '/admin'
     | '/orders'
     | '/rider'
     | '/shops'
+    | '/special-moments'
     | '/account/orders/$orderId'
+    | '/account/service-requests/$requestId'
+    | '/special-moments/category/$slug'
+    | '/special-moments/service/$serviceId'
     | '/account/orders'
+    | '/account/service-requests'
   id:
     | '__root__'
     | '/'
@@ -458,13 +528,19 @@ export interface FileRouteTypes {
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
+    | '/special-moments/search'
     | '/account/'
     | '/admin/'
     | '/orders/'
     | '/rider/'
     | '/shops/'
+    | '/special-moments/'
     | '/account/orders/$orderId'
+    | '/account/service-requests/$requestId'
+    | '/special-moments/category/$slug'
+    | '/special-moments/service/$serviceId'
     | '/account/orders/'
+    | '/account/service-requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -486,9 +562,13 @@ export interface RootRouteChildren {
   RiderJoinRoute: typeof RiderJoinRoute
   RiderLoginRoute: typeof RiderLoginRoute
   ShopsShopIdRoute: typeof ShopsShopIdRoute
+  SpecialMomentsSearchRoute: typeof SpecialMomentsSearchRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   RiderIndexRoute: typeof RiderIndexRoute
   ShopsIndexRoute: typeof ShopsIndexRoute
+  SpecialMomentsIndexRoute: typeof SpecialMomentsIndexRoute
+  SpecialMomentsCategorySlugRoute: typeof SpecialMomentsCategorySlugRoute
+  SpecialMomentsServiceServiceIdRoute: typeof SpecialMomentsServiceServiceIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -738,6 +818,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopsShopIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/special-moments/': {
+      id: '/special-moments/'
+      path: '/special-moments'
+      fullPath: '/special-moments/'
+      preLoaderRoute: typeof SpecialMomentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/special-moments/search': {
+      id: '/special-moments/search'
+      path: '/special-moments/search'
+      fullPath: '/special-moments/search'
+      preLoaderRoute: typeof SpecialMomentsSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/orders/': {
       id: '/account/orders/'
       path: '/orders'
@@ -752,6 +846,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountOrdersOrderIdRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/service-requests/': {
+      id: '/account/service-requests/'
+      path: '/service-requests'
+      fullPath: '/account/service-requests/'
+      preLoaderRoute: typeof AccountServiceRequestsIndexRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/service-requests/$requestId': {
+      id: '/account/service-requests/$requestId'
+      path: '/service-requests/$requestId'
+      fullPath: '/account/service-requests/$requestId'
+      preLoaderRoute: typeof AccountServiceRequestsRequestIdRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/special-moments/category/$slug': {
+      id: '/special-moments/category/$slug'
+      path: '/special-moments/category/$slug'
+      fullPath: '/special-moments/category/$slug'
+      preLoaderRoute: typeof SpecialMomentsCategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/special-moments/service/$serviceId': {
+      id: '/special-moments/service/$serviceId'
+      path: '/special-moments/service/$serviceId'
+      fullPath: '/special-moments/service/$serviceId'
+      preLoaderRoute: typeof SpecialMomentsServiceServiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -763,7 +885,9 @@ interface AccountRouteChildren {
   AccountWishlistRoute: typeof AccountWishlistRoute
   AccountIndexRoute: typeof AccountIndexRoute
   AccountOrdersOrderIdRoute: typeof AccountOrdersOrderIdRoute
+  AccountServiceRequestsRequestIdRoute: typeof AccountServiceRequestsRequestIdRoute
   AccountOrdersIndexRoute: typeof AccountOrdersIndexRoute
+  AccountServiceRequestsIndexRoute: typeof AccountServiceRequestsIndexRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
@@ -774,7 +898,9 @@ const AccountRouteChildren: AccountRouteChildren = {
   AccountWishlistRoute: AccountWishlistRoute,
   AccountIndexRoute: AccountIndexRoute,
   AccountOrdersOrderIdRoute: AccountOrdersOrderIdRoute,
+  AccountServiceRequestsRequestIdRoute: AccountServiceRequestsRequestIdRoute,
   AccountOrdersIndexRoute: AccountOrdersIndexRoute,
+  AccountServiceRequestsIndexRoute: AccountServiceRequestsIndexRoute,
 }
 
 const AccountRouteWithChildren =
@@ -833,9 +959,13 @@ const rootRouteChildren: RootRouteChildren = {
   RiderJoinRoute: RiderJoinRoute,
   RiderLoginRoute: RiderLoginRoute,
   ShopsShopIdRoute: ShopsShopIdRoute,
+  SpecialMomentsSearchRoute: SpecialMomentsSearchRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   RiderIndexRoute: RiderIndexRoute,
   ShopsIndexRoute: ShopsIndexRoute,
+  SpecialMomentsIndexRoute: SpecialMomentsIndexRoute,
+  SpecialMomentsCategorySlugRoute: SpecialMomentsCategorySlugRoute,
+  SpecialMomentsServiceServiceIdRoute: SpecialMomentsServiceServiceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

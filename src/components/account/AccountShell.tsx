@@ -9,6 +9,7 @@ import {
   LogOut,
   MapPin,
   Package,
+  Sparkles,
   User,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +27,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: "/account", label: "Overview", icon: LayoutDashboard },
   { to: "/account/orders", label: "My orders", icon: Package, badgeKey: "orders" },
+  { to: "/account/service-requests", label: "Special Moments", icon: Sparkles },
   { to: "/account/wishlist", label: "Saved products", icon: Heart, badgeKey: "wishlist" },
   { to: "/account/addresses", label: "Addresses", icon: MapPin },
   { to: "/account/profile", label: "Profile", icon: User },

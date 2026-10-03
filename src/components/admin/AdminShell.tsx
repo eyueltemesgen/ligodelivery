@@ -15,6 +15,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Sparkles,
   Store,
   Tags,
   Users,
@@ -55,6 +56,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: "/admin/ops?tab=customers", label: "Customers", icon: Users },
       { to: "/admin/ops?tab=products", label: "Products", icon: Package },
       { to: "/admin/ops?tab=categories", label: "Categories", icon: Tags },
+      { to: "/admin/ops?tab=special-moments", label: "Special Moments", icon: Sparkles },
     ],
   },
   {
