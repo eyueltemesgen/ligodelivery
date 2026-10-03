@@ -14,6 +14,178 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_campaigns: {
+        Row: {
+          advertiser_id: string | null
+          budget: number | null
+          created_at: string
+          ends_at: string | null
+          id: string
+          name: string
+          package_id: string | null
+          starts_at: string | null
+          status: string
+        }
+        Insert: {
+          advertiser_id?: string | null
+          budget?: number | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          name: string
+          package_id?: string | null
+          starts_at?: string | null
+          status?: string
+        }
+        Update: {
+          advertiser_id?: string | null
+          budget?: number | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          name?: string
+          package_id?: string | null
+          starts_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_campaigns_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_campaigns_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "ad_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_clicks: {
+        Row: {
+          ad_id: string
+          created_at: string
+          device: string | null
+          id: number
+          placement: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          device?: string | null
+          id?: never
+          placement?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          device?: string | null
+          id?: never
+          placement?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_clicks_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_impressions: {
+        Row: {
+          ad_id: string
+          created_at: string
+          device: string | null
+          id: number
+          placement: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          device?: string | null
+          id?: never
+          placement?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          device?: string | null
+          id?: never
+          placement?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_impressions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_packages: {
+        Row: {
+          created_at: string
+          duration_days: number
+          id: string
+          is_active: boolean
+          name: string
+          placements: string[]
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          placements?: string[]
+          price?: number
+        }
+        Update: {
+          created_at?: string
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          placements?: string[]
+          price?: number
+        }
+        Relationships: []
+      }
+      ad_placements: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          label: string
+          page: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          label: string
+          page?: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          label?: string
+          page?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           address: string
@@ -79,6 +251,161 @@ export type Database = {
           id?: boolean
         }
         Relationships: []
+      }
+      ads: {
+        Row: {
+          ad_type: string
+          advertiser_id: string | null
+          campaign_id: string | null
+          created_at: string
+          cta_label: string | null
+          destination_id: string | null
+          destination_type: string
+          destination_url: string | null
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          placement: string
+          priority: number
+          starts_at: string | null
+          status: string
+          subtitle: string | null
+          target_category_id: string | null
+          target_device: string
+          target_location: string | null
+          target_shop_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ad_type?: string
+          advertiser_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          cta_label?: string | null
+          destination_id?: string | null
+          destination_type?: string
+          destination_url?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          placement: string
+          priority?: number
+          starts_at?: string | null
+          status?: string
+          subtitle?: string | null
+          target_category_id?: string | null
+          target_device?: string
+          target_location?: string | null
+          target_shop_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ad_type?: string
+          advertiser_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          cta_label?: string | null
+          destination_id?: string | null
+          destination_type?: string
+          destination_url?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          placement?: string
+          priority?: number
+          starts_at?: string | null
+          status?: string
+          subtitle?: string | null
+          target_category_id?: string | null
+          target_device?: string
+          target_location?: string | null
+          target_shop_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_placement_fkey"
+            columns: ["placement"]
+            isOneToOne: false
+            referencedRelation: "ad_placements"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "ads_target_category_id_fkey"
+            columns: ["target_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_target_shop_id_fkey"
+            columns: ["target_shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advertisers: {
+        Row: {
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          shop_id: string | null
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          shop_id?: string | null
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          shop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertisers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       banners: {
         Row: {
@@ -1323,6 +1650,14 @@ export type Database = {
     }
     Functions: {
       accept_order: { Args: { _order_id: string }; Returns: undefined }
+      ad_stats: {
+        Args: never
+        Returns: {
+          ad_id: string
+          clicks: number
+          impressions: number
+        }[]
+      }
       approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
       check_coupon: {
         Args: { p_code: string; p_delivery_fee: number; p_subtotal: number }
@@ -1383,6 +1718,10 @@ export type Database = {
           _owner_name: string
         }
         Returns: string
+      }
+      track_ad_event: {
+        Args: { _ad_id: string; _device?: string; _kind: string }
+        Returns: undefined
       }
     }
     Enums: {

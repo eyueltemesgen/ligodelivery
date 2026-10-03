@@ -8,6 +8,13 @@
       "when": 1790932658215,
       "tag": "0000_coupons_marketing",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791008832980,
+      "tag": "0001_advertising_system",
+      "breakpoints": true
     }
   ]
 }
