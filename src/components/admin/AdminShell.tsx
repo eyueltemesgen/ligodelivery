@@ -119,7 +119,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-4">
           {!collapsed && (
             <div>
-              <p className="font-display text-lg font-extrabold text-primary">LIGO Admin</p>
+              <p className="font-display text-lg font-extrabold text-primary">የኔ Go Admin</p>
               <p className="text-xs text-muted-foreground">Bishoftu · Hub 01</p>
             </div>
           )}
@@ -186,7 +186,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" className="flex w-[86vw] max-w-xs flex-col p-0 md:hidden">
           <SheetHeader className="border-b border-border px-4 py-4 text-left">
-            <SheetTitle className="font-display text-primary">LIGO Admin</SheetTitle>
+            <SheetTitle className="font-display text-primary">የኔ Go Admin</SheetTitle>
             <SheetDescription>Bishoftu · Hub 01</SheetDescription>
           </SheetHeader>
           <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
@@ -248,7 +248,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
-              <p className="truncate font-display text-base font-extrabold text-primary">LIGO Admin</p>
+              <p className="truncate font-display text-base font-extrabold text-primary">የኔ Go Admin</p>
               <p className="truncate text-[11px] text-muted-foreground">
                 {dispatchPaused ? "Dispatch paused" : "All systems operational"}
               </p>

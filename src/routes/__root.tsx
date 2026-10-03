@@ -85,14 +85,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ligo Delivery — Bishoftu food & grocery delivery" },
+      { title: "የኔ Go — Fast. Local. Delivered." },
       {
         name: "description",
         content:
           "Order food, groceries and essentials from Bishoftu shops with fast local delivery.",
       },
-      { name: "author", content: "Ligo Delivery" },
-      { property: "og:title", content: "Ligo Delivery — Bishoftu" },
+      { name: "author", content: "የኔ Go" },
+      { property: "og:title", content: "የኔ Go — Fast. Local. Delivered." },
       { property: "og:description", content: "Fast local delivery across Bishoftu." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -103,7 +103,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700;800&display=swap",
+      },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
     scripts: [
       {

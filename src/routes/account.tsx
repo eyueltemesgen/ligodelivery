@@ -5,14 +5,14 @@ import { AccountShell } from "@/components/account/AccountShell";
 export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
-      { title: "My account — Ligo Delivery" },
+      { title: "My account — የኔ Go" },
       {
         name: "description",
         content:
-          "Your Ligo account center: track orders, manage addresses, saved products, profile and support.",
+          "Your የኔ Go account center: track orders, manage addresses, saved products, profile and support.",
       },
-      { property: "og:title", content: "My account — Ligo Delivery" },
-      { property: "og:description", content: "Manage your Ligo orders, addresses and profile." },
+      { property: "og:title", content: "My account — የኔ Go" },
+      { property: "og:description", content: "Manage your የኔ Go orders, addresses and profile." },
     ],
   }),
   component: AccountLayout,

@@ -5,15 +5,16 @@ import { StorageImage } from "@/lib/media";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   const { data: c } = useQuery(siteContentQuery);
-  const short = c?.brand_short_name || c?.brand_name || "Ligo";
+  const short = c?.brand_short_name || c?.brand_name || "የኔ Go";
+  const mark = short.trim().charAt(0).toUpperCase();
 
   return (
     <Link to="/" className="flex items-center gap-2">
       {c?.logo_url ? (
         <StorageImage path={c.logo_url} alt={short} className="h-9 w-9 rounded-lg object-cover" />
       ) : (
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary font-display text-lg font-extrabold text-primary-foreground">
-          {short.charAt(0).toUpperCase()}
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary font-display text-lg font-extrabold text-primary-foreground">
+          {mark}
         </span>
       )}
       {!compact && (

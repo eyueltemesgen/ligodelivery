@@ -23,8 +23,8 @@ export const BANNER_PLACEMENTS = [
 ] as const;
 
 export const DEFAULT_CONTENT = {
-  brand_name: "Ligo Delivery",
-  brand_short_name: "Ligo",
+  brand_name: "የኔ Go",
+  brand_short_name: "የኔ Go",
   brand_tagline: "Fast. Local. Delivered.",
   logo_url: "",
   city: "Bishoftu",
@@ -38,7 +38,7 @@ export const DEFAULT_CONTENT = {
   offers_title: "Today's offers",
   shops_title: "Popular shops",
   trending_title: "Trending items",
-  how_title: "How Ligo works",
+  how_title: "How የኔ Go works",
   how_step1_title: "1. Choose",
   how_step1_text: "Browse Bishoftu shops and add items to your cart.",
   how_step2_title: "2. Pay",
@@ -46,9 +46,9 @@ export const DEFAULT_CONTENT = {
   how_step3_title: "3. Track",
   how_step3_text: "Follow your rider live until the order arrives.",
   footer_tagline:
-    "Ligo delivers food, groceries and essentials across Bishoftu — fast, local and reliable.",
+    "የኔ Go delivers food, groceries and essentials across Bishoftu — fast, local and reliable.",
   contact_phone: "+251942578001",
-  contact_email: "hello@ligo.et",
+  contact_email: "hello@yenego.et",
   contact_address: "Bishoftu, Oromia",
   developer_name: "Eyuel Temesgen",
   company_name: "EYVORA Technologies",
@@ -93,10 +93,30 @@ export const siteContentQuery = {
       .select("value")
       .eq("key", "site_content")
       .maybeSingle();
-    return { ...DEFAULT_CONTENT, ...((data?.value ?? {}) as Partial<SiteContent>) };
+    return normalizeContent((data?.value ?? {}) as Partial<SiteContent>);
   },
   placeholderData: DEFAULT_CONTENT,
 };
+
+/**
+ * The live `settings.site_content` row can still hold the previous brand name
+ * until the rebrand migration is applied. Normalize those legacy values so the
+ * customer-facing brand is always "የኔ Go".
+ */
+function normalizeContent(raw: Partial<SiteContent>): SiteContent {
+  const merged = { ...DEFAULT_CONTENT, ...raw };
+  const legacy = /ligo/i;
+  if (!merged.brand_name || legacy.test(merged.brand_name)) {
+    merged.brand_name = DEFAULT_CONTENT.brand_name;
+  }
+  if (!merged.brand_short_name || legacy.test(merged.brand_short_name)) {
+    merged.brand_short_name = DEFAULT_CONTENT.brand_short_name;
+  }
+  merged.how_title = merged.how_title.replace(/Ligo/g, DEFAULT_CONTENT.brand_short_name);
+  merged.footer_tagline = merged.footer_tagline.replace(/Ligo/g, DEFAULT_CONTENT.brand_short_name);
+  merged.contact_email = merged.contact_email.replace("@ligo.et", "@yenego.et");
+  return merged;
+}
 
 export const bannersQuery = (placement?: string) => ({
   queryKey: ["banners", placement ?? "all"],
@@ -104,6 +124,11 @@ export const bannersQuery = (placement?: string) => ({
     let q = supabase.from("banners").select("*").eq("is_active", true).order("sort_order");
     if (placement) q = q.eq("placement", placement);
     const { data } = await q;
-    return (data ?? []) as Banner[];
+    const legacy = /^(ligo|ligo delivery)$/i;
+    return ((data ?? []) as Banner[]).map((b) => ({
+      ...b,
+      title: legacy.test(b.title?.trim() ?? "") ? "የኔ Go" : b.title,
+      subtitle: b.subtitle && legacy.test(b.subtitle.trim()) ? "የኔ Go" : b.subtitle,
+    }));
   },
 });

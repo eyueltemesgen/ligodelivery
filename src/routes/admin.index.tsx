@@ -45,13 +45,13 @@ export const Route = createFileRoute("/admin/")({
   },
   head: () => ({
     meta: [
-      { title: "Dashboard — Ligo Admin" },
+      { title: "Dashboard — የኔ Go Admin" },
       {
         name: "description",
-        content: "LIGO operations dashboard: revenue, orders, riders and merchants.",
+        content: "የኔ Go operations dashboard: revenue, orders, riders and merchants.",
       },
-      { property: "og:title", content: "Dashboard — Ligo Admin" },
-      { property: "og:description", content: "LIGO operations dashboard." },
+      { property: "og:title", content: "Dashboard — የኔ Go Admin" },
+      { property: "og:description", content: "የኔ Go operations dashboard." },
     ],
   }),
   component: AdminDashboard,

@@ -1,4 +1,11 @@
-# Ligo: Bishoftu Delivered
+# የኔ Go (Yene Go): Bishoftu Delivered
+
+> **Rebrand note:** This platform was originally developed as "Ligo". The
+> customer-facing brand is now **የኔ Go** (English reference: **Yene Go**),
+> tagline *Fast. Local. Delivered.* Internal technical identifiers (routes,
+> database tables/columns, storage buckets such as `ligo-media`, CSS utilities
+> like `container-ligo`) are intentionally preserved. The original development
+> prompt below is kept for historical reference.
 
 LIGO DELIVERY — MASTER DEVELOPMENT PROMPT
 
@@ -1398,7 +1405,7 @@ The final Ligo platform must feel like a real production delivery business opera
 
 Brand the application as:
 
-LIGO
+የኔ Go
 
 Fast. Local. Delivered.
 

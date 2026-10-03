@@ -18,12 +18,12 @@ const ACTIVE_STATUSES = ["accepted", "arrived_at_merchant", "picked_up", "on_the
 export const Route = createFileRoute("/admin/map")({
   head: () => ({
     meta: [
-      { title: "Live Delivery Map — Ligo Admin" },
+      { title: "Live Delivery Map — የኔ Go Admin" },
       {
         name: "description",
-        content: "Real-time rider, merchant and delivery tracking for LIGO dispatch.",
+        content: "Real-time rider, merchant and delivery tracking for የኔ Go dispatch.",
       },
-      { property: "og:title", content: "Live Delivery Map — Ligo Admin" },
+      { property: "og:title", content: "Live Delivery Map — የኔ Go Admin" },
       { property: "og:description", content: "Real-time dispatch tracking." },
     ],
   }),

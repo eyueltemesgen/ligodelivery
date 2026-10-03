@@ -5,8 +5,8 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/orders/")({
   head: () => ({
     meta: [
-      { title: "My orders — Ligo Delivery" },
-      { name: "description", content: "Track your current and past Ligo deliveries in Bishoftu." },
+      { title: "My orders — የኔ Go" },
+      { name: "description", content: "Track your current and past የኔ Go deliveries in Bishoftu." },
     ],
   }),
   component: () => <Navigate to="/account/orders" replace />,

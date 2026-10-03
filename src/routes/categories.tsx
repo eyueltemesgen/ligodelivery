@@ -8,14 +8,14 @@ import { StorageImage } from "@/lib/media";
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "Browse categories — Ligo Delivery Bishoftu" },
+      { title: "Browse categories — የኔ Go · Bishoftu" },
       {
         name: "description",
         content:
-          "Restaurants, groceries, pharmacy, bakery and more — browse every Ligo delivery category in Bishoftu.",
+          "Restaurants, groceries, pharmacy, bakery and more — browse every የኔ Go delivery category in Bishoftu.",
       },
-      { property: "og:title", content: "Browse categories — Ligo Delivery" },
-      { property: "og:description", content: "Every Ligo delivery category in Bishoftu." },
+      { property: "og:title", content: "Browse categories — የኔ Go" },
+      { property: "og:description", content: "Every የኔ Go delivery category in Bishoftu." },
     ],
   }),
   component: CategoriesPage,

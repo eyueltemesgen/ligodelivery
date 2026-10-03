@@ -5,10 +5,10 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — Ligo Delivery" },
+      { title: "Notifications — የኔ Go" },
       {
         name: "description",
-        content: "Order updates, delivery alerts and payment confirmations from Ligo.",
+        content: "Order updates, delivery alerts and payment confirmations from የኔ Go.",
       },
     ],
   }),

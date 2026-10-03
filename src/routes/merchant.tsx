@@ -49,14 +49,14 @@ import {
 export const Route = createFileRoute("/merchant")({
   head: () => ({
     meta: [
-      { title: "Merchant dashboard — Ligo Delivery" },
+      { title: "Merchant dashboard — የኔ Go" },
       {
         name: "description",
         content:
-          "Manage your Ligo shop: live orders, products, opening hours, promotions and earnings.",
+          "Manage your የኔ Go shop: live orders, products, opening hours, promotions and earnings.",
       },
-      { property: "og:title", content: "Merchant dashboard — Ligo Delivery" },
-      { property: "og:description", content: "Run your Ligo store from one dashboard." },
+      { property: "og:title", content: "Merchant dashboard — የኔ Go" },
+      { property: "og:description", content: "Run your የኔ Go store from one dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -89,7 +89,7 @@ function MerchantPage() {
       <Notice
         icon={Store}
         title="You don't have a merchant account yet"
-        body="Register your shop and the Ligo team will review it."
+        body="Register your shop and the የኔ Go team will review it."
         action={
           <Button asChild>
             <Link to="/merchant/join">Become a merchant</Link>
@@ -107,7 +107,7 @@ function MerchantPage() {
           merchant.review_notes ??
           (merchant.status === "rejected"
             ? "Please update your details and submit again."
-            : "The Ligo team is reviewing your shop. You'll be notified when it's approved.")
+            : "The የኔ Go team is reviewing your shop. You'll be notified when it's approved.")
         }
         action={
           merchant.status === "rejected" || merchant.status === "pending" ? (
@@ -399,7 +399,7 @@ function MerchantDashboard() {
                         </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">
-                          Waiting on the rider / Ligo team
+                          Waiting on the rider / የኔ Go team
                         </span>
                       )}
                     </div>
@@ -438,7 +438,7 @@ function MerchantDashboard() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Total sales (delivered)" value={ETB(revenue)} />
             <Stat
-              label={`Ligo commission (${Number(merchant?.commission_percent ?? 10)}%)`}
+              label={`የኔ Go commission (${Number(merchant?.commission_percent ?? 10)}%)`}
               value={ETB(commission)}
             />
             <Stat label="Your net amount" value={ETB(net)} />
@@ -448,7 +448,7 @@ function MerchantDashboard() {
             <h2 className="font-display text-lg font-bold">Payout history</h2>
             {payouts.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">
-                No payouts recorded yet. Ligo settles merchant balances manually.
+                No payouts recorded yet. የኔ Go settles merchant balances manually.
               </p>
             ) : (
               <div className="mt-3 overflow-x-auto">
@@ -947,7 +947,7 @@ function PromotionPanel({
       return;
     }
     setMessage("");
-    toast.success("Promotion request sent to the Ligo team");
+    toast.success("Promotion request sent to the የኔ Go team");
     void qc.invalidateQueries({ queryKey: ["merchant-promotions"] });
   };
 
@@ -956,7 +956,7 @@ function PromotionPanel({
       <section className="rounded-xl border border-border bg-card p-5 shadow-card">
         <h2 className="font-display text-lg font-bold">Promote your business</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Request premium placement on Ligo. The Ligo team reviews each request and sets the price.
+          Request premium placement on የኔ Go. The የኔ Go team reviews each request and sets the price.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -991,7 +991,7 @@ function PromotionPanel({
             </div>
           )}
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Message to the Ligo team (optional)</Label>
+            <Label>Message to the የኔ Go team (optional)</Label>
             <Textarea rows={2} value={message} onChange={(e) => setMessage(e.target.value)} />
           </div>
         </div>

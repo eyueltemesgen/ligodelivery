@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.merchant_payouts (
 );
 CREATE INDEX IF NOT EXISTS merchant_payouts_merchant_idx ON public.merchant_payouts(merchant_id);
 
--- 3. Promotions (Ligo Ads)
+-- 3. Promotions (Yene Go Ads)
 CREATE TABLE IF NOT EXISTS public.merchant_promotions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id uuid NOT NULL REFERENCES public.merchant_profiles(id) ON DELETE CASCADE,
@@ -300,7 +300,7 @@ BEGIN
     terms_accepted_at = now();
   INSERT INTO public.user_roles(user_id, role) VALUES (uid, 'merchant') ON CONFLICT DO NOTHING;
   INSERT INTO public.notifications(user_id, title, body, type)
-  SELECT ur.user_id, 'New merchant application', _business_name || ' applied to sell on Ligo.', 'merchant'
+  SELECT ur.user_id, 'New merchant application', _business_name || ' applied to sell on የኔ Go.', 'merchant'
   FROM public.user_roles ur WHERE ur.role = 'admin';
   RETURN uid;
 END; $$;
@@ -337,7 +337,7 @@ BEGIN
    WHERE id = _merchant;
   INSERT INTO public.notifications(user_id, title, body, type)
   VALUES (_merchant, 'Merchant application ' || _status,
-          COALESCE(_notes, 'Your Ligo merchant account status is now ' || _status || '.'), 'merchant');
+          COALESCE(_notes, 'Your የኔ Go merchant account status is now ' || _status || '.'), 'merchant');
 END; $$;
 REVOKE ALL ON FUNCTION public.review_merchant(uuid,text,text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.review_merchant(uuid,text,text) TO authenticated;

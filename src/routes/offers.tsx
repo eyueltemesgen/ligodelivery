@@ -9,13 +9,13 @@ import { formatDate } from "@/lib/format";
 export const Route = createFileRoute("/offers")({
   head: () => ({
     meta: [
-      { title: "Offers & discounts — Ligo Delivery Bishoftu" },
+      { title: "Offers & discounts — የኔ Go · Bishoftu" },
       {
         name: "description",
         content:
-          "Live discounts and promotions from Bishoftu restaurants and shops on Ligo Delivery.",
+          "Live discounts and promotions from Bishoftu restaurants and shops on የኔ Go.",
       },
-      { property: "og:title", content: "Offers & discounts — Ligo Delivery" },
+      { property: "og:title", content: "Offers & discounts — የኔ Go" },
       { property: "og:description", content: "Live promotions from Bishoftu shops." },
     ],
   }),

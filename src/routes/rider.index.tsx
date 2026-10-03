@@ -52,10 +52,10 @@ import {
 export const Route = createFileRoute("/rider/")({
   head: () => ({
     meta: [
-      { title: "Rider — LIGO Delivery" },
-      { name: "description", content: "LIGO rider operations: dispatch, deliveries and earnings." },
-      { property: "og:title", content: "Rider — LIGO Delivery" },
-      { property: "og:description", content: "LIGO rider operations." },
+      { title: "Rider — የኔ Go" },
+      { name: "description", content: "የኔ Go rider operations: dispatch, deliveries and earnings." },
+      { property: "og:title", content: "Rider — የኔ Go" },
+      { property: "og:description", content: "የኔ Go rider operations." },
     ],
   }),
   component: RiderPortalPage,

@@ -24,13 +24,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Ligo Delivery — Food & grocery delivery in Bishoftu" },
+      { title: "የኔ Go — Fast. Local. Delivered." },
       {
         name: "description",
         content:
           "Order food, groceries, pharmacy items and more from Bishoftu shops. Fast local delivery, live tracking and Telebirr, CBE or cash payment.",
       },
-      { property: "og:title", content: "Ligo Delivery — Bishoftu food & grocery delivery" },
+      { property: "og:title", content: "የኔ Go — Fast. Local. Delivered." },
       {
         property: "og:description",
         content: "Fast local delivery across Bishoftu with live order tracking.",
@@ -104,13 +104,13 @@ function Home() {
           {heroBanner?.image_url ? (
             <StorageImage
               path={heroBanner.image_url}
-              alt={heroBanner.title || "Ligo hero banner"}
+              alt={heroBanner.title || "የኔ Go hero banner"}
               priority
               className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
             />
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
-              <span className="font-display text-2xl font-bold text-primary/60">Ligo</span>
+              <span className="font-display text-2xl font-bold text-primary/60">የኔ Go</span>
             </div>
           )}
         </div>

@@ -26,12 +26,12 @@ const COPY: Record<PortalKind, PortalCopy> = {
   },
   rider: {
     title: "Driver portal",
-    subtitle: "Sign in to go online and deliver with Ligo",
+    subtitle: "Sign in to go online and deliver with የኔ Go",
     role: "rider",
   },
   admin: {
     title: "Administrative sign-in",
-    subtitle: "Restricted to Ligo operations staff",
+    subtitle: "Restricted to የኔ Go operations staff",
     role: "admin",
   },
 };
@@ -161,7 +161,7 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
 
       {showRegister && (
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          {kind === "customer" ? "New to Ligo? " : kind === "merchant" ? "New store? " : "New driver? "}
+          {kind === "customer" ? "New to የኔ Go? " : kind === "merchant" ? "New store? " : "New driver? "}
           {kind === "rider" ? (
             <Link to="/rider/join" className="font-semibold text-primary">
               Apply to become a rider

@@ -28,8 +28,8 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/account/help")({
   head: () => ({
     meta: [
-      { title: "Help & support — Ligo Delivery" },
-      { name: "description", content: "Get help with your Ligo orders, payments and deliveries." },
+      { title: "Help & support — የኔ Go" },
+      { name: "description", content: "Get help with your የኔ Go orders, payments and deliveries." },
     ],
   }),
   validateSearch: (s: Record<string, unknown>) => {
@@ -84,7 +84,7 @@ function HelpPage() {
     <>
       <AccountHeader
         title="Help & support"
-        description="Answers to common questions, and ways to reach the Ligo team."
+        description="Answers to common questions, and ways to reach the የኔ Go team."
       />
 
       {order && (
@@ -111,7 +111,7 @@ function HelpPage() {
             </div>
           </a>
           <a
-            href={`mailto:${email}?subject=${encodeURIComponent(order ? `Support for order ${order}` : "Ligo support")}`}
+            href={`mailto:${email}?subject=${encodeURIComponent(order ? `Support for order ${order}` : "የኔ Go support")}`}
             className="flex items-center gap-3 rounded-lg border border-border p-4 transition-colors hover:border-primary/40"
           >
             <Mail className="h-5 w-5 text-primary" />
@@ -169,7 +169,7 @@ function HelpPage() {
           {TOPICS.map((t) => (
             <a
               key={t.id}
-              href={`mailto:${email}?subject=${encodeURIComponent(`Ligo support — ${t.label}${order ? ` (order ${order})` : ""}`)}`}
+              href={`mailto:${email}?subject=${encodeURIComponent(`የኔ Go support — ${t.label}${order ? ` (order ${order})` : ""}`)}`}
               className="flex items-center gap-3 rounded-lg border border-border px-4 py-3 text-sm font-medium transition-colors hover:border-primary/40"
             >
               <t.icon className="h-4 w-4 text-primary" />

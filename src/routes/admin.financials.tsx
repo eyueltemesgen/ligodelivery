@@ -4,10 +4,10 @@ import { FinancialsPanel, PayoutsAdmin } from "@/routes/admin.ops";
 export const Route = createFileRoute("/admin/financials")({
   head: () => ({
     meta: [
-      { title: "Financials & Earnings — Ligo Admin" },
-      { name: "description", content: "LIGO revenue ledger, commissions and payout management." },
-      { property: "og:title", content: "Financials & Earnings — Ligo Admin" },
-      { property: "og:description", content: "LIGO financial ledger." },
+      { title: "Financials & Earnings — የኔ Go Admin" },
+      { name: "description", content: "የኔ Go revenue ledger, commissions and payout management." },
+      { property: "og:title", content: "Financials & Earnings — የኔ Go Admin" },
+      { property: "og:description", content: "የኔ Go financial ledger." },
     ],
   }),
   component: FinancialsPage,

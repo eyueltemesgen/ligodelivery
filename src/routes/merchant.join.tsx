@@ -17,16 +17,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 export const Route = createFileRoute("/merchant/join")({
   head: () => ({
     meta: [
-      { title: "Become a merchant on Ligo — sell in Bishoftu" },
+      { title: "Become a merchant on የኔ Go — sell in Bishoftu" },
       {
         name: "description",
         content:
-          "Register your restaurant or shop on Ligo Delivery, reach Bishoftu customers and manage orders from your own merchant dashboard.",
+          "Register your restaurant or shop on የኔ Go, reach Bishoftu customers and manage orders from your own merchant dashboard.",
       },
-      { property: "og:title", content: "Become a merchant on Ligo Delivery" },
+      { property: "og:title", content: "Become a merchant on የኔ Go" },
       {
         property: "og:description",
-        content: "List your shop on Ligo and start receiving delivery orders in Bishoftu.",
+        content: "List your shop on የኔ Go and start receiving delivery orders in Bishoftu.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -194,20 +194,20 @@ function MerchantJoin() {
     <div className="container-ligo py-10">
       <header className="rounded-2xl bg-primary-soft p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-          Ligo for business
+          የኔ Go for business
         </p>
         <h1 className="mt-2 font-display text-3xl font-extrabold sm:text-4xl">
-          Sell on Ligo Delivery
+          Sell on የኔ Go
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          List your restaurant or shop, receive orders in real time and let Ligo riders handle
+          List your restaurant or shop, receive orders in real time and let የኔ Go riders handle
           delivery across Bishoftu.
         </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[
             { icon: Store, t: "Your own storefront", d: "Menu, photos, hours and offers" },
             { icon: Wallet, t: "Clear earnings", d: "Transparent commission and payouts" },
-            { icon: BadgeCheck, t: "Verified listing", d: "Reviewed by the Ligo team" },
+            { icon: BadgeCheck, t: "Verified listing", d: "Reviewed by the የኔ Go team" },
           ].map((b) => (
             <div key={b.t} className="rounded-xl bg-card p-4 shadow-card">
               <b.icon className="h-5 w-5 text-primary" />
@@ -223,7 +223,7 @@ function MerchantJoin() {
           <h2 className="font-display text-xl font-bold">Application {MERCHANT_STATUS_LABEL[existing.status].toLowerCase()}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {existing.status === "approved"
-              ? "Your shop is live on Ligo. Open your dashboard to manage orders and products."
+              ? "Your shop is live on የኔ Go. Open your dashboard to manage orders and products."
               : "Our team is reviewing your application. You'll be notified as soon as it's decided."}
           </p>
           {existing.review_notes && (
@@ -444,7 +444,7 @@ function MerchantJoin() {
                     className="mt-0.5"
                   />
                   <span>
-                    I accept the Ligo merchant terms and platform policies, and confirm the
+                    I accept the የኔ Go merchant terms and platform policies, and confirm the
                     information above is correct.
                   </span>
                 </label>

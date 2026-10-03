@@ -172,7 +172,7 @@ export function SignInRequired({ title }: { title: string }) {
     <AccountState
       icon={AlertTriangle}
       title={title}
-      description="Sign in to your Ligo account to continue."
+      description="Sign in to your የኔ Go account to continue."
       action={
         <Button asChild>
           <Link to="/login">Sign in</Link>

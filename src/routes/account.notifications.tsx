@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/account/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — Ligo Delivery" },
-      { name: "description", content: "Order, delivery and payment updates from Ligo." },
+      { title: "Notifications — የኔ Go" },
+      { name: "description", content: "Order, delivery and payment updates from የኔ Go." },
     ],
   }),
   component: NotificationsPage,

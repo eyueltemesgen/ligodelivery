@@ -50,7 +50,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
       <Message
         icon={ShieldAlert}
         title="Admins only"
-        body="This area is restricted to Ligo operations staff."
+        body="This area is restricted to የኔ Go operations staff."
         action={
           <Button asChild variant="outline">
             <Link to="/">Back to the app</Link>
@@ -132,7 +132,7 @@ export function MerchantGate({ children }: { children: React.ReactNode }) {
       <Message
         icon={ShieldAlert}
         title="Merchants only"
-        body="Shop accounts are set up by the Ligo team — contact us to onboard your store."
+        body="Shop accounts are set up by the የኔ Go team — contact us to onboard your store."
         action={
           <Button asChild variant="outline">
             <Link to="/">Back to the app</Link>
@@ -146,7 +146,7 @@ export function MerchantGate({ children }: { children: React.ReactNode }) {
         <Message
           icon={Store}
           title="No shop linked to your account"
-          body="The Ligo team will link your shop after onboarding. Contact us if you think this is a mistake."
+          body="The የኔ Go team will link your shop after onboarding. Contact us if you think this is a mistake."
         />
       );
     if (!shops.some((s) => s.is_active))
@@ -154,7 +154,7 @@ export function MerchantGate({ children }: { children: React.ReactNode }) {
         <Message
           icon={Clock}
           title="Shop verification pending"
-          body="Your shop is being reviewed by the Ligo team. You'll be able to manage it here as soon as it's verified."
+          body="Your shop is being reviewed by the የኔ Go team. You'll be able to manage it here as soon as it's verified."
         />
       );
   }

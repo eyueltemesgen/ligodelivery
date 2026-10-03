@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/account/addresses")({
   head: () => ({
     meta: [
-      { title: "Delivery addresses — Ligo Delivery" },
+      { title: "Delivery addresses — የኔ Go" },
       { name: "description", content: "Manage your saved delivery addresses in Bishoftu." },
     ],
   }),

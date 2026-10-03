@@ -18,7 +18,7 @@ export const FALLBACK_CATEGORIES: Category[] = [
 export const FALLBACK_SHOPS: Shop[] = [
   {
     id: "shop-1",
-    name: "Ligo Burger House",
+    name: "የኔ Go Burger House",
     description: "Smash burgers, fries and shakes",
     category_id: "cat-food",
     phone: "+251911000001",

@@ -76,8 +76,8 @@
 
 :root {
   --radius: 0.75rem;
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Noto Sans Ethiopic", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "DM Sans", "Noto Sans Ethiopic", ui-sans-serif, system-ui, sans-serif;
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;

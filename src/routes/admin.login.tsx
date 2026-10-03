@@ -4,7 +4,7 @@ import { AuthPortal } from "@/components/auth/AuthPortal";
 export const Route = createFileRoute("/admin/login")({
   head: () => ({
     meta: [
-      { title: "Admin sign-in — Ligo Delivery" },
+      { title: "Admin sign-in — የኔ Go" },
       { name: "description", content: "Restricted administrative access." },
       { name: "robots", content: "noindex, nofollow" },
     ],

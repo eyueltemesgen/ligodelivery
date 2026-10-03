@@ -347,7 +347,7 @@ CREATE POLICY "settings_admin_write" ON public.settings FOR ALL TO authenticated
   USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 INSERT INTO public.settings (key, value, is_public) VALUES
-  ('contact', '{"phone":"+251 900 000 000","email":"hello@ligo.et","address":"Bishoftu, Oromia, Ethiopia"}', true),
+  ('contact', '{"phone":"+251 900 000 000","email":"hello@yenego.et","address":"Bishoftu, Oromia, Ethiopia"}', true),
   ('delivery', '{"base_fee":50,"free_over":1500}', true),
   ('payment_telebirr', '{"enabled":true,"account":"","holder":"","instructions":"Send the exact total to the Telebirr number above, then upload your receipt."}', false),
   ('payment_cbe', '{"enabled":true,"account":"","holder":"","instructions":"Transfer to the CBE account above and upload the transaction receipt."}', false),

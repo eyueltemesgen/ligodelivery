@@ -13,16 +13,16 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/rider/join")({
   head: () => ({
     meta: [
-      { title: "Become a Ligo rider in Bishoftu" },
+      { title: "Become a የኔ Go rider in Bishoftu" },
       {
         name: "description",
         content:
-          "Earn with Ligo — deliver food and groceries around Bishoftu on your own schedule.",
+          "Earn with የኔ Go — deliver food and groceries around Bishoftu on your own schedule.",
       },
-      { property: "og:title", content: "Become a Ligo rider" },
+      { property: "og:title", content: "Become a የኔ Go rider" },
       {
         property: "og:description",
-        content: "Deliver with Ligo in Bishoftu and earn on your schedule.",
+        content: "Deliver with የኔ Go in Bishoftu and earn on your schedule.",
       },
     ],
   }),
@@ -78,7 +78,7 @@ function RiderJoin() {
   return (
     <div className="container-ligo py-10">
       <div className="rounded-2xl bg-primary-soft p-8">
-        <h1 className="font-display text-3xl font-extrabold">Become a Ligo rider</h1>
+        <h1 className="font-display text-3xl font-extrabold">Become a የኔ Go rider</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Deliver across Bishoftu, keep your own hours and get paid for every completed order.
         </p>

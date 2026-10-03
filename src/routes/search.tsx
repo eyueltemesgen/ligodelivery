@@ -8,12 +8,12 @@ export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>) => ({ q: typeof s["q"] === "string" ? s["q"] : "" }),
   head: () => ({
     meta: [
-      { title: "Search — Ligo Delivery Bishoftu" },
+      { title: "Search — የኔ Go · Bishoftu" },
       {
         name: "description",
         content: "Search shops and products available for delivery in Bishoftu.",
       },
-      { property: "og:title", content: "Search — Ligo Delivery" },
+      { property: "og:title", content: "Search — የኔ Go" },
       { property: "og:description", content: "Find shops and products in Bishoftu." },
     ],
   }),

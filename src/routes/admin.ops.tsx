@@ -49,13 +49,13 @@ export const Route = createFileRoute("/admin/ops")({
   },
   head: () => ({
     meta: [
-      { title: "Operations — Ligo Admin" },
+      { title: "Operations — የኔ Go Admin" },
       {
         name: "description",
-        content: "Manage Ligo orders, payments, riders, shops, products and offers.",
+        content: "Manage የኔ Go orders, payments, riders, shops, products and offers.",
       },
-      { property: "og:title", content: "Operations — Ligo Admin" },
-      { property: "og:description", content: "Operations console for Ligo Delivery." },
+      { property: "og:title", content: "Operations — የኔ Go Admin" },
+      { property: "og:description", content: "Operations console for የኔ Go." },
     ],
   }),
   component: AdminPage,
@@ -835,7 +835,7 @@ export function PayoutsAdmin() {
       status === "paid" ? "Payout sent" : "Payout rejected",
       status === "paid"
         ? `${ETB(amount)} has been paid out to you.`
-        : "Your payout request was rejected. Contact the Ligo team.",
+        : "Your payout request was rejected. Contact the የኔ Go team.",
       "payout",
     );
     void qc.invalidateQueries({ queryKey: ["admin-payouts"] });

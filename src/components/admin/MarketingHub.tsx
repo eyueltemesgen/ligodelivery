@@ -32,7 +32,7 @@ const EMPTY: CouponForm = {
 
 function randomCode() {
   const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return "LIGO" + Array.from({ length: 5 }, () => c[Math.floor(Math.random() * c.length)]).join("");
+  return "YENE" + Array.from({ length: 5 }, () => c[Math.floor(Math.random() * c.length)]).join("");
 }
 
 export function MarketingHub() {
@@ -248,7 +248,7 @@ export function MarketingHub() {
               <Input
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                placeholder="LIGO10"
+                placeholder="YENE10"
               />
               <Button type="button" variant="outline" onClick={() => setForm({ ...form, code: randomCode() })}>
                 Auto
