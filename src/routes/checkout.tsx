@@ -16,14 +16,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
+import { useI18n } from "@/lib/i18n";
 
 const METHODS = [
-  { id: "cash", label: "Cash on delivery" },
-  { id: "mobile_money", label: "Mobile Money" },
-  { id: "telebirr", label: "Telebirr" },
-  { id: "cbe", label: "CBE Birr" },
-  { id: "chapa", label: "Chapa" },
-  { id: "boa", label: "Bank of Abyssinia" },
+  { id: "cash", key: "payment.cash" },
+  { id: "mobile_money", key: "payment.mobile_money" },
+  { id: "telebirr", key: "payment.telebirr" },
+  { id: "cbe", key: "payment.cbe" },
+  { id: "chapa", key: "payment.chapa" },
+  { id: "boa", key: "payment.boa" },
 ];
 
 const TIP_PRESETS = [0, 10, 20, 30, 50];
@@ -46,6 +47,7 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { items, subtotal, shopId, shopName, clear } = useCart();
   const { user, profile } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { data: shop } = useQuery({ ...shopQuery(shopId ?? ""), enabled: !!shopId });
   const { data: hours = [] } = useQuery({ ...shopHoursQuery(shopId ?? ""), enabled: !!shopId });
@@ -116,7 +118,7 @@ function CheckoutPage() {
       return;
     }
     setPromo({ code: r.code ?? code, discount: Number(r.discount ?? 0) });
-    toast.success(`Promo applied — you save ${ETB(Number(r.discount ?? 0))}`);
+    toast.success(t("checkout.promoAppliedToast", { amount: ETB(Number(r.discount ?? 0)) }));
   };
   const shopLoaded = !shopId || !!shop;
   const shopOpen = shopLoaded ? isShopOpenNow(shop ?? {}, hours) : false;
@@ -124,9 +126,9 @@ function CheckoutPage() {
   if (!user)
     return (
       <div className="container-ligo py-16 text-center">
-        <h1 className="font-display text-2xl font-extrabold">Sign in to place your order</h1>
+        <h1 className="font-display text-2xl font-extrabold">{t("checkout.signInTitle")}</h1>
         <Button asChild className="mt-6">
-          <Link to="/login">Sign in</Link>
+          <Link to="/login">{t("action.signIn")}</Link>
         </Button>
       </div>
     );
@@ -134,9 +136,9 @@ function CheckoutPage() {
   if (items.length === 0)
     return (
       <div className="container-ligo py-16 text-center">
-        <h1 className="font-display text-2xl font-extrabold">Your cart is empty</h1>
+        <h1 className="font-display text-2xl font-extrabold">{t("checkout.emptyCartTitle")}</h1>
         <Button asChild className="mt-6">
-          <Link to="/shops">Browse shops</Link>
+          <Link to="/shops">{t("action.browseShops")}</Link>
         </Button>
       </div>
     );
@@ -147,14 +149,13 @@ function CheckoutPage() {
         <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-8 shadow-card">
           <Lock className="mx-auto h-8 w-8 text-muted-foreground" />
           <h1 className="mt-4 font-display text-2xl font-extrabold">
-            {shopName} is closed right now
+            {t("checkout.shopClosedTitle", { shop: shopName ?? "" })}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {closedReason(shop ?? {}, hours)} Checkout is locked until the shop reopens — your cart
-            is saved.
+            {t("checkout.shopClosedBody", { reason: t(closedReason(shop ?? {}, hours)) })}
           </p>
           <Button asChild className="mt-6">
-            <Link to="/shops">Browse open shops</Link>
+            <Link to="/shops">{t("checkout.browseOpenShops")}</Link>
           </Button>
         </div>
       </div>
@@ -163,7 +164,7 @@ function CheckoutPage() {
   const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isShopOpenNow(shop ?? {}, hours)) {
-      toast.error("This shop is closed right now — checkout is locked.");
+      toast.error(t("checkout.shopClosedToast"));
       return;
     }
     setBusy(true);
@@ -183,7 +184,7 @@ function CheckoutPage() {
       if (error) throw error;
 
       clear();
-      toast.success("Order placed — awaiting payment verification");
+      toast.success(t("checkout.orderPlaced"));
       await navigate({ to: "/orders/$orderId", params: { orderId: orderId as string } });
     } catch (err) {
       toast.error(supabaseErrorMessage(err));
@@ -201,33 +202,33 @@ function CheckoutPage() {
     >
       <div className="space-y-6">
         <div>
-          <h1 className="font-display text-3xl font-extrabold">Checkout</h1>
+          <h1 className="font-display text-3xl font-extrabold">{t("checkout.title")}</h1>
           <ol className="mt-3 flex items-center gap-2 text-xs font-semibold">
             <li className={step === 1 ? "text-primary" : "text-muted-foreground"}>
-              1 · Delivery details
+              {t("checkout.stepDelivery")}
             </li>
             <li className="text-muted-foreground">→</li>
             <li className={step === 2 ? "text-primary" : "text-muted-foreground"}>
-              2 · Payment & tip
+              {t("checkout.stepPayment")}
             </li>
           </ol>
         </div>
 
         {step === 1 && (
           <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">Delivery details</h2>
+            <h2 className="font-display text-lg font-bold">{t("checkout.deliveryDetails")}</h2>
 
             {savedAddresses.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Saved addresses
+                    {t("checkout.savedAddresses")}
                   </Label>
                   <Link
                     to="/account/addresses"
                     className="text-xs font-semibold text-primary hover:underline"
                   >
-                    Manage
+                    {t("action.manage")}
                   </Link>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -249,7 +250,9 @@ function CheckoutPage() {
                             {a.label}
                           </span>
                           {a.is_default && (
-                            <span className="text-[10px] font-semibold text-primary">Default</span>
+                            <span className="text-[10px] font-semibold text-primary">
+                              {t("common.default")}
+                            </span>
                           )}
                         </span>
                         <span className="mt-1 block truncate text-muted-foreground">
@@ -264,16 +267,16 @@ function CheckoutPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="n">Full name</Label>
+                <Label htmlFor="n">{t("checkout.fullName")}</Label>
                 <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="p">Phone</Label>
+                <Label htmlFor="p">{t("checkout.phone")}</Label>
                 <Input id="p" value={phone} onChange={(e) => setPhone(e.target.value)} required />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="a">Delivery address in Bishoftu</Label>
+              <Label htmlFor="a">{t("checkout.addressLabel")}</Label>
               <Input
                 id="a"
                 value={address}
@@ -282,16 +285,16 @@ function CheckoutPage() {
                   setSelectedAddressId(null);
                 }}
                 required
-                placeholder="Kebele, landmark, house no."
+                placeholder={t("checkout.addressPlaceholder")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="i">Rider delivery notes (optional)</Label>
+              <Label htmlFor="i">{t("checkout.notesLabel")}</Label>
               <Textarea
                 id="i"
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
-                placeholder="e.g. call when you arrive, gate code…"
+                placeholder={t("checkout.notesPlaceholder")}
               />
             </div>
             <Button
@@ -300,7 +303,7 @@ function CheckoutPage() {
               disabled={!canProceed}
               onClick={() => setStep(2)}
             >
-              Continue to payment
+              {t("checkout.continueToPayment")}
             </Button>
           </section>
         )}
@@ -308,7 +311,7 @@ function CheckoutPage() {
         {step === 2 && (
           <>
             <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-              <h2 className="font-display text-lg font-bold">Payment method</h2>
+              <h2 className="font-display text-lg font-bold">{t("checkout.paymentMethod")}</h2>
               <div className="grid gap-2 sm:grid-cols-2">
                 {METHODS.map((m) => (
                   <button
@@ -317,88 +320,89 @@ function CheckoutPage() {
                     onClick={() => setMethod(m.id)}
                     className={`rounded-lg border px-4 py-3 text-left text-sm font-medium ${method === m.id ? "border-primary bg-primary-soft" : "border-border"}`}
                   >
-                    {m.label}
+                    {t(m.key)}
                   </button>
                 ))}
               </div>
               {method !== "cash" && (
-                <p className="text-xs text-muted-foreground">
-                  After placing the order you'll see the account details and can upload your payment
-                  receipt for verification.
-                </p>
+                <p className="text-xs text-muted-foreground">{t("checkout.paymentHint")}</p>
               )}
             </section>
 
             <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-              <h2 className="font-display text-lg font-bold">Rider tip</h2>
+              <h2 className="font-display text-lg font-bold">{t("checkout.riderTip")}</h2>
               <div className="flex flex-wrap gap-2">
-                {TIP_PRESETS.map((t) => (
+                {TIP_PRESETS.map((tp) => (
                   <button
-                    key={t}
+                    key={tp}
                     type="button"
-                    onClick={() => setTip(t)}
+                    onClick={() => setTip(tp)}
                     className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                      tip === t
+                      tip === tp
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border hover:bg-secondary"
                     }`}
                   >
-                    {t === 0 ? "No tip" : ETB(t)}
+                    {tp === 0 ? t("checkout.noTip") : ETB(tp)}
                   </button>
                 ))}
               </div>
             </section>
 
             <Button type="button" variant="ghost" onClick={() => setStep(1)}>
-              ← Back to delivery details
+              {t("checkout.backToDelivery")}
             </Button>
           </>
         )}
       </div>
 
       <aside className="h-fit space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-        <h2 className="font-display text-lg font-bold">Order summary</h2>
+        <h2 className="font-display text-lg font-bold">{t("checkout.orderSummary")}</h2>
         <p className="text-xs text-muted-foreground">{shopName}</p>
         <ul className="space-y-1 text-sm">
           {items.map((i) => (
             <li key={i.productId} className="flex justify-between gap-3">
-              <span className="text-muted-foreground">
+              <span className="min-w-0 text-muted-foreground">
                 {i.quantity} × {i.name}
               </span>
-              <span>{ETB(i.unitPrice * i.quantity)}</span>
+              <span className="shrink-0">{ETB(i.unitPrice * i.quantity)}</span>
             </li>
           ))}
         </ul>
         <div className="border-t border-border pt-3 text-sm">
           <div className="flex justify-between">
-            <span>Subtotal</span>
+            <span>{t("checkout.subtotal")}</span>
             <span>{ETB(subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Delivery{surge > 1 ? ` (surge ×${surge})` : ""}</span>
+            <span>
+              {surge > 1
+                ? t("checkout.deliverySurge", { multiplier: surge })
+                : t("checkout.delivery")}
+            </span>
             <span>{ETB(deliveryFee)}</span>
           </div>
           {tip > 0 && (
             <div className="flex justify-between">
-              <span>Rider tip</span>
+              <span>{t("checkout.riderTipLine")}</span>
               <span>{ETB(tip)}</span>
             </div>
           )}
           {promo && (
             <div className="flex justify-between text-primary">
-              <span>Promo ({promo.code})</span>
+              <span>{t("checkout.promoLine", { code: promo.code })}</span>
               <span>−{ETB(promoDiscount)}</span>
             </div>
           )}
           <div className="mt-3 space-y-1.5">
             <Label htmlFor="promo" className="text-xs">
-              Have a promo code?
+              {t("checkout.promoLabel")}
             </Label>
             {promo ? (
               <div className="flex items-center justify-between rounded-md border border-primary bg-primary-soft px-3 py-2 text-xs font-semibold">
-                <span>{promo.code} applied</span>
+                <span>{t("checkout.promoApplied", { code: promo.code })}</span>
                 <button type="button" className="underline" onClick={() => setPromo(null)}>
-                  Remove
+                  {t("action.remove")}
                 </button>
               </div>
             ) : (
@@ -407,7 +411,7 @@ function CheckoutPage() {
                   id="promo"
                   value={promoInput}
                   onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                  placeholder="ENTER CODE"
+                  placeholder={t("checkout.promoPlaceholder")}
                   className="h-9"
                 />
                 <Button
@@ -417,19 +421,19 @@ function CheckoutPage() {
                   disabled={checkingPromo}
                   onClick={applyPromo}
                 >
-                  {checkingPromo ? "…" : "Apply"}
+                  {checkingPromo ? "…" : t("action.apply")}
                 </Button>
               </div>
             )}
           </div>
           <div className="mt-2 flex justify-between font-display text-base font-bold">
-            <span>Total</span>
+            <span>{t("checkout.total")}</span>
             <span>{ETB(total)}</span>
           </div>
         </div>
         {step === 2 && (
           <Button type="submit" className="w-full" disabled={busy}>
-            {busy ? "Placing order…" : "Place order"}
+            {busy ? t("checkout.placingOrder") : t("checkout.placeOrder")}
           </Button>
         )}
       </aside>

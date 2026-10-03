@@ -4,18 +4,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, PackageCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { STATUS_LABEL, timelineIndex, type OrderStatus } from "@/lib/orders";
+import { statusKey, timelineIndex } from "@/lib/orders";
+import { useI18n } from "@/lib/i18n";
 
 const ACTIVE_STEPS = [
-  { key: "pending_payment", label: "Placed" },
-  { key: "preparing", label: "Preparing" },
-  { key: "picked_up", label: "On the way" },
-  { key: "delivered", label: "Delivered" },
+  { key: "pending_payment", labelKey: "activeOrder.placed" },
+  { key: "preparing", labelKey: "status.preparing" },
+  { key: "picked_up", labelKey: "status.on_the_way" },
+  { key: "delivered", labelKey: "status.delivered" },
 ] as const;
 
 /** Home-page banner tracking the customer's most recent in-flight order. */
 export function ActiveOrderBanner() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
 
   const { data: order } = useQuery({
@@ -76,10 +78,12 @@ export function ActiveOrderBanner() {
           </span>
           <div>
             <p className="text-sm font-bold text-accent-foreground">
-              Order {order.order_code} is{" "}
-              {STATUS_LABEL[order.status as OrderStatus] ?? order.status}
+              {t("activeOrder.status", {
+                code: order.order_code,
+                status: t(statusKey(order.status)),
+              })}
             </p>
-            <p className="text-xs text-accent-foreground/80">Tap to track your delivery live</p>
+            <p className="text-xs text-accent-foreground/80">{t("activeOrder.trackHint")}</p>
           </div>
         </div>
         <ChevronRight className="h-5 w-5 shrink-0 text-accent-foreground" />
@@ -93,7 +97,7 @@ export function ActiveOrderBanner() {
                 i <= idx ? "text-accent-foreground" : "text-accent-foreground/60"
               }`}
             >
-              {s.label}
+              {t(s.labelKey)}
             </span>
           </li>
         ))}

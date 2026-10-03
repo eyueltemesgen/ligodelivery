@@ -16,9 +16,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { shopsByIdsQuery, type OrderItemRow, type OrderRow, type ShopLite } from "@/lib/account";
 import { ETB, formatDate } from "@/lib/format";
-import { STATUS_LABEL, canCancelOrder, statusTone, type OrderStatus } from "@/lib/orders";
+import { canCancelOrder, paymentStatusKey, statusKey, statusTone } from "@/lib/orders";
 import { StorageImage } from "@/lib/media";
 import { useCart } from "@/lib/cart";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -32,37 +33,30 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function StatusBadge({ status, className = "" }: { status: string; className?: string }) {
+  const { t } = useI18n();
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)} ${className}`}
     >
-      {STATUS_LABEL[status as OrderStatus] ?? status}
+      {t(statusKey(status))}
     </span>
   );
 }
 
-const PAYMENT_LABEL: Record<string, string> = {
-  cash: "Cash on delivery",
-  mobile_money: "Mobile Money",
-  telebirr: "Telebirr",
-  cbe: "CBE Birr",
-  boa: "Bank of Abyssinia",
-  chapa: "Chapa",
+/** Translation keys for backend payment methods. */
+const PAYMENT_KEY: Record<string, string> = {
+  cash: "payment.cash",
+  mobile_money: "payment.mobile_money",
+  telebirr: "payment.telebirr",
+  cbe: "payment.cbe",
+  boa: "payment.boa",
+  chapa: "payment.chapa",
 };
 
-export const paymentLabel = (method: string) => PAYMENT_LABEL[method] ?? method;
+export const paymentLabelKey = (method: string) =>
+  PAYMENT_KEY[method] ?? `payment.${method}`;
 
-const PAYMENT_STATUS_LABEL: Record<string, string> = {
-  unpaid: "Unpaid",
-  pending: "Pending verification",
-  pending_verification: "Pending verification",
-  paid: "Paid",
-  verified: "Verified",
-  rejected: "Rejected",
-  refunded: "Refunded",
-};
-
-export const paymentStatusLabel = (status: string) => PAYMENT_STATUS_LABEL[status] ?? status;
+export const paymentStatusLabelKey = (status: string) => paymentStatusKey(status);
 
 function paymentIcon(method: string) {
   if (method === "cash") return Banknote;
@@ -71,6 +65,7 @@ function paymentIcon(method: string) {
 
 export function OrderCard({ order }: { order: OrderRow }) {
   const { data: shops = {} } = useQuery(shopsByIdsQuery(order.shop_id ? [order.shop_id] : []));
+  const { t } = useI18n();
   const { data: itemsByOrder = {} } = useQuery({
     queryKey: ["account-order-items", order.id],
     queryFn: async () => {
@@ -128,41 +123,43 @@ export function OrderCard({ order }: { order: OrderRow }) {
               </li>
             ))}
             {items.length > 3 && (
-              <li className="text-xs text-muted-foreground">+{items.length - 3} more items</li>
+              <li className="text-xs text-muted-foreground">
+                {t("orders.moreItems", { count: items.length - 3 })}
+              </li>
             )}
           </ul>
         )}
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-border pt-3 text-xs sm:grid-cols-3">
           <div>
-            <dt className="text-muted-foreground">Subtotal</dt>
+            <dt className="text-muted-foreground">{t("orders.subtotal")}</dt>
             <dd className="font-medium">{ETB(order.subtotal)}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Delivery fee</dt>
+            <dt className="text-muted-foreground">{t("orders.deliveryFee")}</dt>
             <dd className="font-medium">{ETB(order.delivery_fee)}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Total</dt>
+            <dt className="text-muted-foreground">{t("orders.total")}</dt>
             <dd className="font-display text-sm font-bold">{ETB(order.total)}</dd>
           </div>
           <div className="flex items-center gap-1.5">
             <PayIcon className="h-3.5 w-3.5 text-muted-foreground" />
             <div>
-              <dt className="text-muted-foreground">Payment</dt>
-              <dd className="font-medium">{paymentLabel(order.payment_method)}</dd>
+              <dt className="text-muted-foreground">{t("orders.payment")}</dt>
+              <dd className="font-medium">{t(paymentLabelKey(order.payment_method))}</dd>
             </div>
           </div>
           <div>
-            <dt className="text-muted-foreground">Payment status</dt>
-            <dd className="font-medium">{paymentStatusLabel(order.payment_status)}</dd>
+            <dt className="text-muted-foreground">{t("orders.paymentStatus")}</dt>
+            <dd className="font-medium">{t(paymentStatusLabelKey(order.payment_status))}</dd>
           </div>
           <div className="flex items-center gap-1.5">
             <Truck className="h-3.5 w-3.5 text-muted-foreground" />
             <div>
-              <dt className="text-muted-foreground">Delivery</dt>
+              <dt className="text-muted-foreground">{t("orders.delivery")}</dt>
               <dd className="font-medium">
-                {order.rider_id ? "Rider assigned" : "Awaiting rider"}
+                {order.rider_id ? t("orders.riderAssigned") : t("orders.awaitingRider")}
               </dd>
             </div>
           </div>
@@ -179,20 +176,20 @@ export function OrderCard({ order }: { order: OrderRow }) {
       <footer className="flex flex-wrap gap-2 border-t border-border px-4 py-3">
         <Button asChild size="sm">
           <Link to="/account/orders/$orderId" params={{ orderId: order.id }}>
-            View order
+            {t("action.viewOrder")}
           </Link>
         </Button>
         <Button asChild size="sm" variant="outline">
           <Link to="/account/orders/$orderId" params={{ orderId: order.id }}>
             <Truck className="mr-1.5 h-3.5 w-3.5" />
-            Track order
+            {t("action.trackOrder")}
           </Link>
         </Button>
         <ReorderButton items={items} shop={shop} />
         <Button asChild size="sm" variant="outline">
           <Link to="/account/help" search={{ order: order.order_code }}>
             <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
-            Support
+            {t("action.support")}
           </Link>
         </Button>
         <CancelOrderButton order={order} />
@@ -203,6 +200,7 @@ export function OrderCard({ order }: { order: OrderRow }) {
 
 function ReorderButton({ items, shop }: { items: OrderItemRow[]; shop?: ShopLite | undefined }) {
   const { add, items: cartItems } = useCart();
+  const { t } = useI18n();
   const disabled = items.length === 0;
   return (
     <Button
@@ -223,19 +221,20 @@ function ReorderButton({ items, shop }: { items: OrderItemRow[]; shop?: ShopLite
         }
         toast.success(
           conflict
-            ? `Cart replaced with items from ${shop?.name ?? "this shop"}`
-            : "Items added to your cart",
+            ? t("orders.reorderConflict", { shop: shop?.name ?? "" })
+            : t("orders.reorderAdded"),
         );
       }}
     >
       <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-      Reorder
+      {t("action.reorder")}
     </Button>
   );
 }
 
 function CancelOrderButton({ order }: { order: OrderRow }) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   if (!canCancelOrder(order.status)) return null;
@@ -252,7 +251,7 @@ function CancelOrderButton({ order }: { order: OrderRow }) {
       toast.error(error.message);
       return;
     }
-    toast.success("Order cancelled");
+    toast.success(t("orders.cancelledToast"));
     void qc.invalidateQueries({ queryKey: ["account-orders"] });
     void qc.invalidateQueries({ queryKey: ["account-order", order.id] });
     void qc.invalidateQueries({ queryKey: ["account-summary"] });
@@ -267,19 +266,18 @@ function CancelOrderButton({ order }: { order: OrderRow }) {
         onClick={() => setOpen(true)}
       >
         <X className="mr-1.5 h-3.5 w-3.5" />
-        Cancel
+        {t("action.cancel")}
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel order {order.order_code}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This can't be undone. If you've already paid, our team will arrange a refund after
-              cancellation.
-            </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("orders.cancelTitle", { code: order.order_code })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("orders.cancelBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Keep order</AlertDialogCancel>
+            <AlertDialogCancel disabled={busy}>{t("orders.keepOrder")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -288,7 +286,7 @@ function CancelOrderButton({ order }: { order: OrderRow }) {
               disabled={busy}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {busy ? "Cancelling…" : "Cancel order"}
+              {busy ? t("orders.cancelling") : t("orders.cancelOrder")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

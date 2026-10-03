@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { categoriesQuery } from "@/lib/queries";
 import { uploadImage } from "@/lib/media";
-import { merchantProfileQuery, MERCHANT_STATUS_LABEL } from "@/lib/merchant";
+import { useI18n } from "@/lib/i18n";
+import { merchantProfileQuery, MERCHANT_STATUS_KEY } from "@/lib/merchant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,10 +36,11 @@ export const Route = createFileRoute("/merchant/join")({
   component: MerchantJoin,
 });
 
-const STEPS = ["Account", "Business", "Profile", "Review"] as const;
+const STEPS = ["mjoin.stepAccount", "mjoin.stepBusiness", "mjoin.stepProfile", "mjoin.stepReview"] as const;
 
 function MerchantJoin() {
   const { user, profile, refresh } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { data: categories = [] } = useQuery(categoriesQuery);
   const { data: existing, refetch } = useQuery(merchantProfileQuery(user?.id));
@@ -97,11 +99,11 @@ function MerchantJoin() {
 
   const createAccount = async () => {
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(t("mjoin.passwordMin"));
       return;
     }
     if (password !== confirm) {
-      toast.error("Passwords do not match");
+      toast.error(t("mjoin.passwordsNoMatch"));
       return;
     }
     setBusy(true);
@@ -119,36 +121,36 @@ function MerchantJoin() {
       return;
     }
     await refresh();
-    toast.success("Account created — continue with your business details");
+    toast.success(t("mjoin.accountCreated"));
     setStep(1);
   };
 
   const locate = () => {
     if (!navigator.geolocation) {
-      toast.error("Location is not available on this device");
+      toast.error(t("mjoin.locationUnavailable"));
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setLat(p.coords.latitude.toFixed(6));
         setLng(p.coords.longitude.toFixed(6));
-        toast.success("Location captured");
+        toast.success(t("mjoin.locationCaptured"));
       },
-      () => toast.error("Could not read your location"),
+      () => toast.error(t("mjoin.locationFailed")),
     );
   };
 
   const submit = async () => {
     if (!user) {
-      toast.error("Sign in first");
+      toast.error(t("mjoin.signInFirst"));
       return;
     }
     if (!terms) {
-      toast.error("Please accept the merchant terms");
+      toast.error(t("mjoin.termsRequired"));
       return;
     }
     if (!businessName.trim()) {
-      toast.error("Business name is required");
+      toast.error(t("mjoin.businessNameRequired"));
       return;
     }
     setBusy(true);
@@ -178,10 +180,10 @@ function MerchantJoin() {
 
       if (error) throw error;
       await Promise.all([refetch(), refresh()]);
-      toast.success("Application submitted — our team will review it shortly");
+      toast.success(t("mjoin.submitted"));
       void navigate({ to: "/merchant" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not submit your application");
+      toast.error(err instanceof Error ? err.message : t("mjoin.submitFailed"));
     } finally {
       setBusy(false);
     }
@@ -194,24 +196,21 @@ function MerchantJoin() {
     <div className="container-ligo py-10">
       <header className="rounded-2xl bg-primary-soft p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-          የኔ Go for business
+          {t("mjoin.forBusiness")}
         </p>
         <h1 className="mt-2 font-display text-3xl font-extrabold sm:text-4xl">
-          Sell on የኔ Go
+          {t("mjoin.title")}
         </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          List your restaurant or shop, receive orders in real time and let የኔ Go riders handle
-          delivery across Bishoftu.
-        </p>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{t("mjoin.subtitle")}</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[
-            { icon: Store, t: "Your own storefront", d: "Menu, photos, hours and offers" },
-            { icon: Wallet, t: "Clear earnings", d: "Transparent commission and payouts" },
-            { icon: BadgeCheck, t: "Verified listing", d: "Reviewed by the የኔ Go team" },
+            { icon: Store, title: t("mjoin.perkStorefront"), d: t("mjoin.perkStorefrontDesc") },
+            { icon: Wallet, title: t("mjoin.perkEarnings"), d: t("mjoin.perkEarningsDesc") },
+            { icon: BadgeCheck, title: t("mjoin.perkVerified"), d: t("mjoin.perkVerifiedDesc") },
           ].map((b) => (
-            <div key={b.t} className="rounded-xl bg-card p-4 shadow-card">
+            <div key={b.title} className="rounded-xl bg-card p-4 shadow-card">
               <b.icon className="h-5 w-5 text-primary" />
-              <p className="mt-2 font-semibold">{b.t}</p>
+              <p className="mt-2 font-semibold">{b.title}</p>
               <p className="text-sm text-muted-foreground">{b.d}</p>
             </div>
           ))}
@@ -220,17 +219,19 @@ function MerchantJoin() {
 
       {existing && existing.status !== "rejected" ? (
         <section className="mt-8 max-w-xl rounded-xl border border-border bg-card p-6 shadow-card">
-          <h2 className="font-display text-xl font-bold">Application {MERCHANT_STATUS_LABEL[existing.status].toLowerCase()}</h2>
+          <h2 className="font-display text-xl font-bold">
+            {t("mjoin.applicationStatus", {
+              status: t(MERCHANT_STATUS_KEY[existing.status]).toLowerCase(),
+            })}
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {existing.status === "approved"
-              ? "Your shop is live on የኔ Go. Open your dashboard to manage orders and products."
-              : "Our team is reviewing your application. You'll be notified as soon as it's decided."}
+            {existing.status === "approved" ? t("mjoin.approvedBody") : t("mjoin.reviewingBody")}
           </p>
           {existing.review_notes && (
             <p className="mt-3 rounded-md bg-secondary p-3 text-sm">{existing.review_notes}</p>
           )}
           <Button asChild className="mt-5">
-            <Link to="/merchant">Go to merchant dashboard</Link>
+            <Link to="/merchant">{t("mjoin.goToDashboard")}</Link>
           </Button>
         </section>
       ) : (
@@ -248,7 +249,7 @@ function MerchantJoin() {
                 }`}
               >
                 {i < currentStep ? <Check className="h-3.5 w-3.5" /> : <span>{i + 1}</span>}
-                {label}
+                {t(label)}
               </li>
             ))}
           </ol>
@@ -256,18 +257,18 @@ function MerchantJoin() {
           <section className="mt-6 max-w-2xl space-y-4 rounded-xl border border-border bg-card p-6 shadow-card">
             {currentStep === 0 && (
               <>
-                <h2 className="font-display text-xl font-bold">Create your merchant account</h2>
-                <Field label="Your full name">
+                <h2 className="font-display text-xl font-bold">{t("mjoin.createAccountTitle")}</h2>
+                <Field label={t("mjoin.yourFullName")}>
                   <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} />
                 </Field>
-                <Field label="Phone number">
+                <Field label={t("mjoin.phoneNumber")}>
                   <Input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+2519…"
                   />
                 </Field>
-                <Field label="Email">
+                <Field label={t("mjoin.email")}>
                   <Input
                     type="email"
                     value={email}
@@ -276,7 +277,7 @@ function MerchantJoin() {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Password">
+                  <Field label={t("mjoin.password")}>
                     <Input
                       type="password"
                       value={password}
@@ -284,7 +285,7 @@ function MerchantJoin() {
                       autoComplete="new-password"
                     />
                   </Field>
-                  <Field label="Confirm password">
+                  <Field label={t("mjoin.confirmPassword")}>
                     <Input
                       type="password"
                       value={confirm}
@@ -295,10 +296,10 @@ function MerchantJoin() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <Button onClick={() => void createAccount()} disabled={busy}>
-                    {busy ? "Creating…" : "Create account & continue"}
+                    {busy ? t("mjoin.creating") : t("mjoin.createAccountContinue")}
                   </Button>
                   <Button asChild variant="ghost">
-                    <Link to="/merchant/login">I already have an account</Link>
+                    <Link to="/merchant/login">{t("mjoin.alreadyHaveAccount")}</Link>
                   </Button>
                 </div>
               </>
@@ -307,26 +308,26 @@ function MerchantJoin() {
             {currentStep === 1 && (
               <>
                 <h2 className="flex items-center gap-2 font-display text-xl font-bold">
-                  <Building2 className="h-5 w-5 text-primary" /> Business details
+                  <Building2 className="h-5 w-5 text-primary" /> {t("mjoin.businessDetails")}
                 </h2>
-                <Field label="Business / shop name">
+                <Field label={t("mjoin.businessName")}>
                   <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
                 </Field>
-                <Field label="Description">
+                <Field label={t("merchant.description")}>
                   <Textarea
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What do you sell? Tell customers what makes your shop special."
+                    placeholder={t("mjoin.descriptionPlaceholder")}
                   />
                 </Field>
-                <Field label="Category">
+                <Field label={t("mjoin.category")}>
                   <select
                     className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                   >
-                    <option value="">Select a category</option>
+                    <option value="">{t("mjoin.selectCategory")}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -335,41 +336,41 @@ function MerchantJoin() {
                   </select>
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Business phone">
+                  <Field label={t("mjoin.businessPhone")}>
                     <Input
                       value={businessPhone}
                       onChange={(e) => setBusinessPhone(e.target.value)}
                     />
                   </Field>
-                  <Field label="City">
+                  <Field label={t("mjoin.city")}>
                     <Input value={city} onChange={(e) => setCity(e.target.value)} />
                   </Field>
                 </div>
-                <Field label="Business address">
+                <Field label={t("mjoin.businessAddress")}>
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Latitude">
+                  <Field label={t("mjoin.latitude")}>
                     <Input value={lat} onChange={(e) => setLat(e.target.value)} inputMode="decimal" />
                   </Field>
-                  <Field label="Longitude">
+                  <Field label={t("mjoin.longitude")}>
                     <Input value={lng} onChange={(e) => setLng(e.target.value)} inputMode="decimal" />
                   </Field>
                   <div className="flex items-end">
                     <Button type="button" variant="outline" onClick={locate} className="w-full">
-                      <Crosshair className="mr-2 h-4 w-4" /> Use my location
+                      <Crosshair className="mr-2 h-4 w-4" /> {t("mjoin.useMyLocation")}
                     </Button>
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Opening time">
+                  <Field label={t("mjoin.openingTime")}>
                     <Input
                       type="time"
                       value={opensAt}
                       onChange={(e) => setOpensAt(e.target.value)}
                     />
                   </Field>
-                  <Field label="Closing time">
+                  <Field label={t("mjoin.closingTime")}>
                     <Input
                       type="time"
                       value={closesAt}
@@ -381,7 +382,7 @@ function MerchantJoin() {
                   onBack={signedIn ? undefined : () => setStep(0)}
                   onNext={() => {
                     if (!businessName.trim()) {
-                      toast.error("Enter your business name to continue");
+                      toast.error(t("mjoin.enterBusinessName"));
                       return;
                     }
                     setStep(2);
@@ -394,19 +395,17 @@ function MerchantJoin() {
             {currentStep === 2 && (
               <>
                 <h2 className="flex items-center gap-2 font-display text-xl font-bold">
-                  <ImageIcon className="h-5 w-5 text-primary" /> Shop images
+                  <ImageIcon className="h-5 w-5 text-primary" /> {t("mjoin.shopImages")}
                 </h2>
-                <p className="text-sm text-muted-foreground">
-                  JPG, PNG or WEBP up to 5 MB. You can change these later from your dashboard.
-                </p>
-                <Field label="Shop logo">
+                <p className="text-sm text-muted-foreground">{t("mjoin.shopImagesHint")}</p>
+                <Field label={t("mjoin.shopLogo")}>
                   <Input
                     type="file"
                     accept="image/*"
                     onChange={(e) => setLogo(e.target.files?.[0] ?? null)}
                   />
                 </Field>
-                <Field label="Cover image">
+                <Field label={t("mjoin.coverImage")}>
                   <Input
                     type="file"
                     accept="image/*"
@@ -419,17 +418,23 @@ function MerchantJoin() {
 
             {currentStep === 3 && (
               <>
-                <h2 className="font-display text-xl font-bold">Review & submit</h2>
+                <h2 className="font-display text-xl font-bold">{t("mjoin.reviewSubmit")}</h2>
                 <dl className="divide-y divide-border rounded-lg border border-border">
                   {[
-                    ["Owner", ownerName],
-                    ["Business", businessName],
-                    ["Category", categories.find((c) => c.id === categoryId)?.name ?? "—"],
-                    ["Business phone", businessPhone || "—"],
-                    ["Address", `${address || "—"}, ${city}`],
-                    ["Hours", `${opensAt} – ${closesAt}`],
-                    ["Logo", logo?.name ?? (existing?.logo_url ? "Uploaded" : "—")],
-                    ["Cover", cover?.name ?? (existing?.cover_url ? "Uploaded" : "—")],
+                    [t("mjoin.rowOwner"), ownerName],
+                    [t("mjoin.rowBusiness"), businessName],
+                    [
+                      t("mjoin.rowCategory"),
+                      categories.find((c) => c.id === categoryId)?.name ?? "—",
+                    ],
+                    [t("mjoin.rowBusinessPhone"), businessPhone || "—"],
+                    [t("mjoin.rowAddress"), `${address || "—"}, ${city}`],
+                    [t("mjoin.rowHours"), `${opensAt} – ${closesAt}`],
+                    [t("mjoin.rowLogo"), logo?.name ?? (existing?.logo_url ? t("mjoin.uploaded") : "—")],
+                    [
+                      t("mjoin.rowCover"),
+                      cover?.name ?? (existing?.cover_url ? t("mjoin.uploaded") : "—"),
+                    ],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-4 px-3 py-2 text-sm">
                       <dt className="text-muted-foreground">{k}</dt>
@@ -443,17 +448,14 @@ function MerchantJoin() {
                     onCheckedChange={(v) => setTerms(v === true)}
                     className="mt-0.5"
                   />
-                  <span>
-                    I accept the የኔ Go merchant terms and platform policies, and confirm the
-                    information above is correct.
-                  </span>
+                  <span>{t("mjoin.terms")}</span>
                 </label>
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Button variant="outline" onClick={() => setStep(2)}>
-                    Back
+                    {t("mjoin.back")}
                   </Button>
                   <Button onClick={() => void submit()} disabled={busy}>
-                    {busy ? "Submitting…" : "Submit application"}
+                    {busy ? t("mjoin.submitting") : t("mjoin.submit")}
                   </Button>
                 </div>
               </>
@@ -481,15 +483,16 @@ function StepNav({
   onBack?: (() => void) | undefined;
   onNext: () => void;
 }) {
+  const { t } = useI18n();
 
   return (
     <div className="flex flex-wrap gap-3 pt-2">
       {onBack && (
         <Button variant="outline" onClick={onBack}>
-          Back
+          {t("mjoin.back")}
         </Button>
       )}
-      <Button onClick={onNext}>Continue</Button>
+      <Button onClick={onNext}>{t("mjoin.continue")}</Button>
     </div>
   );
 }

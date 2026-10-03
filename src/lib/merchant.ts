@@ -75,29 +75,30 @@ export type MerchantPromotion = {
   created_at: string;
 };
 
-export const MERCHANT_STATUS_LABEL: Record<MerchantStatus, string> = {
-  pending: "Pending review",
-  under_review: "Under review",
-  approved: "Approved",
-  rejected: "Rejected",
-  suspended: "Suspended",
+export const MERCHANT_STATUS_KEY: Record<MerchantStatus, string> = {
+  pending: "merchant.statusPending",
+  under_review: "merchant.statusUnderReview",
+  approved: "merchant.statusApproved",
+  rejected: "merchant.statusRejected",
+  suspended: "merchant.statusSuspended",
 };
 
-export const PROMOTION_LABEL: Record<MerchantPromotion["kind"], string> = {
-  featured_shop: "Featured shop",
-  featured_product: "Featured product",
-  homepage: "Homepage placement",
+export const PROMOTION_KEY: Record<MerchantPromotion["kind"], string> = {
+  featured_shop: "merchant.promoFeaturedShop",
+  featured_product: "merchant.promoFeaturedProduct",
+  homepage: "merchant.promoHomepage",
 };
 
 /** Statuses a shop owner is allowed to move an order through. */
-export const MERCHANT_NEXT_STATUS: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> =
-  {
-    pending: { to: "preparing", label: "Accept & start preparing" },
-    pending_payment: { to: "preparing", label: "Accept & start preparing" },
-    payment_verification: { to: "preparing", label: "Accept & start preparing" },
-    confirmed: { to: "preparing", label: "Accept & start preparing" },
-    preparing: { to: "ready_for_pickup", label: "Mark ready for pickup" },
-  };
+export const MERCHANT_NEXT_STATUS: Partial<
+  Record<OrderStatus, { to: OrderStatus; labelKey: string }>
+> = {
+  pending: { to: "preparing", labelKey: "merchant.nextAcceptPrepare" },
+  pending_payment: { to: "preparing", labelKey: "merchant.nextAcceptPrepare" },
+  payment_verification: { to: "preparing", labelKey: "merchant.nextAcceptPrepare" },
+  confirmed: { to: "preparing", labelKey: "merchant.nextAcceptPrepare" },
+  preparing: { to: "ready_for_pickup", labelKey: "merchant.nextReadyPickup" },
+};
 
 export const merchantProfileQuery = (uid: string | undefined) => ({
   queryKey: ["merchant-profile", uid],

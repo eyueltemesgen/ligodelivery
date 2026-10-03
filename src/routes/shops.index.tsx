@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery, shopsQuery } from "@/lib/queries";
 import { ShopCard } from "@/components/ligo/Cards";
 import { ShopGridSkeleton } from "@/components/ligo/Skeletons";
+import { useI18n, useContentTranslations } from "@/lib/i18n";
 
 export const Route = createFileRoute("/shops/")({
   validateSearch: (s: Record<string, unknown>) =>
@@ -27,36 +28,41 @@ function ShopsPage() {
   const { category } = Route.useSearch();
   const { data: categories = [] } = useQuery(categoriesQuery);
   const { data: shops = [], isLoading } = useQuery(shopsQuery(category));
+  const { t } = useI18n();
+  const { localize } = useContentTranslations("category");
 
   return (
     <div className="container-ligo py-10">
       <BannerSlot placement="shops" className="px-0 py-4" />
-      <h1 className="font-display text-3xl font-extrabold">Shops</h1>
+      <h1 className="font-display text-3xl font-extrabold">{t("shops.title")}</h1>
       <div className="mt-5 flex flex-wrap gap-2">
         <Link
           to="/shops"
           search={{}}
           className={`rounded-full border px-3 py-1.5 text-sm ${!category ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
         >
-          All
+          {t("shops.all")}
         </Link>
-        {categories.map((c) => (
-          <Link
-            key={c.id}
-            to="/shops"
-            search={{ category: c.id }}
-            className={`rounded-full border px-3 py-1.5 text-sm ${category === c.id ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-          >
-            {c.name}
-          </Link>
-        ))}
+        {categories.map((c) => {
+          const view = localize(c);
+          return (
+            <Link
+              key={view.id}
+              to="/shops"
+              search={{ category: view.id }}
+              className={`rounded-full border px-3 py-1.5 text-sm ${category === view.id ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+            >
+              {view.name}
+            </Link>
+          );
+        })}
       </div>
       {isLoading ? (
         <div className="mt-8">
           <ShopGridSkeleton />
         </div>
       ) : shops.length === 0 ? (
-        <p className="mt-8 text-sm text-muted-foreground">No shops in this category yet.</p>
+        <p className="mt-8 text-sm text-muted-foreground">{t("shops.noneInCategory")}</p>
       ) : (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {shops.map((s) => (

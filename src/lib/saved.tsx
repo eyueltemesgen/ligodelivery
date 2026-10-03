@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isMissingTable } from "@/lib/supa-error";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18nOptional } from "@/lib/i18n";
 
 type SavedValue = {
   wishlistIds: Set<string>;
@@ -35,6 +36,7 @@ const EMPTY = new Set<string>();
  */
 export function SavedProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { t } = useI18nOptional();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(EMPTY);
@@ -67,10 +69,10 @@ export function SavedProvider({ children }: { children: ReactNode }) {
 
   const requireUser = useCallback(() => {
     if (user) return true;
-    toast.info("Sign in to save items to your account");
+    toast.info(t("toast.signInToSave"));
     void navigate({ to: "/login" });
     return false;
-  }, [user, navigate]);
+  }, [user, navigate, t]);
 
   const toggleProduct = useCallback(
     async (productId: string) => {
@@ -97,17 +99,15 @@ export function SavedProvider({ children }: { children: ReactNode }) {
           return next;
         });
         toast.error(
-          isMissingTable(error)
-            ? "Saved products are being set up — please try again shortly"
-            : "Could not update saved products",
+          isMissingTable(error) ? t("toast.savedProductsSetup") : t("toast.savedProductsFailed"),
         );
         return;
       }
-      toast.success(saved ? "Removed from saved products" : "Saved to your products");
+      toast.success(saved ? t("toast.removedProduct") : t("toast.savedProduct"));
       void qc.invalidateQueries({ queryKey: ["wishlist"] });
       void qc.invalidateQueries({ queryKey: ["account-summary"] });
     },
-    [requireUser, user, wishlistIds, qc],
+    [requireUser, user, wishlistIds, qc, t],
   );
 
   const toggleShop = useCallback(
@@ -135,17 +135,15 @@ export function SavedProvider({ children }: { children: ReactNode }) {
           return next;
         });
         toast.error(
-          isMissingTable(error)
-            ? "Favorite shops are being set up — please try again shortly"
-            : "Could not update favorite shops",
+          isMissingTable(error) ? t("toast.favoritesSetup") : t("toast.favoritesFailed"),
         );
         return;
       }
-      toast.success(fav ? "Removed from favorite shops" : "Added to favorite shops");
+      toast.success(fav ? t("toast.favoriteRemoved") : t("toast.favoriteAdded"));
       void qc.invalidateQueries({ queryKey: ["shop-favorites"] });
       void qc.invalidateQueries({ queryKey: ["account-summary"] });
     },
-    [requireUser, user, favoriteShopIds, qc],
+    [requireUser, user, favoriteShopIds, qc, t],
   );
 
   const value = useMemo<SavedValue>(

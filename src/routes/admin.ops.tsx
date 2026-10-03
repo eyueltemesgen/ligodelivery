@@ -22,6 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { MarketingHub } from "@/components/admin/MarketingHub";
 import { SpecialMomentsAdmin } from "@/components/admin/SpecialMomentsAdmin";
+import { ContentTranslationsAdmin } from "@/components/admin/ContentTranslationsAdmin";
+import { useI18n } from "@/lib/i18n";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const OPS_TABS = [
@@ -39,6 +41,7 @@ const OPS_TABS = [
   "content",
   "financials",
   "settings",
+  "language",
   "system",
 ] as const;
 type OpsTab = (typeof OPS_TABS)[number];
@@ -67,6 +70,7 @@ export const Route = createFileRoute("/admin/ops")({
 function AdminPage() {
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const { t } = useI18n();
   return (
     <>
       <Stats />
@@ -77,21 +81,54 @@ function AdminPage() {
       >
         <div className="-mx-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           <TabsList className="h-auto w-max min-w-full justify-start gap-1">
-            <TabsTrigger value="orders" className="min-h-9">Orders</TabsTrigger>
-            <TabsTrigger value="payments" className="min-h-9">Payments</TabsTrigger>
-            <TabsTrigger value="payouts" className="min-h-9">Payouts</TabsTrigger>
-            <TabsTrigger value="customers" className="min-h-9">Customers</TabsTrigger>
-            <TabsTrigger value="shops" className="min-h-9">Shops</TabsTrigger>
-            <TabsTrigger value="products" className="min-h-9">Products</TabsTrigger>
-            <TabsTrigger value="categories" className="min-h-9">Categories</TabsTrigger>
-            <TabsTrigger value="special-moments" className="min-h-9">Special Moments</TabsTrigger>
-            <TabsTrigger value="offers" className="min-h-9">Offers</TabsTrigger>
-            <TabsTrigger value="marketing" className="min-h-9">Marketing</TabsTrigger>
-            <TabsTrigger value="banners" className="min-h-9">Banners</TabsTrigger>
-            <TabsTrigger value="content" className="min-h-9">Content</TabsTrigger>
-            <TabsTrigger value="financials" className="min-h-9">Financials</TabsTrigger>
-            <TabsTrigger value="settings" className="min-h-9">Settings</TabsTrigger>
-            <TabsTrigger value="system" className="min-h-9">System</TabsTrigger>
+            <TabsTrigger value="orders" className="min-h-9">
+              {t("admin.opsOrders")}
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="min-h-9">
+              {t("admin.opsPayments")}
+            </TabsTrigger>
+            <TabsTrigger value="payouts" className="min-h-9">
+              {t("admin.opsPayouts")}
+            </TabsTrigger>
+            <TabsTrigger value="customers" className="min-h-9">
+              {t("admin.customers")}
+            </TabsTrigger>
+            <TabsTrigger value="shops" className="min-h-9">
+              {t("admin.opsShops")}
+            </TabsTrigger>
+            <TabsTrigger value="products" className="min-h-9">
+              {t("admin.opsProducts")}
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="min-h-9">
+              {t("admin.opsCategories")}
+            </TabsTrigger>
+            <TabsTrigger value="special-moments" className="min-h-9">
+              {t("admin.opsSpecialMoments")}
+            </TabsTrigger>
+            <TabsTrigger value="offers" className="min-h-9">
+              {t("admin.opsOffers")}
+            </TabsTrigger>
+            <TabsTrigger value="marketing" className="min-h-9">
+              {t("admin.opsMarketing")}
+            </TabsTrigger>
+            <TabsTrigger value="banners" className="min-h-9">
+              {t("admin.opsBanners")}
+            </TabsTrigger>
+            <TabsTrigger value="content" className="min-h-9">
+              {t("admin.opsContent")}
+            </TabsTrigger>
+            <TabsTrigger value="financials" className="min-h-9">
+              {t("admin.opsFinancials")}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="min-h-9">
+              {t("admin.opsSettings")}
+            </TabsTrigger>
+            <TabsTrigger value="language" className="min-h-9">
+              {t("admin.opsLanguage")}
+            </TabsTrigger>
+            <TabsTrigger value="system" className="min-h-9">
+              {t("admin.opsSystem")}
+            </TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="orders">
@@ -136,6 +173,9 @@ function AdminPage() {
         <TabsContent value="settings">
           <SettingsAdmin />
         </TabsContent>
+        <TabsContent value="language">
+          <ContentTranslationsAdmin />
+        </TabsContent>
         <TabsContent value="system">
           <SystemAdmin />
         </TabsContent>
@@ -160,6 +200,7 @@ const DEFAULT_PLATFORM: PlatformSettings = {
 
 function SystemAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [draft, setDraft] = useState<PlatformSettings | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -191,7 +232,7 @@ function SystemAdmin() {
     setDraft(null);
     void qc.invalidateQueries({ queryKey: ["admin-platform-settings"] });
     void qc.invalidateQueries({ queryKey: ["settings-public"] });
-    toast.success("Platform settings saved");
+    toast.success(t("admin.platformSettingsSaved"));
   };
 
   return (
@@ -199,9 +240,9 @@ function SystemAdmin() {
       onSubmit={save}
       className="mt-6 max-w-lg space-y-4 rounded-xl border border-border bg-card p-6 shadow-card"
     >
-      <h3 className="font-display text-lg font-bold">System control center</h3>
+      <h3 className="font-display text-lg font-bold">{t("admin.systemControlCenter")}</h3>
       <div className="space-y-1.5">
-        <Label htmlFor="commission">Platform commission (%)</Label>
+        <Label htmlFor="commission">{t("admin.platformCommission")}</Label>
         <Input
           id="commission"
           type="number"
@@ -213,7 +254,7 @@ function SystemAdmin() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="base-fee">Base delivery fee (ETB)</Label>
+        <Label htmlFor="base-fee">{t("admin.baseDeliveryFee")}</Label>
         <Input
           id="base-fee"
           type="number"
@@ -222,12 +263,10 @@ function SystemAdmin() {
           value={value.base_delivery_fee}
           onChange={(e) => setDraft({ ...value, base_delivery_fee: Number(e.target.value) || 0 })}
         />
-        <p className="text-xs text-muted-foreground">
-          Used when a shop doesn't set its own delivery fee.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("admin.baseDeliveryFeeHint")}</p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="surge">Surge multiplier</Label>
+        <Label htmlFor="surge">{t("admin.surgeMultiplier")}</Label>
         <Input
           id="surge"
           type="number"
@@ -237,25 +276,20 @@ function SystemAdmin() {
           value={value.surge_multiplier}
           onChange={(e) => setDraft({ ...value, surge_multiplier: Number(e.target.value) || 1 })}
         />
-        <p className="text-xs text-muted-foreground">
-          Multiplies delivery fees at checkout during peak demand.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("admin.surgeMultiplierHint")}</p>
       </div>
       <label className="flex items-center justify-between gap-4 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm font-medium">
-        Emergency dispatch pause
+        {t("admin.emergencyPause")}
         <Switch
           checked={value.dispatch_paused}
           onCheckedChange={(v) => setDraft({ ...value, dispatch_paused: v })}
         />
       </label>
       {value.dispatch_paused && (
-        <p className="text-xs text-destructive">
-          Dispatch is paused: admins cannot dispatch orders and riders receive no new offers until
-          resumed.
-        </p>
+        <p className="text-xs text-destructive">{t("admin.emergencyPauseHint")}</p>
       )}
       <Button type="submit" disabled={saving}>
-        {saving ? "Saving…" : "Save platform settings"}
+        {saving ? t("admin.saving") : t("admin.savePlatformSettings")}
       </Button>
     </form>
   );
@@ -271,6 +305,7 @@ function Card({ label, value }: { label: string; value: string | number }) {
 }
 
 function CustomersAdmin() {
+  const { t } = useI18n();
   const { data: customers = [] } = useQuery({
     queryKey: ["admin-customers"],
     queryFn: async () => {
@@ -302,11 +337,11 @@ function CustomersAdmin() {
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <th className="px-4 py-3">Customer</th>
-            <th className="px-4 py-3">Contact</th>
-            <th className="px-4 py-3">Joined</th>
-            <th className="px-4 py-3 text-right">Orders</th>
-            <th className="px-4 py-3 text-right">Lifetime spend</th>
+            <th className="px-4 py-3">{t("admin.customer")}</th>
+            <th className="px-4 py-3">{t("admin.contact")}</th>
+            <th className="px-4 py-3">{t("admin.joined")}</th>
+            <th className="px-4 py-3 text-right">{t("admin.opsOrders")}</th>
+            <th className="px-4 py-3 text-right">{t("admin.lifetimeSpend")}</th>
           </tr>
         </thead>
         <tbody>
@@ -322,7 +357,7 @@ function CustomersAdmin() {
           {customers.length === 0 && (
             <tr>
               <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                No customers yet.
+                {t("admin.noCustomers")}
               </td>
             </tr>
           )}
@@ -333,6 +368,7 @@ function CustomersAdmin() {
 }
 
 export function FinancialsPanel() {
+  const { t } = useI18n();
   const { data } = useQuery({
     queryKey: ["admin-financials"],
     queryFn: async () => {
@@ -365,20 +401,20 @@ export function FinancialsPanel() {
     },
   });
 
-  if (!data) return <p className="mt-6 text-sm text-muted-foreground">Loading…</p>;
+  if (!data) return <p className="mt-6 text-sm text-muted-foreground">{t("admin.loading")}</p>;
 
   return (
     <div className="mt-6 space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card label="Platform gross revenue" value={ETB(data.gross)} />
-        <Card label="Platform commission" value={ETB(data.commission)} />
-        <Card label="Delivery fees" value={ETB(data.deliveryFees)} />
-        <Card label="Merchant payouts value" value={ETB(data.merchantPayouts)} />
-        <Card label="Rider cashouts paid" value={ETB(data.paidOut)} />
-        <Card label="Cashout requests pending" value={ETB(data.requested)} />
+        <Card label={t("admin.grossRevenue")} value={ETB(data.gross)} />
+        <Card label={t("admin.platformCommissionCard")} value={ETB(data.commission)} />
+        <Card label={t("admin.deliveryFees")} value={ETB(data.deliveryFees)} />
+        <Card label={t("admin.merchantPayoutsValue")} value={ETB(data.merchantPayouts)} />
+        <Card label={t("admin.riderCashoutsPaid")} value={ETB(data.paidOut)} />
+        <Card label={t("admin.cashoutRequestsPending")} value={ETB(data.requested)} />
       </div>
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <h3 className="font-display font-bold">Volume by payment gateway</h3>
+        <h3 className="font-display font-bold">{t("admin.volumeByGateway")}</h3>
         <ul className="mt-3 space-y-1.5 text-sm">
           {data.byMethod.map(([method, total]) => (
             <li
@@ -397,6 +433,7 @@ export function FinancialsPanel() {
 
 function Stats() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const { data } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
@@ -447,14 +484,14 @@ function Stats() {
 
   return (
     <div className="mt-6 grid gap-4 sm:grid-cols-3 lg:grid-cols-7">
-      <Card label="Orders" value={data?.orders ?? 0} />
-      <Card label="Active" value={data?.active ?? 0} />
-      <Card label="Revenue" value={ETB(data?.revenue ?? 0)} />
-      <Card label="Shops" value={data?.shops ?? 0} />
-      <Card label="Products" value={data?.products ?? 0} />
-      <Card label="Pending receipts" value={data?.pendingProofs ?? 0} />
+      <Card label={t("admin.opsOrders")} value={data?.orders ?? 0} />
+      <Card label={t("admin.active")} value={data?.active ?? 0} />
+      <Card label={t("admin.revenue")} value={ETB(data?.revenue ?? 0)} />
+      <Card label={t("admin.opsShops")} value={data?.shops ?? 0} />
+      <Card label={t("admin.opsProducts")} value={data?.products ?? 0} />
+      <Card label={t("admin.pendingReceipts")} value={data?.pendingProofs ?? 0} />
       <div className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Fleet</p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("admin.fleet")}</p>
         <p className="mt-1 font-display text-2xl font-extrabold">
           {data?.ridersOnline ?? 0}
           <span className="text-sm font-semibold text-muted-foreground">
@@ -476,6 +513,7 @@ function Stats() {
 
 function OrdersAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders"],
     queryFn: async () =>
@@ -492,7 +530,7 @@ function OrdersAdmin() {
         : { data: [] };
       return (data ?? []).map((r) => ({
         ...r,
-        name: profiles?.find((p) => p.id === r.id)?.full_name || "Rider",
+        name: profiles?.find((p) => p.id === r.id)?.full_name || t("rider.defaultName"),
         phone: profiles?.find((p) => p.id === r.id)?.phone ?? "",
       }));
     },
@@ -527,7 +565,7 @@ function OrdersAdmin() {
     }
     await notify(customerId, `Order ${code}`, message, "order", id);
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
-    toast.success("Order updated");
+    toast.success(t("admin.orderUpdated"));
   };
 
   const approveDispatch = async (id: string, customerId: string, code: string) => {
@@ -538,13 +576,13 @@ function OrdersAdmin() {
     }
     await notify(
       customerId,
-      `Order ${code} confirmed`,
-      "Payment verified — a rider is on the way.",
+      t("admin.orderConfirmedTitle", { code }),
+      t("admin.paymentVerifiedBody"),
       "order",
       id,
     );
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
-    toast.success("Order dispatched to all riders");
+    toast.success(t("admin.orderDispatched"));
   };
 
   return (
@@ -574,7 +612,7 @@ function OrdersAdmin() {
                 size="sm"
                 onClick={() => void approveDispatch(o.id, o.customer_id, o.order_code)}
               >
-                Approve &amp; Dispatch
+                {t("admin.approveDispatch")}
               </Button>
             )}
             <select
@@ -608,17 +646,17 @@ function OrdersAdmin() {
                   },
                   o.customer_id,
                   o.order_code,
-                  "A rider has been assigned to your order.",
+                  t("admin.riderAssignedBody"),
                 )
               }
             >
-              <option value="">Assign rider…</option>
+              <option value="">{t("admin.assignRider")}</option>
               {riders
                 .filter((r) => r.is_approved)
                 .map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
-                    {r.is_online ? " (online)" : ""}
+                    {r.is_online ? ` ${t("admin.onlineSuffix")}` : ""}
                   </option>
                 ))}
             </select>
@@ -631,11 +669,11 @@ function OrdersAdmin() {
                   { payment_status: "paid" },
                   o.customer_id,
                   o.order_code,
-                  "Payment confirmed.",
+                  t("admin.paymentConfirmed"),
                 )
               }
             >
-              Mark paid
+              {t("admin.markPaid")}
             </Button>
           </div>
         </div>
@@ -666,6 +704,7 @@ async function dispatchOrder(orderId: string) {
 
 function PaymentsAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const { data: proofs = [] } = useQuery({
     queryKey: ["admin-proofs"],
     queryFn: async () =>
@@ -705,24 +744,20 @@ function PaymentsAdmin() {
     }
     await notify(
       userId,
-      "Payment " + status,
-      status === "approved"
-        ? "Your payment was verified and your order is on its way to a rider."
-        : "Your receipt was rejected. Please re-submit.",
+      t("admin.paymentStatusTitle", { status }),
+      status === "approved" ? t("admin.paymentVerifiedBody") : t("admin.receiptRejectedBody"),
       "payment",
       orderId,
     );
     void qc.invalidateQueries({ queryKey: ["admin-proofs"] });
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
-    toast.success(
-      status === "approved" ? "Payment approved — order dispatched to riders" : "Receipt rejected",
-    );
+    toast.success(status === "approved" ? t("admin.paymentApproved") : t("admin.receiptRejected"));
   };
 
   return (
     <div className="mt-6 space-y-3">
       {proofs.length === 0 && (
-        <p className="text-sm text-muted-foreground">No receipts submitted.</p>
+        <p className="text-sm text-muted-foreground">{t("admin.noReceipts")}</p>
       )}
       {proofs.map((p) => (
         <div
@@ -731,7 +766,7 @@ function PaymentsAdmin() {
         >
           <StorageImage
             path={p.image_url}
-            alt="Receipt"
+            alt={t("admin.paymentProofAlt")}
             bucket={PROOF_BUCKET}
             className="h-24 w-24 rounded-lg object-cover"
           />
@@ -739,21 +774,23 @@ function PaymentsAdmin() {
             <p className="font-semibold uppercase">
               {p.method} · {ETB(p.amount ?? 0)}
             </p>
-            <p className="text-sm text-muted-foreground">Ref: {p.reference || "—"}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("admin.reference")}: {p.reference || "—"}
+            </p>
             <p className="text-xs text-muted-foreground">
               {formatDate(p.created_at)} · {p.status}
             </p>
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => void review(p.id, p.order_id, p.user_id, "approved")}>
-              Approve &amp; Dispatch
+              {t("admin.approveDispatch")}
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => void review(p.id, p.order_id, p.user_id, "rejected")}
             >
-              Reject
+              {t("admin.reject")}
             </Button>
           </div>
         </div>
@@ -768,6 +805,7 @@ function useImageUpload(folder: string) {
 
 export function PayoutsAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const { data: payouts = [] } = useQuery({
     queryKey: ["admin-payouts"],
     queryFn: async () => {
@@ -790,11 +828,11 @@ export function PayoutsAdmin() {
         const riderProfile = profiles?.find((x) => x.id === p.rider_id);
         return {
           ...p,
-          riderName: riderProfile?.full_name || "Rider",
+          riderName: riderProfile?.full_name || t("admin.riderFallback"),
           riderPhone: riderProfile?.phone ?? "",
           riderAvatar: riderProfile?.avatar_url ?? null,
           payoutDetails: riderRow
-            ? `${riderRow.payout_method === "telebirr" ? "Telebirr" : "Bank"}: ${riderRow.payout_account ?? "—"} (${riderRow.payout_account_name ?? "—"})`
+            ? `${riderRow.payout_method === "telebirr" ? t("payMethod.telebirr") : t("admin.bank")}: ${riderRow.payout_account ?? "—"} (${riderRow.payout_account_name ?? "—"})`
             : "",
         };
       });
@@ -838,20 +876,20 @@ export function PayoutsAdmin() {
     }
     await notify(
       riderId,
-      status === "paid" ? "Payout sent" : "Payout rejected",
+      status === "paid" ? t("admin.payoutSent") : t("admin.payoutRejected"),
       status === "paid"
         ? `${ETB(amount)} has been paid out to you.`
-        : "Your payout request was rejected. Contact the የኔ Go team.",
+        : t("admin.payoutRejectedBody"),
       "payout",
     );
     void qc.invalidateQueries({ queryKey: ["admin-payouts"] });
-    toast.success(`Payout ${status}`);
+    toast.success(t("admin.payoutStatusToast", { status }));
   };
 
   return (
     <div className="mt-6 space-y-3">
       {payouts.length === 0 && (
-        <p className="text-sm text-muted-foreground">No payout requests yet.</p>
+        <p className="text-sm text-muted-foreground">{t("admin.noPayoutRequests")}</p>
       )}
       {payouts.map((p) => (
         <div
@@ -877,14 +915,14 @@ export function PayoutsAdmin() {
                 size="sm"
                 onClick={() => void process(p.id, p.rider_id, Number(p.amount), "paid")}
               >
-                Mark paid
+                {t("admin.markPaid")}
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => void process(p.id, p.rider_id, Number(p.amount), "rejected")}
               >
-                Reject
+                {t("admin.reject")}
               </Button>
             </div>
           ) : (
@@ -902,6 +940,7 @@ export function PayoutsAdmin() {
 
 function CategoriesAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const upload = useImageUpload("categories");
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -925,9 +964,9 @@ function CategoriesAdmin() {
       setName("");
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-categories"] });
-      toast.success("Category added");
+      toast.success(t("admin.categoryAdded"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : t("admin.failed"));
     }
   };
 
@@ -942,14 +981,19 @@ function CategoriesAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New category</h3>
-        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <h3 className="font-display font-bold">{t("admin.newCategory")}</h3>
+        <Input
+          placeholder={t("admin.namePlaceholder")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
         <Input
           type="file"
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Add category</Button>
+        <Button type="submit">{t("admin.addCategory")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((c) => (
@@ -974,6 +1018,7 @@ function CategoriesAdmin() {
 
 function ShopsAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const upload = useImageUpload("shops");
   const [form, setForm] = useState({
     name: "",
@@ -1022,9 +1067,9 @@ function ShopsAdmin() {
       });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-shops"] });
-      toast.success("Shop created");
+      toast.success(t("admin.shopCreated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : t("admin.failed"));
     }
   };
 
@@ -1042,25 +1087,25 @@ function ShopsAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New shop</h3>
+        <h3 className="font-display font-bold">{t("admin.newShop")}</h3>
         <Input
-          placeholder="Shop name"
+          placeholder={t("admin.shopNamePlaceholder")}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Description"
+          placeholder={t("admin.descriptionPlaceholder")}
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
         <Input
-          placeholder="Address"
+          placeholder={t("admin.addressPlaceholder")}
           value={form.address}
           onChange={(e) => setForm({ ...form, address: e.target.value })}
         />
         <Input
-          placeholder="Phone"
+          placeholder={t("admin.phonePlaceholder")}
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
         />
@@ -1069,7 +1114,7 @@ function ShopsAdmin() {
           value={form.category_id}
           onChange={(e) => setForm({ ...form, category_id: e.target.value })}
         >
-          <option value="">Category…</option>
+          <option value="">{t("admin.categoryPlaceholder")}</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -1079,13 +1124,13 @@ function ShopsAdmin() {
         <div className="grid grid-cols-2 gap-2">
           <Input
             type="number"
-            placeholder="Delivery fee"
+            placeholder={t("admin.deliveryFeePlaceholder")}
             value={form.delivery_fee}
             onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })}
           />
           <Input
             type="number"
-            placeholder="Minutes"
+            placeholder={t("admin.minutesPlaceholder")}
             value={form.delivery_time_min}
             onChange={(e) => setForm({ ...form, delivery_time_min: e.target.value })}
           />
@@ -1095,7 +1140,7 @@ function ShopsAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Create shop</Button>
+        <Button type="submit">{t("admin.createShop")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((s) => (
@@ -1117,21 +1162,21 @@ function ShopsAdmin() {
               </div>
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <label className="flex items-center gap-2">
-                  Online
+                  {t("admin.online")}
                   <Switch
                     checked={s.is_online}
                     onCheckedChange={(v) => void toggle(s.id, { is_online: v })}
                   />
                 </label>
                 <label className="flex items-center gap-2">
-                  Featured
+                  {t("admin.featured")}
                   <Switch
                     checked={s.is_featured}
                     onCheckedChange={(v) => void toggle(s.id, { is_featured: v })}
                   />
                 </label>
                 <label className="flex items-center gap-2">
-                  Active
+                  {t("admin.activeLabel")}
                   <Switch
                     checked={s.is_active}
                     onCheckedChange={(v) => void toggle(s.id, { is_active: v })}
@@ -1142,16 +1187,16 @@ function ShopsAdmin() {
                   variant="outline"
                   onClick={() => {
                     void navigator.clipboard.writeText(`${window.location.origin}/shops/${s.id}`);
-                    toast.success("Shop link copied — paste it in a banner or ad");
+                    toast.success(t("admin.shopLinkCopied"));
                   }}
                 >
-                  Copy promo link
+                  {t("admin.copyPromoLink")}
                 </Button>
               </div>
             </div>
             <details className="mt-3">
               <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
-                Opening hours
+                {t("admin.openingHours")}
               </summary>
               <div className="mt-2">
                 <ShopHoursEditor
@@ -1170,6 +1215,7 @@ function ShopsAdmin() {
 
 function ProductsAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const upload = useImageUpload("products");
   const [form, setForm] = useState({
     shop_id: "",
@@ -1217,9 +1263,9 @@ function ProductsAdmin() {
       });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-products"] });
-      toast.success("Product added");
+      toast.success(t("admin.productAdded"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : t("admin.failed"));
     }
   };
 
@@ -1237,14 +1283,14 @@ function ProductsAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New product</h3>
+        <h3 className="font-display font-bold">{t("admin.newProduct")}</h3>
         <select
           className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
           value={form.shop_id}
           onChange={(e) => setForm({ ...form, shop_id: e.target.value })}
           required
         >
-          <option value="">Select shop…</option>
+          <option value="">{t("admin.selectShop")}</option>
           {shops.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -1252,13 +1298,13 @@ function ProductsAdmin() {
           ))}
         </select>
         <Input
-          placeholder="Product name"
+          placeholder={t("admin.productNamePlaceholder")}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Description"
+          placeholder={t("admin.descriptionPlaceholder")}
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
@@ -1266,14 +1312,14 @@ function ProductsAdmin() {
           <Input
             type="number"
             step="0.01"
-            placeholder="Price ETB"
+            placeholder={t("admin.pricePlaceholder")}
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             required
           />
           <Input
             type="number"
-            placeholder="Discount %"
+            placeholder={t("admin.discountPlaceholder")}
             value={form.discount_percent}
             onChange={(e) => setForm({ ...form, discount_percent: e.target.value })}
           />
@@ -1283,7 +1329,7 @@ function ProductsAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Add product</Button>
+        <Button type="submit">{t("admin.addProduct")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((p) => (
@@ -1307,14 +1353,14 @@ function ProductsAdmin() {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <label className="flex items-center gap-2">
-                Popular
+                {t("admin.popular")}
                 <Switch
                   checked={p.is_popular}
                   onCheckedChange={(v) => void toggle(p.id, { is_popular: v })}
                 />
               </label>
               <label className="flex items-center gap-2">
-                In stock
+                {t("admin.inStock")}
                 <Switch
                   checked={p.in_stock}
                   onCheckedChange={(v) => void toggle(p.id, { in_stock: v })}
@@ -1330,6 +1376,7 @@ function ProductsAdmin() {
 
 function OffersAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const upload = useImageUpload("offers");
   const [form, setForm] = useState({
     title: "",
@@ -1360,9 +1407,9 @@ function OffersAdmin() {
       setForm({ title: "", description: "", discount_type: "percent", discount_value: "10" });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-offers"] });
-      toast.success("Offer created");
+      toast.success(t("admin.offerCreated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : t("admin.failed"));
     }
   };
 
@@ -1372,15 +1419,15 @@ function OffersAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New offer</h3>
+        <h3 className="font-display font-bold">{t("admin.newOffer")}</h3>
         <Input
-          placeholder="Title"
+          placeholder={t("admin.titlePlaceholder")}
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Description"
+          placeholder={t("admin.descriptionPlaceholder")}
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
@@ -1390,8 +1437,8 @@ function OffersAdmin() {
             value={form.discount_type}
             onChange={(e) => setForm({ ...form, discount_type: e.target.value })}
           >
-            <option value="percent">Percent</option>
-            <option value="amount">Amount</option>
+            <option value="percent">{t("admin.percent")}</option>
+            <option value="amount">{t("admin.amount")}</option>
           </select>
           <Input
             type="number"
@@ -1404,7 +1451,7 @@ function OffersAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Create offer</Button>
+        <Button type="submit">{t("admin.createOffer")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((o) => (
@@ -1445,6 +1492,7 @@ const PAYMENT_KEYS = [
 
 function SettingsAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const { data: settings = {} } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: async () => {
@@ -1464,7 +1512,7 @@ function SettingsAdmin() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-settings"] });
-    toast.success("Saved");
+    toast.success(t("admin.saved"));
   };
 
   return (
@@ -1490,6 +1538,7 @@ function PaymentSetting({
   value: Record<string, string>;
   onSave: (v: Record<string, string>) => void;
 }) {
+  const { t } = useI18n();
   const [accountName, setAccountName] = useState(value["account_name"] ?? "");
   const [accountNumber, setAccountNumber] = useState(value["account_number"] ?? "");
 
@@ -1503,15 +1552,15 @@ function PaymentSetting({
     >
       <h3 className="font-display font-bold">{label}</h3>
       <div className="space-y-1.5">
-        <Label>Account name</Label>
+        <Label>{t("admin.accountName")}</Label>
         <Input value={accountName} onChange={(e) => setAccountName(e.target.value)} />
       </div>
       <div className="space-y-1.5">
-        <Label>Account number</Label>
+        <Label>{t("admin.accountNumber")}</Label>
         <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
       </div>
       <Button type="submit" size="sm">
-        Save
+        {t("admin.saved")}
       </Button>
     </form>
   );
@@ -1540,6 +1589,7 @@ function RowEditor({
 }) {
   const [deleting, setDeleting] = useState(false);
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [value, setValue] = useState(name);
   const [priceValue, setPriceValue] = useState(price != null ? String(price) : "");
   const [saving, setSaving] = useState(false);
@@ -1560,16 +1610,16 @@ function RowEditor({
         .eq("id", id);
       if (error) throw error;
       void qc.invalidateQueries({ queryKey: [invalidateKey] });
-      toast.success("Saved");
+      toast.success(t("admin.saved"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save");
+      toast.error(err instanceof Error ? err.message : t("admin.failedSave"));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async () => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    if (!window.confirm(t("admin.deleteConfirm", { name }))) return;
     setDeleting(true);
     try {
       const { error } = await supabase.from(table).delete().eq("id", id);
@@ -1579,13 +1629,13 @@ function RowEditor({
           .update({ is_active: false } as never)
           .eq("id", id);
         if (deactivateError) throw error;
-        toast.success("In use by existing orders — hidden from the app instead");
+        toast.success(t("admin.hiddenFromApp"));
       } else {
-        toast.success("Deleted");
+        toast.success(t("admin.deleted"));
       }
       void qc.invalidateQueries({ queryKey: [invalidateKey] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete");
+      toast.error(err instanceof Error ? err.message : t("admin.failedDelete"));
     } finally {
       setDeleting(false);
     }
@@ -1616,10 +1666,10 @@ function RowEditor({
         onChange={(e) => void save(e.target.files?.[0] ?? null)}
       />
       <Button size="sm" variant="outline" disabled={saving} onClick={() => void save(null)}>
-        Save
+        {t("admin.saveAction")}
       </Button>
       <Button size="sm" variant="destructive" disabled={deleting} onClick={() => void remove()}>
-        Delete
+        {t("admin.deleteAction")}
       </Button>
     </div>
   );
@@ -1627,6 +1677,7 @@ function RowEditor({
 
 function BannersAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [form, setForm] = useState({
     title: "",
     subtitle: "",
@@ -1644,8 +1695,7 @@ function BannersAdmin() {
   });
   const { data: bannerShops = [] } = useQuery({
     queryKey: ["admin-banner-shops"],
-    queryFn: async () =>
-      (await supabase.from("shops").select("id,name").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("shops").select("id,name").order("name")).data ?? [],
   });
 
   const create = async (e: React.FormEvent) => {
@@ -1672,9 +1722,9 @@ function BannersAdmin() {
       });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-banners"] });
-      toast.success("Banner created");
+      toast.success(t("admin.bannerCreated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : t("admin.failed"));
     }
   };
 
@@ -1697,7 +1747,7 @@ function BannersAdmin() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-banners"] });
-    toast.success("Banner deleted");
+    toast.success(t("admin.bannerDeleted"));
   };
 
   return (
@@ -1706,20 +1756,20 @@ function BannersAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New banner</h3>
+        <h3 className="font-display font-bold">{t("admin.newBanner")}</h3>
         <Input
-          placeholder="Title"
+          placeholder={t("admin.titlePlaceholder")}
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Subtitle"
+          placeholder={t("admin.subtitlePlaceholder")}
           value={form.subtitle}
           onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
         />
         <Input
-          placeholder="Button label"
+          placeholder={t("admin.buttonLabelPlaceholder")}
           value={form.cta_label}
           onChange={(e) => setForm({ ...form, cta_label: e.target.value })}
         />
@@ -1733,11 +1783,11 @@ function BannersAdmin() {
               ...form,
               link_url: `/shops/${s.id}`,
               title: form.title || s.name,
-              cta_label: form.cta_label || "Order now",
+              cta_label: form.cta_label || t("admin.orderNow"),
             });
           }}
         >
-          <option value="">Promote a shop (auto-fill link)…</option>
+          <option value="">{t("admin.promoteShop")}</option>
           {bannerShops.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -1745,7 +1795,7 @@ function BannersAdmin() {
           ))}
         </select>
         <Input
-          placeholder="Link (/shops or https://…)"
+          placeholder={t("admin.linkPlaceholder")}
           value={form.link_url}
           onChange={(e) => setForm({ ...form, link_url: e.target.value })}
         />
@@ -1762,7 +1812,7 @@ function BannersAdmin() {
         </select>
         <Input
           type="number"
-          placeholder="Order"
+          placeholder={t("admin.orderPlaceholder")}
           value={form.sort_order}
           onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
         />
@@ -1771,10 +1821,12 @@ function BannersAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Create banner</Button>
+        <Button type="submit">{t("admin.createBanner")}</Button>
       </form>
       <ul className="space-y-2">
-        {rows.length === 0 && <p className="text-sm text-muted-foreground">No banners yet.</p>}
+        {rows.length === 0 && (
+          <p className="text-sm text-muted-foreground">{t("admin.noBanners")}</p>
+        )}
         {rows.map((b) => (
           <li
             key={b.id}
@@ -1812,14 +1864,14 @@ function BannersAdmin() {
                 onBlur={(e) => void patch(b.id, { sort_order: Number(e.target.value) || 0 })}
               />
               <label className="flex items-center gap-2">
-                Active
+                {t("admin.activeLabel")}
                 <Switch
                   checked={b.is_active}
                   onCheckedChange={(v) => void patch(b.id, { is_active: v })}
                 />
               </label>
               <Button size="sm" variant="outline" onClick={() => void remove(b.id)}>
-                Delete
+                {t("admin.deleteAction")}
               </Button>
             </div>
           </li>
@@ -1831,6 +1883,7 @@ function BannersAdmin() {
 
 function ContentAdmin() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const { data } = useQuery({
     queryKey: ["admin-site-content"],
     queryFn: async () => {
@@ -1865,7 +1918,7 @@ function ContentAdmin() {
     }
     void qc.invalidateQueries({ queryKey: ["admin-site-content"] });
     void qc.invalidateQueries({ queryKey: ["site-content"] });
-    toast.success("Site content saved");
+    toast.success(t("admin.siteContentSaved"));
   };
 
   const uploadLogo = async (file?: File | null) => {
@@ -1883,9 +1936,9 @@ function ContentAdmin() {
       if (error) throw error;
       void qc.invalidateQueries({ queryKey: ["admin-site-content"] });
       void qc.invalidateQueries({ queryKey: ["site-content"] });
-      toast.success("Logo updated");
+      toast.success(t("admin.logoUpdated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload logo");
+      toast.error(err instanceof Error ? err.message : t("admin.failedUploadLogo"));
     }
   };
 
@@ -1894,11 +1947,11 @@ function ContentAdmin() {
       <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-card">
         <StorageImage
           path={value.logo_url || null}
-          alt="Platform logo"
+          alt={t("admin.platformLogoAlt")}
           className="h-14 w-14 rounded-lg object-cover"
         />
         <div className="space-y-1.5">
-          <Label>Platform logo</Label>
+          <Label>{t("admin.platformLogo")}</Label>
           <Input
             type="file"
             accept="image/*"
@@ -1913,7 +1966,7 @@ function ContentAdmin() {
             variant="outline"
             onClick={() => setDraft({ ...value, logo_url: "" })}
           >
-            Remove logo
+            {t("admin.removeLogo")}
           </Button>
         )}
       </div>
@@ -1936,7 +1989,7 @@ function ContentAdmin() {
           </div>
         ))}
       </div>
-      <Button type="submit">Save all text</Button>
+      <Button type="submit">{t("admin.saveAllText")}</Button>
     </form>
   );
 }

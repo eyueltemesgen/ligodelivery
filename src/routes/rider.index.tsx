@@ -30,6 +30,7 @@ import { TierBadge } from "@/components/ligo/TierBadge";
 import { publicSettingsQuery } from "@/lib/queries";
 import { STATUS_LABEL, notify, type OrderStatus } from "@/lib/orders";
 import { sounds, loadAudioSettings, primeAudio } from "@/lib/audio";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -130,6 +131,7 @@ function RiderAvatar({
 
 /** Compact trip summary pinned above the step-by-step delivery flow. */
 function ActiveTripCard({ order }: { order: OrderRow }) {
+  const { t } = useI18n();
   const { data: shop } = useQuery({
     queryKey: ["trip-shop", order.shop_id],
     enabled: !!order.shop_id,
@@ -153,7 +155,7 @@ function ActiveTripCard({ order }: { order: OrderRow }) {
     <div className="rounded-2xl border border-primary/30 bg-card p-4 shadow-card">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Active trip
+          {t("rider.activeTrip")}
         </p>
         <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-bold text-accent-foreground">
           {STATUS_LABEL[order.status as OrderStatus] ?? order.status}
@@ -163,31 +165,37 @@ function ActiveTripCard({ order }: { order: OrderRow }) {
         <p className="flex items-start gap-2 text-sm">
           <Store className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <span>
-            <span className="block text-xs text-muted-foreground">Pickup</span>
-            <span className="font-semibold">{shop?.name ?? "Merchant"}</span>
+            <span className="block text-xs text-muted-foreground">{t("rider.pickup")}</span>
+            <span className="font-semibold">{shop?.name ?? t("rider.merchantFallback")}</span>
           </span>
         </p>
         <p className="flex items-start gap-2 text-sm">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <span>
-            <span className="block text-xs text-muted-foreground">Drop-off</span>
+            <span className="block text-xs text-muted-foreground">{t("rider.dropoff")}</span>
             <span className="font-semibold">{order.delivery_address ?? "—"}</span>
           </span>
         </p>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3 text-center">
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Distance</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            {t("rider.distance")}
+          </p>
           <p className="font-display text-sm font-bold">
             {distanceKm != null ? `${distanceKm} km` : "—"}
           </p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Est. pay</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            {t("rider.estPay")}
+          </p>
           <p className="font-display text-sm font-bold text-primary">{ETB(pay)}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Order</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            {t("rider.order")}
+          </p>
           <p className="font-display text-sm font-bold">{order.order_code}</p>
         </div>
       </div>
@@ -197,6 +205,7 @@ function ActiveTripCard({ order }: { order: OrderRow }) {
 
 function RiderPortal() {
   const { user, isRider, profile } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("home");
   const [offer, setOffer] = useState<OrderRow | null>(null);
@@ -348,7 +357,7 @@ function RiderPortal() {
         const next = (payload.new ?? {}) as Partial<OrderRow>;
         if (payload.eventType === "UPDATE" && next.status === "dispatched") {
           sounds.newOrder();
-          toast.success(`New order available: ${next.order_code ?? ""}`);
+          toast.success(t("rider.newOrderAvailable", { code: next.order_code ?? "" }));
         }
         void qc.invalidateQueries({ queryKey: ["rider-available"] });
       })
@@ -377,7 +386,7 @@ function RiderPortal() {
           const next = (payload.new ?? {}) as { status?: string };
           if (next.status === "paid") {
             sounds.payment();
-            toast.success("Your payout was sent!");
+            toast.success(t("rider.payoutSent"));
           }
           void qc.invalidateQueries({ queryKey: ["rider-payouts"] });
           void qc.invalidateQueries({ queryKey: ["rider-earnings"] });
@@ -421,7 +430,7 @@ function RiderPortal() {
   }, [user, rider?.is_online]);
 
   if (!user || !isRider)
-    return <div className="py-16 text-center text-muted-foreground">Loading…</div>;
+    return <div className="py-16 text-center text-muted-foreground">{t("rider.loading")}</div>;
 
   const setVehicle = async (vehicle: string) => {
     const { error } = await supabase
@@ -430,7 +439,7 @@ function RiderPortal() {
       .eq("id", user.id);
     if (error) toast.error(error.message);
     else {
-      toast.success(`Vehicle set to ${vehicle}`);
+      toast.success(t("rider.vehicleSet", { vehicle }));
       void qc.invalidateQueries({ queryKey: ["rider-me"] });
     }
   };
@@ -444,12 +453,12 @@ function RiderPortal() {
     const { error } = await supabase.rpc("accept_order", { _order_id: orderId });
     setOffer(null);
     if (error) {
-      toast.error("Too late — another rider accepted this order.");
+      toast.error(t("rider.tooLate"));
       void qc.invalidateQueries({ queryKey: ["rider-available"] });
       return;
     }
     sounds.newOrder();
-    toast.success("Order accepted — head to the pickup point!");
+    toast.success(t("rider.orderAccepted"));
     setTab("home");
     void qc.invalidateQueries({ queryKey: ["rider-available"] });
     void qc.invalidateQueries({ queryKey: ["rider-orders"] });
@@ -475,7 +484,7 @@ function RiderPortal() {
     }
     await notify(
       order.customer_id,
-      `Order ${order.order_code} updated`,
+      t("admin.orderStatusUpdateTitle", { code: order.order_code }),
       STATUS_LABEL[status],
       "order",
       order.id,
@@ -504,15 +513,17 @@ function RiderPortal() {
           <RiderAvatar path={profile?.avatar_url} name={profile?.full_name} size="lg" />
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-base font-bold">
-              {profile?.full_name || "Rider"}
+              {profile?.full_name || t("rider.defaultName")}
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
                 <Star className="h-3 w-3 fill-warning text-warning" />
-                {avgRating != null ? `${avgRating.toFixed(2)} (${ratings.length})` : "New rider"}
+                {avgRating != null
+                  ? `${avgRating.toFixed(2)} (${ratings.length})`
+                  : t("rider.newRider")}
               </span>
               <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-secondary-foreground">
-                {deliveredCount} trip{deliveredCount === 1 ? "" : "s"}
+                {deliveredCount} {deliveredCount === 1 ? t("rider.trip") : t("rider.trips")}
               </span>
               {rider?.vehicle_type ? (
                 <Select value={rider.vehicle_type} onValueChange={(v) => void setVehicle(v)}>
@@ -521,11 +532,11 @@ function RiderPortal() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="bicycle">Bicycle</SelectItem>
-                    <SelectItem value="motorbike">Motorbike</SelectItem>
-                    <SelectItem value="scooter">Scooter</SelectItem>
-                    <SelectItem value="car">Car</SelectItem>
-                    <SelectItem value="foot">On foot</SelectItem>
+                    <SelectItem value="bicycle">{t("rider.vehicleBicycle")}</SelectItem>
+                    <SelectItem value="motorbike">{t("rider.vehicleMotorcycle")}</SelectItem>
+                    <SelectItem value="scooter">{t("rider.vehicleScooter")}</SelectItem>
+                    <SelectItem value="car">{t("rider.vehicleCar")}</SelectItem>
+                    <SelectItem value="foot">{t("rider.vehicleFoot")}</SelectItem>
                   </SelectContent>
                 </Select>
               ) : null}
@@ -538,7 +549,7 @@ function RiderPortal() {
                 rider?.is_online ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              {rider?.is_online ? "ONLINE" : "OFFLINE"}
+              {rider?.is_online ? t("rider.online") : t("rider.offline")}
             </span>
             <Switch checked={!!rider?.is_online} onCheckedChange={(v) => void toggleOnline(v)} />
           </div>
@@ -547,7 +558,7 @@ function RiderPortal() {
 
       {dispatchPaused && (
         <div className="mx-4 mt-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs font-medium">
-          Dispatch is paused platform-wide — no new orders until operations resume.
+          {t("rider.dispatchPaused")}
         </div>
       )}
 
@@ -587,10 +598,10 @@ function RiderPortal() {
         <div className="grid grid-cols-4">
           {(
             [
-              { id: "home", label: "Home", icon: Home },
-              { id: "orders", label: "Orders", icon: ClipboardList },
-              { id: "earnings", label: "Earnings", icon: Wallet },
-              { id: "profile", label: "Profile", icon: User },
+              { id: "home", label: t("rider.tabHome"), icon: Home },
+              { id: "orders", label: t("rider.tabOrders"), icon: ClipboardList },
+              { id: "earnings", label: t("rider.tabEarnings"), icon: Wallet },
+              { id: "profile", label: t("rider.tabProfile"), icon: User },
             ] as const
           ).map((item) => (
             <button
@@ -634,22 +645,27 @@ function IdleDashboard({
   availableCount: number;
   onBrowse: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-4">
       <div className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-card">
         <p className="text-sm opacity-90">
-          {online ? "You are Online — searching for orders near Bishoftu…" : "You are offline"}
+          {online ? t("rider.youAreOnline") : t("rider.youAreOffline")}
         </p>
         <p className="mt-3 font-display text-3xl font-extrabold">{ETB(todayTotal)}</p>
-        <p className="text-xs opacity-90">Today's earnings</p>
+        <p className="text-xs opacity-90">{t("rider.todaysEarnings")}</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-border bg-card p-4 shadow-card">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Trips completed</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("rider.tripsCompleted")}
+          </p>
           <p className="mt-1 font-display text-2xl font-extrabold">{trips}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 shadow-card">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Distance covered</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("rider.distanceCovered")}
+          </p>
           <p className="mt-1 font-display text-2xl font-extrabold">
             {Math.round(distanceKm * 10) / 10} km
           </p>
@@ -657,7 +673,9 @@ function IdleDashboard({
       </div>
       {online && availableCount > 0 && (
         <Button className="w-full" size="lg" onClick={onBrowse}>
-          {availableCount} order{availableCount === 1 ? "" : "s"} available — view now
+          {availableCount === 1
+            ? t("rider.ordersAvailable", { count: availableCount })
+            : t("rider.ordersAvailablePlural", { count: availableCount })}
         </Button>
       )}
     </div>
@@ -673,6 +691,7 @@ function IncomingOrderModal({
   onAccept: () => void;
   onDecline: () => void;
 }) {
+  const { t } = useI18n();
   const [secondsLeft, setSecondsLeft] = useState(15);
   const declinedRef = useRef(false);
 
@@ -713,11 +732,11 @@ function IncomingOrderModal({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <p className="font-display text-lg font-extrabold">New order request</p>
+        <p className="font-display text-lg font-extrabold">{t("rider.newOrderRequest")}</p>
         <button
           type="button"
           onClick={onDecline}
-          aria-label="Decline"
+          aria-label={t("rider.decline")}
           className="rounded-md p-1.5 hover:bg-secondary"
         >
           <X className="h-5 w-5" />
@@ -749,8 +768,8 @@ function IncomingOrderModal({
           <p className="flex items-start gap-2 text-sm">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-xs text-muted-foreground">Pickup</span>
-              <span className="font-semibold">{shop?.name ?? "Merchant"}</span>
+              <span className="block text-xs text-muted-foreground">{t("rider.pickup")}</span>
+              <span className="font-semibold">{shop?.name ?? t("rider.merchantFallback")}</span>
               {shop?.address && (
                 <span className="block text-xs text-muted-foreground">{shop.address}</span>
               )}
@@ -759,23 +778,23 @@ function IncomingOrderModal({
           <p className="flex items-start gap-2 text-sm">
             <Navigation className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-xs text-muted-foreground">Deliver to</span>
+              <span className="block text-xs text-muted-foreground">{t("rider.deliverTo")}</span>
               <span className="font-semibold">{order.delivery_address}</span>
             </span>
           </p>
           <div className="grid grid-cols-3 gap-2 border-t border-border pt-3 text-center">
             <div>
-              <p className="text-xs text-muted-foreground">Distance</p>
+              <p className="text-xs text-muted-foreground">{t("rider.distance")}</p>
               <p className="font-display font-bold">
                 {distanceKm != null ? `${distanceKm} km` : "—"}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Est. time</p>
+              <p className="text-xs text-muted-foreground">{t("rider.estTime")}</p>
               <p className="font-display font-bold">{etaMins != null ? `${etaMins} min` : "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">You earn</p>
+              <p className="text-xs text-muted-foreground">{t("rider.youEarn")}</p>
               <p className="font-display font-bold text-primary">
                 {ETB(order.rider_payout || order.delivery_fee)}
               </p>
@@ -783,17 +802,17 @@ function IncomingOrderModal({
           </div>
           {Number(order.tip) > 0 && (
             <p className="rounded-lg bg-primary-soft p-2 text-center text-xs font-semibold text-accent-foreground">
-              Customer tip included: {ETB(order.tip)}
+              {t("rider.tipIncluded", { amount: ETB(order.tip) })}
             </p>
           )}
         </div>
       </div>
       <div className="space-y-2 border-t border-border bg-card p-4">
         <Button size="lg" className="h-14 w-full text-base font-extrabold" onClick={onAccept}>
-          ACCEPT ORDER
+          {t("rider.acceptOrder")}
         </Button>
         <Button size="lg" variant="outline" className="w-full" onClick={onDecline}>
-          Decline
+          {t("rider.decline")}
         </Button>
       </div>
     </div>
@@ -807,6 +826,7 @@ function DeliveryFlow({
   order: OrderRow;
   onStatus: (s: OrderStatus) => void;
 }) {
+  const { t } = useI18n();
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -850,7 +870,7 @@ function DeliveryFlow({
       toast.error(error.message);
       return;
     }
-    toast.success("Delivery completed — earnings updated!");
+    toast.success(t("rider.deliveryCompleted"));
     setPin("");
   };
 
@@ -888,18 +908,18 @@ function DeliveryFlow({
 
       {stage === 1 && (
         <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-card">
-          <p className="font-display text-lg font-bold">Stage 1 · Head to the merchant</p>
+          <p className="font-display text-lg font-bold">{t("rider.stage1")}</p>
           <p className="flex items-start gap-2 text-sm">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="font-semibold">{shop?.name ?? "Merchant"}</span>
+              <span className="font-semibold">{shop?.name ?? t("rider.merchantFallback")}</span>
               {shop?.address && <span className="block text-muted-foreground">{shop.address}</span>}
             </span>
           </p>
           {navigateUrl(shop?.lat, shop?.lng) && (
             <Button variant="outline" className="w-full" asChild>
               <a href={navigateUrl(shop?.lat, shop?.lng)!} target="_blank" rel="noreferrer">
-                <Navigation className="mr-2 h-4 w-4" /> NAVIGATE
+                <Navigation className="mr-2 h-4 w-4" /> {t("rider.navigate")}
               </a>
             </Button>
           )}
@@ -908,14 +928,14 @@ function DeliveryFlow({
             className="h-14 w-full text-base font-extrabold"
             onClick={() => onStatus("arrived_at_merchant")}
           >
-            ARRIVED AT MERCHANT
+            {t("rider.arrivedAtMerchant")}
           </Button>
         </div>
       )}
 
       {stage === 2 && (
         <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-card">
-          <p className="font-display text-lg font-bold">Stage 2 · Verify the pickup</p>
+          <p className="font-display text-lg font-bold">{t("rider.stage2")}</p>
           <ul className="space-y-2">
             {items.map((i) => (
               <li
@@ -934,14 +954,14 @@ function DeliveryFlow({
             className="h-14 w-full text-base font-extrabold"
             onClick={() => onStatus("picked_up")}
           >
-            PICKED UP ORDER
+            {t("rider.pickedUpOrder")}
           </Button>
         </div>
       )}
 
       {stage === 3 && (
         <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-card">
-          <p className="font-display text-lg font-bold">Stage 3 · Deliver to the customer</p>
+          <p className="font-display text-lg font-bold">{t("rider.stage3")}</p>
           <p className="text-sm">
             <span className="font-semibold">{order.customer_name}</span>
             <span className="block text-muted-foreground">{order.delivery_address}</span>
@@ -954,14 +974,14 @@ function DeliveryFlow({
           {order.customer_phone && (
             <Button variant="outline" className="w-full" asChild>
               <a href={`tel:${order.customer_phone}`}>
-                <Phone className="mr-2 h-4 w-4" /> Call customer
+                <Phone className="mr-2 h-4 w-4" /> {t("rider.callCustomer")}
               </a>
             </Button>
           )}
           {navigateUrl(order.lat, order.lng) && (
             <Button variant="outline" className="w-full" asChild>
               <a href={navigateUrl(order.lat, order.lng)!} target="_blank" rel="noreferrer">
-                <Navigation className="mr-2 h-4 w-4" /> NAVIGATE TO CUSTOMER
+                <Navigation className="mr-2 h-4 w-4" /> {t("rider.navigateToCustomer")}
               </a>
             </Button>
           )}
@@ -970,17 +990,15 @@ function DeliveryFlow({
             className="h-14 w-full text-base font-extrabold"
             onClick={() => onStatus("on_the_way")}
           >
-            ON THE WAY
+            {t("rider.onTheWay")}
           </Button>
         </div>
       )}
 
       {stage === 4 && (
         <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-card">
-          <p className="font-display text-lg font-bold">Stage 4 · Confirm delivery</p>
-          <p className="text-sm text-muted-foreground">
-            Ask the customer for their 4-digit delivery PIN to complete this order.
-          </p>
+          <p className="font-display text-lg font-bold">{t("rider.stage4")}</p>
+          <p className="text-sm text-muted-foreground">{t("rider.pinPrompt")}</p>
           <input
             inputMode="numeric"
             maxLength={4}
@@ -995,7 +1013,7 @@ function DeliveryFlow({
             disabled={busy || pin.length < 4}
             onClick={() => void completeDelivery()}
           >
-            {busy ? "Completing…" : "COMPLETE DELIVERY"}
+            {busy ? t("rider.completing") : t("rider.completeDelivery")}
           </Button>
         </div>
       )}
@@ -1016,11 +1034,12 @@ function OrdersTab({
   onAccept: (o: OrderRow) => void;
   onOpenTrip: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-4">
       {active.length > 0 && (
         <div>
-          <h2 className="font-display text-base font-bold">Active delivery</h2>
+          <h2 className="font-display text-base font-bold">{t("rider.activeDelivery")}</h2>
           {active.map((o) => (
             <div
               key={o.id}
@@ -1031,22 +1050,18 @@ function OrdersTab({
                 {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
               </p>
               <Button size="sm" className="mt-2 w-full" onClick={onOpenTrip}>
-                Resume trip
+                {t("rider.resumeTrip")}
               </Button>
             </div>
           ))}
         </div>
       )}
       <div>
-        <h2 className="font-display text-base font-bold">Available orders</h2>
+        <h2 className="font-display text-base font-bold">{t("rider.availableOrders")}</h2>
         {!online ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Go online to receive dispatched orders.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("rider.goOnlinePrompt")}</p>
         ) : available.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            No orders right now — you'll get a loud alert when one is dispatched.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("rider.noOrdersNow")}</p>
         ) : (
           <ul className="mt-2 space-y-3">
             {available.map((o) => (
@@ -1062,11 +1077,11 @@ function OrdersTab({
                   {o.delivery_address}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {ETB(o.total)} · {o.payment_method} · Dispatched{" "}
-                  {formatDate(o.dispatched_at ?? o.created_at)}
+                  {ETB(o.total)} · {o.payment_method} ·{" "}
+                  {t("rider.dispatchedAt", { date: formatDate(o.dispatched_at ?? o.created_at) })}
                 </p>
                 <Button className="mt-3 w-full" onClick={() => onAccept(o)}>
-                  View & accept
+                  {t("rider.viewAccept")}
                 </Button>
               </li>
             ))}
@@ -1083,9 +1098,9 @@ const startOfWeek = (d: Date) => {
 };
 
 const WALLET_PERIODS = [
-  { key: "day", label: "Today" },
-  { key: "week", label: "This week" },
-  { key: "month", label: "This month" },
+  { key: "day", labelKey: "rider.periodToday" },
+  { key: "week", labelKey: "rider.periodWeek" },
+  { key: "month", labelKey: "rider.periodMonth" },
 ] as const;
 
 type WalletPeriod = (typeof WALLET_PERIODS)[number]["key"];
@@ -1106,6 +1121,7 @@ function EarningsTab({
   userId: string;
 }) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [period, setPeriod] = useState<WalletPeriod>("day");
 
@@ -1148,11 +1164,11 @@ function EarningsTab({
         .eq("rider_id", userId)
         .eq("status", "pending");
       if (linkError) throw linkError;
-      toast.success("Instant payout requested to your Telebirr / bank account.");
+      toast.success(t("rider.payoutRequested"));
       void qc.invalidateQueries({ queryKey: ["rider-earnings"] });
       void qc.invalidateQueries({ queryKey: ["rider-payouts"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not request payout");
+      toast.error(err instanceof Error ? err.message : t("rider.couldNotRequestPayout"));
     } finally {
       setBusy(false);
     }
@@ -1173,33 +1189,35 @@ function EarningsTab({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {p.label}
+              {t(p.labelKey)}
             </button>
           ))}
         </div>
         <div className="mt-4 text-center">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Net pay</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("rider.netPay")}</p>
           <p className="mt-1 font-display text-3xl font-extrabold">{ETB(netPay)}</p>
           <p className="text-xs text-muted-foreground">
-            {periodTrips} trip{periodTrips === 1 ? "" : "s"} ·{" "}
-            {WALLET_PERIODS.find((p) => p.key === period)!.label.toLowerCase()}
+            {periodTrips === 1
+              ? t("rider.periodTrips", { count: periodTrips })
+              : t("rider.periodTripsPlural", { count: periodTrips })}{" "}
+            · {t(WALLET_PERIODS.find((p) => p.key === period)!.labelKey)}
           </p>
         </div>
         <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
           <div className="rounded-xl bg-surface p-3">
-            <dt className="text-xs text-muted-foreground">Tips</dt>
+            <dt className="text-xs text-muted-foreground">{t("rider.tips")}</dt>
             <dd className="mt-0.5 font-display font-bold">{ETB(tips)}</dd>
           </div>
           <div className="rounded-xl bg-surface p-3">
-            <dt className="text-xs text-muted-foreground">Bonuses</dt>
+            <dt className="text-xs text-muted-foreground">{t("rider.bonuses")}</dt>
             <dd className="mt-0.5 font-display font-bold">{ETB(bonus)}</dd>
           </div>
           <div className="rounded-xl bg-surface p-3">
-            <dt className="text-xs text-muted-foreground">Base + distance</dt>
+            <dt className="text-xs text-muted-foreground">{t("rider.baseDistance")}</dt>
             <dd className="mt-0.5 font-display font-bold">{ETB(commission)}</dd>
           </div>
           <div className="rounded-xl bg-surface p-3">
-            <dt className="text-xs text-muted-foreground">Gross total</dt>
+            <dt className="text-xs text-muted-foreground">{t("rider.grossTotal")}</dt>
             <dd className="mt-0.5 font-display font-bold">{ETB(sum(inPeriod, "amount"))}</dd>
           </div>
         </dl>
@@ -1207,7 +1225,7 @@ function EarningsTab({
 
       <div className="flex items-center justify-between rounded-2xl bg-primary p-5 text-primary-foreground">
         <div>
-          <p className="text-xs opacity-90">Available for cashout</p>
+          <p className="text-xs opacity-90">{t("rider.availableForCashout")}</p>
           <p className="font-display text-2xl font-extrabold">{ETB(pendingPayout)}</p>
         </div>
         <Button
@@ -1215,13 +1233,13 @@ function EarningsTab({
           disabled={pendingPayout <= 0 || busy}
           onClick={() => void requestPayout()}
         >
-          {busy ? "Requesting…" : "Instant payout"}
+          {busy ? t("rider.requesting") : t("rider.instantPayout")}
         </Button>
       </div>
 
       {payouts.length > 0 && (
         <div>
-          <h3 className="font-display text-base font-bold">Payout requests</h3>
+          <h3 className="font-display text-base font-bold">{t("rider.payoutRequests")}</h3>
           <ul className="mt-2 space-y-2">
             {payouts.map((p) => (
               <li
@@ -1250,11 +1268,9 @@ function EarningsTab({
       )}
 
       <div>
-        <h3 className="font-display text-base font-bold">Earning history</h3>
+        <h3 className="font-display text-base font-bold">{t("rider.earningHistory")}</h3>
         {earnings.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Complete a delivery to start earning.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("rider.completeToEarn")}</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {earnings.map((e) => (
@@ -1264,11 +1280,18 @@ function EarningsTab({
                   <span className="text-xs text-muted-foreground">{formatDate(e.created_at)}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Base {ETB(e.base_fare)}
-                  {Number(e.distance_incentive) > 0 &&
-                    ` · Distance ${ETB(e.distance_incentive)} (${e.distance_km} km)`}
-                  {Number(e.tip) > 0 && ` · Tip ${ETB(e.tip)}`}
-                  {Number(e.bonus) > 0 && ` · Bonus ${ETB(e.bonus)}`}
+                  {t("rider.earningLine", {
+                    base: ETB(e.base_fare),
+                    distance:
+                      Number(e.distance_incentive) > 0
+                        ? t("rider.earningDistance", {
+                            amount: ETB(e.distance_incentive),
+                            km: e.distance_km,
+                          })
+                        : "",
+                    tip: Number(e.tip) > 0 ? t("rider.earningTip", { amount: ETB(e.tip) }) : "",
+                    bonus: Number(e.bonus) > 0 ? t("rider.earningBonus", { amount: ETB(e.bonus) }) : "",
+                  })}
                 </p>
               </li>
             ))}
@@ -1281,20 +1304,21 @@ function EarningsTab({
 
 function ProfileTab({ rider, name }: { rider: Record<string, unknown> | null; name: string }) {
   const { profile } = useAuth();
+  const { t } = useI18n();
   const [editOpen, setEditOpen] = useState(false);
 
-  if (!rider) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!rider) return <p className="text-sm text-muted-foreground">{t("rider.loading")}</p>;
   const rows: [string, string][] = [
-    ["Name", name],
-    ["Phone", (profile?.phone as string) ?? "—"],
-    ["Vehicle", String(rider["vehicle_type"] ?? "—")],
-    ["National ID", String(rider["national_id"] ?? "—")],
+    [t("rider.rowName"), name],
+    [t("rider.rowPhone"), (profile?.phone as string) ?? "—"],
+    [t("rider.rowVehicle"), String(rider["vehicle_type"] ?? "—")],
+    [t("rider.rowNationalId"), String(rider["national_id"] ?? "—")],
     [
-      "Verification",
+      t("rider.rowVerification"),
       String(rider["verification_status"] ?? "pending_verification").replace(/_/g, " "),
     ],
     [
-      "Payout",
+      t("rider.rowPayout"),
       `${String(rider["payout_method"] ?? "telebirr").replace("_", " ")} · ${String(rider["payout_account"] ?? "—")}`,
     ],
   ];
@@ -1306,14 +1330,15 @@ function ProfileTab({ rider, name }: { rider: Record<string, unknown> | null; na
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-lg font-bold">{name}</p>
             <p className="flex items-center gap-1 text-xs capitalize text-muted-foreground">
-              <Bike className="h-3.5 w-3.5" /> {String(rider["vehicle_type"] ?? "")} rider
+              <Bike className="h-3.5 w-3.5" /> {String(rider["vehicle_type"] ?? "")}{" "}
+              {t("rider.riderSuffix")}
             </p>
             <div className="mt-1.5">
               <TierBadge tier={rider["commission_tier"] as string | null} />
             </div>
           </div>
           <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit
+            <Pencil className="mr-1.5 h-3.5 w-3.5" /> {t("merchant.edit")}
           </Button>
         </div>
       </div>
@@ -1332,9 +1357,9 @@ function ProfileTab({ rider, name }: { rider: Record<string, unknown> | null; na
 }
 
 const VEHICLE_TYPES = [
-  { value: "motorcycle", label: "Motorcycle" },
-  { value: "bicycle", label: "Bicycle" },
-  { value: "car", label: "Car" },
+  { value: "motorcycle", labelKey: "rider.vehicleMotorcycle" },
+  { value: "bicycle", labelKey: "rider.vehicleBicycle" },
+  { value: "car", labelKey: "rider.vehicleCar" },
 ];
 
 function EditProfileDrawer({
@@ -1347,6 +1372,7 @@ function EditProfileDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   const { user, profile, refresh } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -1378,9 +1404,9 @@ function EditProfileDrawer({
         .eq("id", user.id);
       if (error) throw error;
       await refresh();
-      toast.success("Profile photo updated");
+      toast.success(t("rider.profilePhotoUpdated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not upload photo");
+      toast.error(err instanceof Error ? err.message : t("rider.couldNotUploadPhoto"));
     }
   };
 
@@ -1388,7 +1414,7 @@ function EditProfileDrawer({
     e.preventDefault();
     if (!user) return;
     if (!fullName.trim()) {
-      toast.error("Your name is required");
+      toast.error(t("rider.nameRequired"));
       return;
     }
     setBusy(true);
@@ -1409,12 +1435,12 @@ function EditProfileDrawer({
     ]);
     setBusy(false);
     if (profileError || riderError) {
-      toast.error(profileError?.message ?? riderError?.message ?? "Could not save profile");
+      toast.error(profileError?.message ?? riderError?.message ?? t("rider.couldNotSaveProfile"));
       return;
     }
     await refresh();
     void qc.invalidateQueries({ queryKey: ["rider-me"] });
-    toast.success("Profile updated");
+    toast.success(t("rider.profileUpdated"));
     onOpenChange(false);
   };
 
@@ -1422,8 +1448,8 @@ function EditProfileDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto rounded-t-3xl">
         <SheetHeader>
-          <SheetTitle>Edit profile</SheetTitle>
-          <SheetDescription>Update your details, vehicle and payout preferences.</SheetDescription>
+          <SheetTitle>{t("rider.editProfile")}</SheetTitle>
+          <SheetDescription>{t("rider.editProfileDesc")}</SheetDescription>
         </SheetHeader>
 
         <div className="mt-4 flex items-center gap-3">
@@ -1445,22 +1471,22 @@ function EditProfileDrawer({
             size="sm"
             onClick={() => fileRef.current?.click()}
           >
-            <Camera className="mr-1.5 h-4 w-4" /> Change photo
+            <Camera className="mr-1.5 h-4 w-4" /> {t("rider.changePhoto")}
           </Button>
         </div>
 
         <form onSubmit={save} className="mt-5 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="full-name">Full name</Label>
+            <Label htmlFor="full-name">{t("rider.fullName")}</Label>
             <Input
               id="full-name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Your full name"
+              placeholder={t("rider.fullNamePlaceholder")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone number</Label>
+            <Label htmlFor="phone">{t("rider.phoneNumber")}</Label>
             <Input
               id="phone"
               inputMode="tel"
@@ -1470,7 +1496,7 @@ function EditProfileDrawer({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Vehicle type</Label>
+            <Label>{t("rider.vehicleType")}</Label>
             <Select value={vehicleType} onValueChange={setVehicleType}>
               <SelectTrigger>
                 <SelectValue />
@@ -1478,7 +1504,7 @@ function EditProfileDrawer({
               <SelectContent>
                 {VEHICLE_TYPES.map((v) => (
                   <SelectItem key={v.value} value={v.value}>
-                    {v.label}
+                    {t(v.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1486,22 +1512,22 @@ function EditProfileDrawer({
           </div>
 
           <div className="space-y-3 rounded-2xl border border-border p-4">
-            <p className="text-sm font-semibold">Payout preferences</p>
+            <p className="text-sm font-semibold">{t("rider.payoutPreferences")}</p>
             <div className="space-y-1.5">
-              <Label>Payout method</Label>
+              <Label>{t("rider.payoutMethod")}</Label>
               <Select value={payoutMethod} onValueChange={setPayoutMethod}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="telebirr">Telebirr</SelectItem>
-                  <SelectItem value="bank_account">CBE / bank account</SelectItem>
+                  <SelectItem value="telebirr">{t("payMethod.telebirr")}</SelectItem>
+                  <SelectItem value="bank_account">{t("rider.payoutBank")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="payout-account">
-                {payoutMethod === "telebirr" ? "Telebirr number" : "Account number"}
+                {payoutMethod === "telebirr" ? t("rider.telebirrNumber") : t("rider.accountNumber")}
               </Label>
               <Input
                 id="payout-account"
@@ -1511,18 +1537,18 @@ function EditProfileDrawer({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="payout-account-name">Account holder name</Label>
+              <Label htmlFor="payout-account-name">{t("rider.accountHolderName")}</Label>
               <Input
                 id="payout-account-name"
                 value={payoutAccountName}
                 onChange={(e) => setPayoutAccountName(e.target.value)}
-                placeholder="Name on the account"
+                placeholder={t("rider.nameOnAccount")}
               />
             </div>
           </div>
 
           <Button type="submit" size="lg" className="h-12 w-full font-extrabold" disabled={busy}>
-            {busy ? "Saving…" : "Save changes"}
+            {busy ? t("rider.saving") : t("rider.saveChanges")}
           </Button>
         </form>
       </SheetContent>

@@ -7,6 +7,7 @@ import { categoryMeta } from "@/lib/service-catalog";
 import { StorageImage } from "@/lib/media";
 import { GridSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/special-moments/category/$slug")({
   head: ({ params }) => ({
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/special-moments/category/$slug")({
 
 function CategoryPage() {
   const { slug } = Route.useParams();
+  const { t } = useI18n();
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
   const category = categories.find((c) => c.slug === slug);
   const meta = categoryMeta(slug);
@@ -47,7 +49,7 @@ function CategoryPage() {
             className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
-            Special Moments
+            {t("moments.title")}
           </Link>
           <div className="mt-4 flex flex-wrap items-start gap-4">
             <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary">
@@ -55,14 +57,14 @@ function CategoryPage() {
             </span>
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-3xl font-extrabold">
-                {category?.name ?? meta.noun}
+                {category?.name ?? t(meta.nameKey)}
               </h1>
               <p className="mt-1 max-w-2xl text-muted-foreground">
-                {category?.description || category?.tagline || meta.blurb}
+                {category?.description || category?.tagline || t(meta.blurbKey)}
               </p>
             </div>
             <Button asChild variant="outline">
-              <Link to="/special-moments/search">Search all services</Link>
+              <Link to="/special-moments/search">{t("moments.searchAllServices")}</Link>
             </Button>
           </div>
         </div>
@@ -75,14 +77,13 @@ function CategoryPage() {
           <div className="rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
             <ImageOff className="mx-auto h-7 w-7 text-muted-foreground" />
             <p className="mt-3 font-display font-bold">
-              No {category?.name ?? meta.noun} published yet
+              {t("moments.noneInCategory", { category: category?.name ?? t(meta.nameKey) })}
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-              Our team is preparing this category. Services will appear here as soon as they are
-              available — nothing is invented to fill the space.
+              {t("moments.noCategoryBody")}
             </p>
             <Button asChild className="mt-5" variant="outline">
-              <Link to="/special-moments">Back to Special Moments</Link>
+              <Link to="/special-moments">{t("moments.backToMoments")}</Link>
             </Button>
           </div>
         ) : (

@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/Logo";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { siteContentQuery } from "@/lib/content";
+import { useI18n } from "@/lib/i18n";
 
 export function SiteFooter() {
   const { data: c } = useQuery(siteContentQuery);
+  const { t } = useI18n();
 
   return (
     <footer className="mt-16 border-t border-border bg-surface">
@@ -15,61 +17,65 @@ export function SiteFooter() {
           <p className="text-sm text-muted-foreground">{c?.footer_tagline}</p>
         </div>
         <div>
-          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">Explore</h3>
+          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">
+            {t("footer.explore")}
+          </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
               <Link to="/shops" className="hover:text-foreground">
-                Shops
+                {t("nav.shops")}
               </Link>
             </li>
             <li>
               <Link to="/categories" className="hover:text-foreground">
-                Categories
+                {t("nav.categories")}
               </Link>
             </li>
             <li>
               <Link to="/offers" className="hover:text-foreground">
-                Offers
+                {t("nav.offers")}
               </Link>
             </li>
             <li>
               <Link to="/account/orders" className="hover:text-foreground">
-                Track order
+                {t("nav.trackOrder")}
               </Link>
             </li>
           </ul>
         </div>
         <div>
           <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">
-            Work with us
+            {t("footer.workWithUs")}
           </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
               <Link to="/rider/join" className="hover:text-foreground">
-                Become a rider
+                {t("nav.becomeRider")}
               </Link>
             </li>
             <li>
               <Link to="/account" className="hover:text-foreground">
-                My account
+                {t("nav.myAccount")}
               </Link>
             </li>
             <li>
               <Link to="/account/help" className="hover:text-foreground">
-                Help & support
+                {t("footer.helpSupport")}
               </Link>
             </li>
           </ul>
         </div>
         <div>
-          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">Contact</h3>
+          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">
+            {t("footer.contact")}
+          </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              {c?.contact_address}
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              <span className="min-w-0 break-words">{c?.contact_address}</span>
             </li>
             <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-primary" />
+              <Phone className="h-4 w-4 shrink-0 text-primary" />
               <a
                 href={`tel:${(c?.contact_phone ?? "").replace(/\s/g, "")}`}
                 className="hover:text-foreground"
@@ -78,8 +84,11 @@ export function SiteFooter() {
               </a>
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-primary" />
-              <a href={`mailto:${c?.contact_email ?? ""}`} className="hover:text-foreground">
+              <Mail className="h-4 w-4 shrink-0 text-primary" />
+              <a
+                href={`mailto:${c?.contact_email ?? ""}`}
+                className="min-w-0 break-all hover:text-foreground"
+              >
                 {c?.contact_email}
               </a>
             </li>
@@ -88,10 +97,16 @@ export function SiteFooter() {
       </div>
       <div className="space-y-1 border-t border-border py-4 text-center text-xs text-muted-foreground">
         <p>
-          © {new Date().getFullYear()} {c?.brand_name}. All rights reserved.
+          {t("footer.rights", {
+            year: new Date().getFullYear(),
+            brand: c?.brand_name ?? t("brand.name"),
+          })}
         </p>
         <p>
-          Developed by {c?.developer_name} · {c?.company_name}
+          {t("footer.developedBy", {
+            developer: c?.developer_name ?? "",
+            company: c?.company_name ?? "",
+          })}
         </p>
       </div>
     </footer>

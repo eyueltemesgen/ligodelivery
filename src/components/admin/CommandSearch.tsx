@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Bike, ClipboardList, Store, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 import {
   CommandDialog,
   CommandEmpty,
@@ -19,6 +20,13 @@ type Result = {
   params?: Record<string, string>;
 };
 
+const GROUP_KEYS: Record<Result["group"], string> = {
+  Orders: "asearch.groupOrders",
+  Riders: "asearch.groupRiders",
+  Customers: "asearch.groupCustomers",
+  Shops: "asearch.groupShops",
+};
+
 export function AdminCommandSearch({
   open,
   onOpenChange,
@@ -29,6 +37,7 @@ export function AdminCommandSearch({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!open) {
@@ -72,21 +81,21 @@ export function AdminCommandSearch({
           out.push({
             group: "Orders",
             label: o.order_code,
-            detail: `${o.customer_name ?? "Customer"} · ${o.status} · ${o.total} ETB`,
+            detail: `${o.customer_name ?? t("asearch.customerFallback")} · ${o.status} · ${o.total} ETB`,
             to: `/orders/${o.id}`,
           });
         for (const p of profileRows) {
           if (riderIdSet.has(p.id))
             out.push({
               group: "Riders",
-              label: p.full_name || "Rider",
+              label: p.full_name || t("asearch.riderFallback"),
               detail: p.phone ?? p.email ?? "",
               to: "/admin/riders",
             });
           else
             out.push({
               group: "Customers",
-              label: p.full_name || "Customer",
+              label: p.full_name || t("asearch.customerFallback"),
               detail: p.phone ?? p.email ?? "",
               to: "/admin/ops",
             });
@@ -105,27 +114,27 @@ export function AdminCommandSearch({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, open]);
+  }, [query, open, t]);
 
   const GROUP_ICONS = { Orders: ClipboardList, Riders: Bike, Customers: Users, Shops: Store };
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder="Search orders, riders, customers, shops…"
+        placeholder={t("asearch.placeholder")}
         value={query}
         onValueChange={setQuery}
       />
       <CommandList>
         <CommandEmpty>
-          {query.length < 2 ? "Type at least 2 characters…" : "No results found."}
+          {query.length < 2 ? t("asearch.typeMore") : t("asearch.noResults")}
         </CommandEmpty>
         {(["Orders", "Riders", "Customers", "Shops"] as const).map((group) => {
           const items = results.filter((r) => r.group === group);
           if (items.length === 0) return null;
           const Icon = GROUP_ICONS[group];
           return (
-            <CommandGroup key={group} heading={group}>
+            <CommandGroup key={group} heading={t(GROUP_KEYS[group])}>
               {items.map((r, i) => (
                 <CommandItem
                   key={`${group}-${i}`}

@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Package, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ordersQuery } from "@/lib/account";
-import { ORDER_TABS, matchesOrderTab, tabCounts, type OrderTab } from "@/lib/orders";
+import { ORDER_TABS, ORDER_TAB_KEYS, matchesOrderTab, tabCounts, type OrderTab } from "@/lib/orders";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { OrderCard } from "@/components/account/OrderCard";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account/orders/")({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/account/orders/")({
 
 function OrdersPage() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [tab, setTab] = useState<OrderTab>("all");
   const { data = [], isLoading, isError, refetch } = useQuery(ordersQuery(user?.id));
 
@@ -34,23 +36,24 @@ function OrdersPage() {
 
   return (
     <>
-      <AccountHeader
-        title="My orders"
-        description="Every የኔ Go order you've placed, with live status and actions."
-      />
+      <AccountHeader title={t("orders.title")} description={t("orders.subtitle")} />
 
       {/* Status filter — horizontally scrollable on mobile */}
       <div className="-mx-4 overflow-x-auto px-4">
-        <div role="tablist" aria-label="Filter orders by status" className="flex w-max gap-2 pb-1">
-          {ORDER_TABS.map((t) => {
-            const active = tab === t.id;
-            const count = counts[t.id];
+        <div
+          role="tablist"
+          aria-label={t("orders.filterAria")}
+          className="flex w-max gap-2 pb-1"
+        >
+          {ORDER_TABS.map((tabItem) => {
+            const active = tab === tabItem.id;
+            const count = counts[tabItem.id];
             return (
               <button
-                key={t.id}
+                key={tabItem.id}
                 role="tab"
                 aria-selected={active}
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(tabItem.id)}
                 className={cn(
                   "flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
                   active
@@ -58,7 +61,7 @@ function OrdersPage() {
                     : "border-border bg-card text-muted-foreground hover:border-primary/40",
                 )}
               >
-                {t.label}
+                {t(ORDER_TAB_KEYS[tabItem.id])}
                 {count > 0 && (
                   <span
                     className={cn(
@@ -82,20 +85,22 @@ function OrdersPage() {
       ) : filtered.length === 0 ? (
         <AccountState
           icon={data.length === 0 ? ShoppingCart : Package}
-          title={data.length === 0 ? "No orders yet" : `No ${tab.replace(/_/g, " ")} orders`}
-          description={
+          title={
             data.length === 0
-              ? "Place your first order and it will show up here with live tracking."
-              : "Nothing matches this filter right now. Try another status."
+              ? t("orders.noneYet")
+              : t("orders.noneInFilter", { tab: t(ORDER_TAB_KEYS[tab]).toLowerCase() })
+          }
+          description={
+            data.length === 0 ? t("orders.noneYetDesc") : t("orders.noneInFilterDesc")
           }
           action={
             data.length === 0 ? (
               <Button asChild>
-                <Link to="/shops">Browse shops</Link>
+                <Link to="/shops">{t("action.browseShops")}</Link>
               </Button>
             ) : (
               <Button variant="outline" onClick={() => setTab("all")}>
-                Show all orders
+                {t("action.showAllOrders")}
               </Button>
             )
           }

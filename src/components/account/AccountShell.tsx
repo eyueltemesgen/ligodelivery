@@ -15,29 +15,31 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { accountSummaryQuery } from "@/lib/account";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
   to: string;
-  label: string;
+  key: string;
   icon: React.ComponentType<{ className?: string }>;
   badgeKey?: "orders" | "wishlist" | "notifications";
 };
 
 const NAV: NavItem[] = [
-  { to: "/account", label: "Overview", icon: LayoutDashboard },
-  { to: "/account/orders", label: "My orders", icon: Package, badgeKey: "orders" },
-  { to: "/account/service-requests", label: "Special Moments", icon: Sparkles },
-  { to: "/account/wishlist", label: "Saved products", icon: Heart, badgeKey: "wishlist" },
-  { to: "/account/addresses", label: "Addresses", icon: MapPin },
-  { to: "/account/profile", label: "Profile", icon: User },
-  { to: "/account/notifications", label: "Notifications", icon: Bell, badgeKey: "notifications" },
-  { to: "/account/help", label: "Help & support", icon: HelpCircle },
+  { to: "/account", key: "account.overview", icon: LayoutDashboard },
+  { to: "/account/orders", key: "nav.myOrders", icon: Package, badgeKey: "orders" },
+  { to: "/account/service-requests", key: "nav.specialMoments", icon: Sparkles },
+  { to: "/account/wishlist", key: "nav.savedProducts", icon: Heart, badgeKey: "wishlist" },
+  { to: "/account/addresses", key: "nav.addresses", icon: MapPin },
+  { to: "/account/profile", key: "account.profile", icon: User },
+  { to: "/account/notifications", key: "nav.notifications", icon: Bell, badgeKey: "notifications" },
+  { to: "/account/help", key: "footer.helpSupport", icon: HelpCircle },
 ];
 
 export function AccountShell({ children }: { children: ReactNode }) {
   const { user, profile, signOut } = useAuth();
   const { data: summary } = useQuery(accountSummaryQuery(user?.id));
+  const { t } = useI18n();
 
   const badgeFor = (key?: NavItem["badgeKey"]) => {
     if (!key || !summary) return 0;
@@ -59,7 +61,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
               />
               <div className="min-w-0">
                 <p className="truncate font-display text-sm font-bold">
-                  {profile?.full_name || "Your account"}
+                  {profile?.full_name || t("account.yourAccount")}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {profile?.phone || user?.email}
@@ -82,7 +84,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                       activeProps={{ className: "bg-primary-soft text-accent-foreground" }}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 truncate">{item.label}</span>
+                      <span className="flex-1 truncate">{t(item.key)}</span>
                       {badge > 0 && (
                         <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
                           {badge}
@@ -99,7 +101,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
                 >
                   <LogOut className="h-4 w-4 shrink-0" />
-                  Sign out
+                  {t("action.signOut")}
                 </button>
               </li>
             </ul>
@@ -108,7 +110,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
           {/* Mobile horizontal nav */}
           <nav
             className="-mx-4 mt-4 overflow-x-auto px-4 pb-1 lg:hidden"
-            aria-label="Account sections"
+            aria-label={t("account.sectionsAria")}
           >
             <ul className="flex gap-2">
               {NAV.map((item) => {
@@ -124,7 +126,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                       }}
                     >
                       <item.icon className="h-4 w-4" />
-                      {item.label}
+                      {t(item.key)}
                       {badge > 0 && (
                         <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                           {badge}

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { adsQuery, currentDevice, trackAd, type Ad } from "@/lib/ads";
 import { StorageImage } from "@/lib/media";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Ctx = { categoryId?: string | null; shopId?: string | null };
@@ -18,6 +19,7 @@ export function AdSlot({
   className?: string;
 }) {
   const { data = [] } = useQuery(adsQuery(placement));
+  const { t } = useI18n();
   const [device, setDevice] = useState<"mobile" | "desktop" | null>(null);
   useEffect(() => setDevice(currentDevice()), []);
 
@@ -34,13 +36,14 @@ export function AdSlot({
 
   if (ads.length === 0) return null;
   return (
-    <section className={className ?? "container-ligo py-4"} aria-label="Advertisements">
+    <section className={className ?? "container-ligo py-4"} aria-label={t("ads.regionAria")}>
       <Carousel ads={ads} />
     </section>
   );
 }
 
 function Carousel({ ads }: { ads: Ad[] }) {
+  const { t } = useI18n();
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef<number | null>(null);
@@ -101,7 +104,7 @@ function Carousel({ ads }: { ads: Ad[] }) {
         <>
           <button
             type="button"
-            aria-label="Previous ad"
+            aria-label={t("ads.previous")}
             onClick={() => go(-1)}
             className="absolute left-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow sm:flex"
           >
@@ -109,7 +112,7 @@ function Carousel({ ads }: { ads: Ad[] }) {
           </button>
           <button
             type="button"
-            aria-label="Next ad"
+            aria-label={t("ads.next")}
             onClick={() => go(1)}
             className="absolute right-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow sm:flex"
           >
@@ -120,7 +123,7 @@ function Carousel({ ads }: { ads: Ad[] }) {
               <button
                 key={a.id}
                 type="button"
-                aria-label={`Show ad ${k + 1}`}
+                aria-label={t("ads.show", { index: k + 1 })}
                 onClick={() => setI(k)}
                 className={cn(
                   "h-2 rounded-full bg-background/80 transition-all",
@@ -136,6 +139,7 @@ function Carousel({ ads }: { ads: Ad[] }) {
 }
 
 function Slide({ ad, priority, hidden }: { ad: Ad; priority: boolean; hidden: boolean }) {
+  const { t } = useI18n();
   const href = ad.destination_url;
   const external = !!href && /^https?:/.test(href);
   const body = (
@@ -147,7 +151,7 @@ function Slide({ ad, priority, hidden }: { ad: Ad; priority: boolean; hidden: bo
           <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30" />
         )}
         <span className="absolute left-2 top-2 rounded bg-background/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground">
-          Sponsored
+          {t("sponsored.label")}
         </span>
       </div>
       <div className="flex min-w-0 flex-col justify-center gap-1 p-4 pb-8 sm:p-6">

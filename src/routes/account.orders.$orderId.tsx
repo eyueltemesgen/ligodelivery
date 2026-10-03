@@ -29,8 +29,9 @@ import { publicSettingsQuery } from "@/lib/queries";
 import { useCart } from "@/lib/cart";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
-import { StatusBadge, paymentLabel, paymentStatusLabel } from "@/components/account/OrderCard";
+import { StatusBadge, paymentLabelKey, paymentStatusLabelKey } from "@/components/account/OrderCard";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +66,7 @@ export const Route = createFileRoute("/account/orders/$orderId")({
 function OrderDetails() {
   const { orderId } = Route.useParams();
   const { user } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
 
   const { data: order, isLoading, isError, refetch } = useQuery(orderQuery(orderId, user?.id));
@@ -137,11 +139,11 @@ function OrderDetails() {
     return (
       <AccountState
         icon={X}
-        title="Order not found"
-        description="This order doesn't exist or isn't linked to your account."
+        title={t("orderDetail.notFoundTitle")}
+        description={t("orderDetail.notFoundBody")}
         action={
           <Button asChild>
-            <Link to="/account/orders">Back to my orders</Link>
+            <Link to="/account/orders">{t("orderDetail.backToOrders")}</Link>
           </Button>
         }
       />
@@ -152,7 +154,7 @@ function OrderDetails() {
   const needsProof = order.payment_method !== "cash" && order.payment_status !== "paid";
   const copy = (value: string, label: string) => {
     void navigator.clipboard.writeText(value);
-    toast.success(`${label} copied`);
+    toast.success(t("orderDetail.copied", { label }));
   };
 
   const reorder = () => {
@@ -166,7 +168,7 @@ function OrderDetails() {
         unitPrice: Number(it.unit_price),
       });
     }
-    toast.success("Items added to your cart");
+    toast.success(t("orders.reorderAdded"));
   };
 
   const cancel = async () => {
@@ -181,7 +183,7 @@ function OrderDetails() {
       toast.error(error.message);
       return;
     }
-    toast.success("Order cancelled");
+    toast.success(t("orders.cancelledToast"));
     void qc.invalidateQueries({ queryKey: ["account-order", orderId] });
     void qc.invalidateQueries({ queryKey: ["account-orders"] });
     void qc.invalidateQueries({ queryKey: ["account-summary"] });
@@ -194,12 +196,12 @@ function OrderDetails() {
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        All orders
+        {t("orderDetail.allOrders")}
       </Link>
 
       <AccountHeader
         title={order.order_code}
-        description={`Placed ${formatDate(order.created_at)}`}
+        description={t("orderDetail.placed", { date: formatDate(order.created_at) })}
         action={<StatusBadge status={order.status} />}
       />
 
@@ -207,14 +209,14 @@ function OrderDetails() {
         <div className="space-y-6">
           {/* Timeline */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="mb-4 font-display text-lg font-bold">Delivery progress</h2>
+            <h2 className="mb-4 font-display text-lg font-bold">{t("orderDetail.progress")}</h2>
             <OrderTimeline status={order.status} />
           </section>
 
           {/* Live tracking */}
           {isOrderOpen(order.status) && (
             <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <h2 className="mb-3 font-display text-lg font-bold">Live tracking</h2>
+              <h2 className="mb-3 font-display text-lg font-bold">{t("orderDetail.liveTracking")}</h2>
               <ClientOnly fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
                 <Suspense fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
                   <OrderMap
@@ -226,9 +228,7 @@ function OrderDetails() {
                 </Suspense>
               </ClientOnly>
               <p className="mt-2 text-xs text-muted-foreground">
-                {rider
-                  ? "Your rider's location updates live."
-                  : "A rider will be assigned shortly."}
+                {rider ? t("orderDetail.riderLive") : t("orderDetail.riderSoon")}
               </p>
             </section>
           )}
@@ -236,7 +236,7 @@ function OrderDetails() {
           {/* Items */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold">Items</h2>
+              <h2 className="font-display text-lg font-bold">{t("orderDetail.items")}</h2>
               {shop && (
                 <Link
                   to="/shops/$shopId"
@@ -272,22 +272,22 @@ function OrderDetails() {
 
           {/* Payment */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="mb-3 font-display text-lg font-bold">Payment</h2>
+            <h2 className="mb-3 font-display text-lg font-bold">{t("orderDetail.payment")}</h2>
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <dt className="text-muted-foreground">Method</dt>
+                <dt className="text-muted-foreground">{t("orderDetail.method")}</dt>
                 <dd className="flex items-center gap-1.5 font-medium">
                   {order.payment_method === "cash" ? (
                     <Banknote className="h-4 w-4 text-primary" />
                   ) : (
                     <CreditCard className="h-4 w-4 text-primary" />
                   )}
-                  {paymentLabel(order.payment_method)}
+                  {t(paymentLabelKey(order.payment_method))}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Status</dt>
-                <dd className="font-medium">{paymentStatusLabel(order.payment_status)}</dd>
+                <dt className="text-muted-foreground">{t("orderDetail.status")}</dt>
+                <dd className="font-medium">{t(paymentStatusLabelKey(order.payment_status))}</dd>
               </div>
             </dl>
 
@@ -295,7 +295,9 @@ function OrderDetails() {
               <div className="mt-4 space-y-4 rounded-lg bg-surface p-4">
                 <div className="text-sm">
                   <p className="font-semibold">
-                    Complete your {order.payment_method.toUpperCase()} payment
+                    {t("orderDetail.completePayment", {
+                      method: order.payment_method.toUpperCase(),
+                    })}
                   </p>
                   {Object.keys(payment).length > 0 ? (
                     <ul className="mt-2 space-y-1">
@@ -319,13 +321,15 @@ function OrderDetails() {
                     </ul>
                   ) : (
                     <p className="mt-1 text-muted-foreground">
-                      Payment account details will be shared by our team shortly.
+                      {t("orderDetail.paymentSharedSoon")}
                     </p>
                   )}
                   {payment["instructions"] && (
                     <p className="mt-2 text-xs text-muted-foreground">{payment["instructions"]}</p>
                   )}
-                  <p className="mt-2 font-semibold">Amount to send: {ETB(order.total)}</p>
+                  <p className="mt-2 font-semibold">
+                    {t("orderDetail.amountToSend", { amount: ETB(order.total) })}
+                  </p>
                 </div>
                 <PaymentProofForm
                   orderId={orderId}
@@ -340,7 +344,7 @@ function OrderDetails() {
             {proofs.length > 0 && (
               <div className="mt-4 space-y-2 border-t border-border pt-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Receipts submitted
+                  {t("orderDetail.receiptsSubmitted")}
                 </p>
                 {proofs.map((p) => (
                   <div
@@ -348,7 +352,7 @@ function OrderDetails() {
                     className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm"
                   >
                     <span className="text-muted-foreground">
-                      {p.reference ?? "Receipt"} · {formatDate(p.created_at)}
+                      {p.reference ?? t("orderDetail.receipt")} · {formatDate(p.created_at)}
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -359,7 +363,7 @@ function OrderDetails() {
                             : "bg-warning/20 text-warning-foreground"
                       }`}
                     >
-                      {p.status}
+                      {t(`proofStatus.${p.status}`)}
                     </span>
                   </div>
                 ))}
@@ -369,12 +373,12 @@ function OrderDetails() {
 
           {/* Rider */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="mb-3 font-display text-lg font-bold">Delivery</h2>
+            <h2 className="mb-3 font-display text-lg font-bold">{t("orderDetail.delivery")}</h2>
             <dl className="space-y-2 text-sm">
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <div>
-                  <dt className="text-muted-foreground">Address</dt>
+                  <dt className="text-muted-foreground">{t("orderDetail.address")}</dt>
                   <dd className="font-medium">{order.delivery_address ?? "—"}</dd>
                 </div>
               </div>
@@ -382,7 +386,7 @@ function OrderDetails() {
                 <div className="flex items-start gap-2">
                   <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <div>
-                    <dt className="text-muted-foreground">Instructions</dt>
+                    <dt className="text-muted-foreground">{t("orderDetail.instructions")}</dt>
                     <dd className="font-medium">{order.delivery_instructions}</dd>
                   </div>
                 </div>
@@ -390,7 +394,7 @@ function OrderDetails() {
               <div className="flex items-start gap-2">
                 <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <div>
-                  <dt className="text-muted-foreground">Recipient</dt>
+                  <dt className="text-muted-foreground">{t("orderDetail.recipient")}</dt>
                   <dd className="font-medium">
                     {order.customer_name} · {order.customer_phone}
                   </dd>
@@ -399,24 +403,24 @@ function OrderDetails() {
               <div className="flex items-start gap-2">
                 <Truck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <div>
-                  <dt className="text-muted-foreground">Rider</dt>
+                  <dt className="text-muted-foreground">{t("orderDetail.rider")}</dt>
                   <dd className="font-medium">
                     {order.rider_id
-                      ? `${rider?.vehicle_type ? rider.vehicle_type : "Rider"} assigned`
-                      : "Awaiting assignment"}
+                      ? rider?.vehicle_type
+                        ? t("orderDetail.riderAssignedVehicle", { vehicle: rider.vehicle_type })
+                        : t("orders.riderAssigned")
+                      : t("orderDetail.awaitingAssignment")}
                   </dd>
                 </div>
               </div>
             </dl>
             {order.delivery_pin && isOrderOpen(order.status) && (
               <p className="mt-4 rounded-lg bg-primary-soft p-3 text-center text-sm">
-                Delivery PIN:{" "}
+                {t("orderDetail.deliveryPin")}{" "}
                 <span className="font-display text-base font-extrabold tracking-widest text-accent-foreground">
                   {order.delivery_pin}
                 </span>
-                <span className="mt-0.5 block text-xs">
-                  Share this with your rider to confirm delivery
-                </span>
+                <span className="mt-0.5 block text-xs">{t("orderDetail.deliveryPinHint")}</span>
               </p>
             )}
           </section>
@@ -425,49 +429,49 @@ function OrderDetails() {
         {/* Summary + actions */}
         <aside className="h-fit space-y-4 lg:sticky lg:top-20">
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">Order summary</h2>
+            <h2 className="font-display text-lg font-bold">{t("checkout.orderSummary")}</h2>
             <dl className="mt-3 space-y-1.5 text-sm">
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Subtotal</dt>
+                <dt className="text-muted-foreground">{t("orders.subtotal")}</dt>
                 <dd>{ETB(order.subtotal)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Delivery fee</dt>
+                <dt className="text-muted-foreground">{t("orders.deliveryFee")}</dt>
                 <dd>{ETB(order.delivery_fee)}</dd>
               </div>
               {Number(order.tip) > 0 && (
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Rider tip</dt>
+                  <dt className="text-muted-foreground">{t("checkout.riderTipLine")}</dt>
                   <dd>{ETB(order.tip)}</dd>
                 </div>
               )}
               {Number(order.discount) > 0 && (
                 <div className="flex justify-between text-primary">
-                  <dt>Discount</dt>
+                  <dt>{t("orderDetail.discount")}</dt>
                   <dd>−{ETB(order.discount)}</dd>
                 </div>
               )}
               <div className="flex justify-between border-t border-border pt-2 font-display text-base font-bold">
-                <dt>Total</dt>
+                <dt>{t("orders.total")}</dt>
                 <dd>{ETB(order.total)}</dd>
               </div>
             </dl>
             <div className="mt-4 space-y-1 text-xs text-muted-foreground">
-              <p>Order ID: {order.order_code}</p>
-              <p>Placed: {formatDate(order.created_at)}</p>
+              <p>{t("orderDetail.orderId", { code: order.order_code })}</p>
+              <p>{t("orderDetail.placed", { date: formatDate(order.created_at) })}</p>
             </div>
           </section>
 
           <section className="space-y-2 rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-base font-bold">Actions</h2>
+            <h2 className="font-display text-base font-bold">{t("orderDetail.actions")}</h2>
             <Button className="w-full" onClick={reorder} disabled={items.length === 0}>
               <RefreshCw className="mr-2 h-4 w-4" />
-              Reorder
+              {t("action.reorder")}
             </Button>
             <Button asChild variant="outline" className="w-full">
               <Link to="/account/help" search={{ order: order.order_code }}>
                 <MessageCircle className="mr-2 h-4 w-4" />
-                Contact support
+                {t("action.support")}
               </Link>
             </Button>
             {canCancelOrder(order.status) && (
@@ -477,18 +481,18 @@ function OrderDetails() {
                 onClick={() => setCancelOpen(true)}
               >
                 <X className="mr-2 h-4 w-4" />
-                Cancel order
+                {t("orders.cancelOrder")}
               </Button>
             )}
             {order.payment_status === "paid" && (
               <p className="flex items-center gap-1.5 pt-1 text-xs font-medium text-primary">
                 <CheckCircle2 className="h-4 w-4" />
-                Payment confirmed
+                {t("orderDetail.paymentConfirmed")}
               </p>
             )}
             <p className="flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
               <ShieldCheck className="h-4 w-4" />
-              Payments are verified by the የኔ Go team
+              {t("orderDetail.verifiedByTeam")}
             </p>
           </section>
         </aside>
@@ -497,14 +501,11 @@ function OrderDetails() {
       <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel order {order.order_code}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This can't be undone. If you've already paid, our team will arrange a refund after
-              cancellation.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("orders.cancelTitle", { code: order.order_code })}</AlertDialogTitle>
+            <AlertDialogDescription>{t("orders.cancelBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={cancelling}>Keep order</AlertDialogCancel>
+            <AlertDialogCancel disabled={cancelling}>{t("orders.keepOrder")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -513,7 +514,7 @@ function OrderDetails() {
               disabled={cancelling}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {cancelling ? "Cancelling…" : "Cancel order"}
+              {cancelling ? t("orders.cancelling") : t("orders.cancelOrder")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -536,6 +537,7 @@ function PaymentProofForm({
   existing: boolean;
 }) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -544,7 +546,7 @@ function PaymentProofForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      toast.error("Attach a screenshot of your payment receipt");
+      toast.error(t("orderDetail.attachReceipt"));
       return;
     }
     setBusy(true);
@@ -564,9 +566,9 @@ function PaymentProofForm({
       setNote("");
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["proofs", orderId] });
-      toast.success("Receipt submitted for verification");
+      toast.success(t("orderDetail.receiptSubmitted"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : t("orderDetail.uploadFailed"));
     } finally {
       setBusy(false);
     }
@@ -575,31 +577,29 @@ function PaymentProofForm({
   return (
     <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
       {existing && (
-        <p className="text-xs text-muted-foreground">
-          A receipt is already under review. You can submit another if needed.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("orderDetail.receiptUnderReview")}</p>
       )}
       <div className="space-y-1.5">
-        <Label htmlFor="proof-ref">Transaction reference</Label>
+        <Label htmlFor="proof-ref">{t("orderDetail.transactionRef")}</Label>
         <Input
           id="proof-ref"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
-          placeholder="e.g. FT23XXXXXX"
+          placeholder={t("orderDetail.transactionRefPlaceholder")}
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="proof-note">Note (optional)</Label>
+        <Label htmlFor="proof-note">{t("orderDetail.noteOptional")}</Label>
         <Textarea
           id="proof-note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
-          placeholder="Anything our team should know"
+          placeholder={t("orderDetail.notePlaceholder")}
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="proof-file">Receipt screenshot</Label>
+        <Label htmlFor="proof-file">{t("orderDetail.receiptScreenshot")}</Label>
         <Input
           id="proof-file"
           type="file"
@@ -609,7 +609,7 @@ function PaymentProofForm({
       </div>
       <Button type="submit" disabled={busy} className="w-full">
         <Upload className="mr-2 h-4 w-4" />
-        {busy ? "Submitting…" : "Submit receipt"}
+        {busy ? t("orderDetail.submitting") : t("orderDetail.submitReceipt")}
       </Button>
     </form>
   );

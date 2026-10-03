@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders";
 import { publicSettingsQuery } from "@/lib/queries";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import type { LiveMapDestination, LiveMapRider, LiveMapShop } from "@/components/admin/LiveMap";
 
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/admin/map")({
 });
 
 function LiveMapPage() {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [selectedRiderId, setSelectedRiderId] = useState<string | null>(null);
 
@@ -50,7 +52,7 @@ function LiveMapPage() {
         : { data: [] };
       return (data ?? []).map((r) => ({
         ...r,
-        name: profiles?.find((p) => p.id === r.id)?.full_name || "Rider",
+        name: profiles?.find((p) => p.id === r.id)?.full_name || t("rider.defaultName"),
         phone: profiles?.find((p) => p.id === r.id)?.phone ?? "",
       }));
     },
@@ -151,7 +153,7 @@ function LiveMapPage() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["settings-public"] });
-    toast.success(paused ? "Dispatch paused platform-wide" : "Dispatch resumed");
+    toast.success(paused ? t("amap.dispatchPaused") : t("amap.dispatchResumed"));
   };
 
   const reassign = async (orderId: string) => {
@@ -164,7 +166,7 @@ function LiveMapPage() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-map-orders"] });
-    toast.success("Order re-broadcast to all riders");
+    toast.success(t("amap.rebroadcast"));
   };
 
   return (
@@ -190,16 +192,16 @@ function LiveMapPage() {
               <p className="text-xs text-muted-foreground">
                 {selectedRider.is_online
                   ? deliveringIds.has(selectedRider.id)
-                    ? "On delivery"
-                    : "Online · idle"
-                  : "Offline"}
+                    ? t("amap.onDelivery")
+                    : t("amap.onlineIdle")
+                  : t("amap.offline")}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setSelectedRiderId(null)}
               className="rounded-md p-1 text-muted-foreground hover:bg-secondary"
-              aria-label="Close rider panel"
+              aria-label={t("amap.closePanel")}
             >
               <X className="h-4 w-4" />
             </button>
@@ -208,7 +210,7 @@ function LiveMapPage() {
           <dl className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <Gauge className="h-4 w-4 text-muted-foreground" />
-              <dt className="text-muted-foreground">Speed</dt>
+              <dt className="text-muted-foreground">{t("amap.speed")}</dt>
               <dd className="ml-auto font-medium">
                 {selectedRider.speed != null
                   ? `${Math.round(selectedRider.speed * 3.6)} km/h`
@@ -217,20 +219,20 @@ function LiveMapPage() {
             </div>
             <div className="flex items-center gap-2">
               <Battery className="h-4 w-4 text-muted-foreground" />
-              <dt className="text-muted-foreground">Battery</dt>
+              <dt className="text-muted-foreground">{t("amap.battery")}</dt>
               <dd className="ml-auto font-medium">
                 {selectedRider.battery != null ? `${selectedRider.battery}%` : "—"}
               </dd>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <dt className="text-muted-foreground">GPS</dt>
+              <dt className="text-muted-foreground">{t("amap.gps")}</dt>
               <dd className="ml-auto font-mono text-xs">
                 {selectedRider.lat?.toFixed(5) ?? "—"}, {selectedRider.lng?.toFixed(5) ?? "—"}
               </dd>
             </div>
             <div className="flex items-center gap-2">
-              <dt className="text-muted-foreground">Last update</dt>
+              <dt className="text-muted-foreground">{t("amap.lastUpdate")}</dt>
               <dd className="ml-auto text-xs">{formatDate(selectedRider.location_updated_at)}</dd>
             </div>
           </dl>
@@ -249,17 +251,17 @@ function LiveMapPage() {
                 className="mt-2 w-full"
                 onClick={() => void reassign(selectedOrder.id)}
               >
-                Reassign order
+                {t("amap.reassignOrder")}
               </Button>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No active order assigned.</p>
+            <p className="text-sm text-muted-foreground">{t("amap.noActiveOrder")}</p>
           )}
 
           <div className="space-y-2">
             <Button size="sm" className="w-full" asChild disabled={!selectedRider.phone}>
               <a href={`tel:${selectedRider.phone}`}>
-                <Phone className="mr-2 h-4 w-4" /> Contact rider
+                <Phone className="mr-2 h-4 w-4" /> {t("amap.contactRider")}
               </a>
             </Button>
             <Button
@@ -269,7 +271,7 @@ function LiveMapPage() {
               onClick={() => void toggleDispatchPause(!dispatchPaused)}
             >
               <PauseCircle className="mr-2 h-4 w-4" />
-              {dispatchPaused ? "Resume dispatch" : "Pause dispatch"}
+              {dispatchPaused ? t("amap.resumeDispatch") : t("amap.pauseDispatch")}
             </Button>
           </div>
         </aside>

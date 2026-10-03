@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account/profile")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/account/profile")({
 
 function ProfilePage() {
   const { user, profile, refresh } = useAuth();
+  const { t } = useI18n();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -43,11 +45,11 @@ function ProfilePage() {
     e.preventDefault();
     if (!user) return;
     if (fullName.trim().length < 2) {
-      toast.error("Please enter your full name");
+      toast.error(t("profile.enterFullName"));
       return;
     }
     if (phone.trim() && phone.trim().length < 9) {
-      toast.error("Enter a valid phone number");
+      toast.error(t("profile.invalidPhone"));
       return;
     }
     setSavingProfile(true);
@@ -61,7 +63,7 @@ function ProfilePage() {
       return;
     }
     await refresh();
-    toast.success("Profile updated");
+    toast.success(t("profile.updated"));
   };
 
   const onAvatarPicked = async (file: File | null) => {
@@ -75,9 +77,9 @@ function ProfilePage() {
         .eq("id", user.id);
       if (error) throw error;
       await refresh();
-      toast.success("Profile photo updated");
+      toast.success(t("profile.photoUpdated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not upload photo");
+      toast.error(err instanceof Error ? err.message : t("profile.photoFailed"));
     } finally {
       setUploadingAvatar(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -86,11 +88,11 @@ function ProfilePage() {
 
   return (
     <>
-      <AccountHeader title="Profile" description="Your personal details and account security." />
+      <AccountHeader title={t("profile.title")} description={t("profile.subtitle")} />
 
       {/* Identity */}
       <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <SectionHeading title="Profile photo" />
+        <SectionHeading title={t("profile.photo")} />
         <div className="mt-4 flex items-center gap-4">
           <IdentityAvatar
             path={profile?.avatar_url}
@@ -112,19 +114,19 @@ function ProfilePage() {
               onClick={() => fileRef.current?.click()}
             >
               <Camera className="mr-2 h-4 w-4" />
-              {uploadingAvatar ? "Uploading…" : "Change photo"}
+              {uploadingAvatar ? t("profile.uploading") : t("profile.changePhoto")}
             </Button>
-            <p className="text-xs text-muted-foreground">JPG, PNG or WEBP up to 5 MB.</p>
+            <p className="text-xs text-muted-foreground">{t("profile.photoHint")}</p>
           </div>
         </div>
       </section>
 
       {/* Personal details */}
       <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <SectionHeading title="Personal information" />
+        <SectionHeading title={t("profile.personalInfo")} />
         <form onSubmit={saveProfile} className="mt-4 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="pf-name">Full name</Label>
+            <Label htmlFor="pf-name">{t("profile.fullName")}</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -138,7 +140,7 @@ function ProfilePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="pf-phone">Phone number</Label>
+              <Label htmlFor="pf-phone">{t("profile.phone")}</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -152,38 +154,30 @@ function ProfilePage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pf-email">Email</Label>
+              <Label htmlFor="pf-email">{t("profile.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="pf-email" value={user?.email ?? ""} className="pl-9" disabled />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Your email is used to sign in and can't be changed here.
-              </p>
+              <p className="text-xs text-muted-foreground">{t("profile.emailHint")}</p>
             </div>
           </div>
           <Button type="submit" disabled={savingProfile || !profileDirty}>
-            {savingProfile ? "Saving…" : "Save changes"}
+            {savingProfile ? t("action.saving") : t("action.saveChanges")}
           </Button>
         </form>
       </section>
 
       {/* Security */}
       <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <SectionHeading
-          title="Security"
-          description="Change your password to keep your account safe."
-        />
+        <SectionHeading title={t("profile.security")} description={t("profile.securityDesc")} />
         <PasswordForm />
         <Separator className="my-5" />
         <div className="flex items-start gap-3 rounded-lg bg-surface p-4">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div className="text-sm">
-            <p className="font-semibold">Your account is protected</p>
-            <p className="text-muted-foreground">
-              Passwords are handled securely and never shown or stored in plain text. We'll never
-              ask for your password over chat or phone.
-            </p>
+            <p className="font-semibold">{t("profile.protected")}</p>
+            <p className="text-muted-foreground">{t("profile.protectedBody")}</p>
           </div>
         </div>
       </section>
@@ -197,19 +191,20 @@ function PasswordForm() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
+  const { t } = useI18n();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (next.length < 6) {
-      toast.error("New password must be at least 6 characters");
+      toast.error(t("profile.newPasswordMin"));
       return;
     }
     if (next !== confirm) {
-      toast.error("New passwords don't match");
+      toast.error(t("profile.passwordsNoMatch"));
       return;
     }
     if (!user?.email) {
-      toast.error("Could not verify your account");
+      toast.error(t("profile.couldNotVerify"));
       return;
     }
     setBusy(true);
@@ -220,7 +215,7 @@ function PasswordForm() {
     });
     if (signInError) {
       setBusy(false);
-      toast.error("Your current password is incorrect");
+      toast.error(t("profile.currentWrong"));
       return;
     }
     const { error } = await supabase.auth.updateUser({ password: next });
@@ -232,13 +227,13 @@ function PasswordForm() {
     setCurrent("");
     setNext("");
     setConfirm("");
-    toast.success("Password changed successfully");
+    toast.success(t("profile.passwordChanged"));
   };
 
   return (
     <form onSubmit={submit} className="mt-4 space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="pw-current">Current password</Label>
+        <Label htmlFor="pw-current">{t("profile.currentPassword")}</Label>
         <Input
           id="pw-current"
           type="password"
@@ -250,7 +245,7 @@ function PasswordForm() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="pw-new">New password</Label>
+          <Label htmlFor="pw-new">{t("profile.newPassword")}</Label>
           <Input
             id="pw-new"
             type="password"
@@ -262,7 +257,7 @@ function PasswordForm() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="pw-confirm">Confirm new password</Label>
+          <Label htmlFor="pw-confirm">{t("profile.confirmNewPassword")}</Label>
           <Input
             id="pw-confirm"
             type="password"
@@ -277,9 +272,9 @@ function PasswordForm() {
       <div className="flex items-center gap-3">
         <Button type="submit" variant="outline" disabled={busy}>
           <KeyRound className="mr-2 h-4 w-4" />
-          {busy ? "Updating…" : "Change password"}
+          {busy ? t("profile.updating") : t("profile.changePassword")}
         </Button>
-        {busy && <InlineSpinner label="Securing your account…" />}
+        {busy && <InlineSpinner label={t("profile.securing")} />}
       </div>
     </form>
   );

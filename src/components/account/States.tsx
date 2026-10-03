@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Loader2, RefreshCw, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /** Neutral centred state used for empty, error and confirmation panels. */
@@ -55,25 +56,26 @@ export function EmptyState(props: {
 }
 
 export function ErrorState({
-  title = "Something went wrong",
-  description = "We couldn't load this section. Check your connection and try again.",
+  title,
+  description,
   onRetry,
 }: {
   title?: string;
   description?: string;
   onRetry?: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <AccountState
       icon={AlertTriangle}
       tone="error"
-      title={title}
-      description={description}
+      title={title ?? t("common.somethingWentWrong")}
+      description={description ?? t("common.loadFailed")}
       action={
         onRetry ? (
           <Button variant="outline" onClick={onRetry}>
             <RefreshCw className="mr-2 h-4 w-4" />
-            Try again
+            {t("action.tryAgain")}
           </Button>
         ) : undefined
       }
@@ -168,14 +170,15 @@ export function InlineSpinner({ label }: { label?: string }) {
 
 /** Consistent "sign in first" gate for account routes. */
 export function SignInRequired({ title }: { title: string }) {
+  const { t } = useI18n();
   return (
     <AccountState
       icon={AlertTriangle}
       title={title}
-      description="Sign in to your የኔ Go account to continue."
+      description={t("common.signInRequired")}
       action={
         <Button asChild>
-          <Link to="/login">Sign in</Link>
+          <Link to="/login">{t("action.signIn")}</Link>
         </Button>
       }
     />

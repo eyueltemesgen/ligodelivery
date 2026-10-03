@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DAY_NAMES, type ShopHoursRow } from "@/lib/hours";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -33,6 +34,7 @@ export function ShopHoursEditor({
   fallbackClose?: string;
 }) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [draft, setDraft] = useState<DayDraft[] | null>(null);
   const [savingDay, setSavingDay] = useState<number | null>(null);
 
@@ -72,7 +74,7 @@ export function ShopHoursEditor({
       return;
     }
     void qc.invalidateQueries({ queryKey: ["shop-hours", shopId] });
-    toast.success(`${DAY_NAMES[day]} hours saved`);
+    toast.success(t("hours.saved", { day: t(`day.${day}`) }));
   };
 
   return (
@@ -82,9 +84,9 @@ export function ShopHoursEditor({
           key={day}
           className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2 text-sm"
         >
-          <span className="w-24 font-medium">{DAY_NAMES[day]}</span>
+          <span className="w-24 font-medium">{t(`day.${day}`)}</span>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            Closed
+            {t("hours.closed")}
             <Switch checked={d.is_closed} onCheckedChange={(v) => setDay(day, { is_closed: v })} />
           </label>
           {!d.is_closed && (

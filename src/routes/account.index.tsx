@@ -22,6 +22,7 @@ import { AccountHeader } from "@/components/account/AccountShell";
 import { StatusBadge } from "@/components/account/OrderCard";
 import { AccountState, CardSkeleton, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account/")({
   head: () => ({
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/account/")({
 
 function AccountOverview() {
   const { user, profile } = useAuth();
+  const { t } = useI18n();
   const { data: summary, isLoading, isError, refetch } = useQuery(accountSummaryQuery(user?.id));
   const { data: recent = [] } = useQuery(recentProductsQuery(user?.id));
   const { add } = useCart();
@@ -45,21 +47,21 @@ function AccountOverview() {
   const activeOrder = summary?.activeOrder ?? null;
 
   const stats = [
-    { label: "Orders", value: summary?.totalOrders ?? 0, to: "/account/orders", icon: Package },
+    { label: t("account.ordersStat"), value: summary?.totalOrders ?? 0, to: "/account/orders", icon: Package },
     {
-      label: "Saved products",
+      label: t("account.savedStat"),
       value: summary?.wishlistCount ?? 0,
       to: "/account/wishlist",
       icon: Heart,
     },
     {
-      label: "Addresses",
+      label: t("account.addressesStat"),
       value: summary?.addressCount ?? 0,
       to: "/account/addresses",
       icon: MapPin,
     },
     {
-      label: "Total spent",
+      label: t("account.totalSpent"),
       value: ETB(summary?.totalSpent ?? 0),
       to: "/account/orders",
       icon: Wallet,
@@ -69,13 +71,13 @@ function AccountOverview() {
   return (
     <>
       <AccountHeader
-        title={`Hi${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}
-        description="Here's what's happening with your account and orders."
+        title={`${t("account.greeting")}${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}
+        description={t("account.overviewDesc")}
         action={
           <Button asChild variant="outline" size="sm">
             <Link to="/account/profile">
               <User className="mr-1.5 h-4 w-4" />
-              Edit profile
+              {t("account.editProfile")}
             </Link>
           </Button>
         }
@@ -91,7 +93,7 @@ function AccountOverview() {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-primary/20 px-5 py-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground">
-                Active order
+                {t("account.activeOrder")}
               </p>
               <p className="font-display text-lg font-bold">{activeOrder.order_code}</p>
             </div>
@@ -99,21 +101,23 @@ function AccountOverview() {
           </div>
           <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
             <div className="space-y-1 text-sm">
-              <p className="text-muted-foreground">Placed {formatDate(activeOrder.created_at)}</p>
               <p className="text-muted-foreground">
-                {activeOrder.delivery_address ?? "Delivery address on file"}
+                {t("account.placedOn", { date: formatDate(activeOrder.created_at) })}
+              </p>
+              <p className="text-muted-foreground">
+                {activeOrder.delivery_address ?? t("account.deliveryAddressOnFile")}
               </p>
               <p className="font-display text-base font-bold">{ETB(activeOrder.total)}</p>
             </div>
             <div className="flex flex-wrap items-start gap-2 sm:justify-end">
               <Button asChild>
                 <Link to="/account/orders/$orderId" params={{ orderId: activeOrder.id }}>
-                  Track order
+                  {t("action.trackOrder")}
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/account/orders">All orders</Link>
+                <Link to="/account/orders">{t("account.allOrders")}</Link>
               </Button>
             </div>
           </div>
@@ -121,11 +125,11 @@ function AccountOverview() {
       ) : (
         <AccountState
           icon={ShoppingCart}
-          title="No active orders"
-          description="When you place an order you'll be able to follow it here from confirmation to your door."
+          title={t("account.noActiveOrders")}
+          description={t("account.noActiveOrdersDesc")}
           action={
             <Button asChild>
-              <Link to="/shops">Start shopping</Link>
+              <Link to="/shops">{t("action.startShopping")}</Link>
             </Button>
           }
         />
@@ -149,9 +153,9 @@ function AccountOverview() {
       {/* Recent orders */}
       <section className="space-y-3">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-lg font-bold">Recent orders</h2>
+          <h2 className="font-display text-lg font-bold">{t("account.recentOrders")}</h2>
           <Link to="/account/orders" className="text-sm font-medium text-primary">
-            View all
+            {t("account.viewAll")}
           </Link>
         </div>
         {isLoading ? (
@@ -159,11 +163,11 @@ function AccountOverview() {
         ) : (summary?.orders ?? []).length === 0 ? (
           <AccountState
             icon={Package}
-            title="No orders yet"
-            description="Your first order will appear here once you check out."
+            title={t("account.noOrders")}
+            description={t("account.noOrdersDesc")}
             action={
               <Button asChild>
-                <Link to="/shops">Browse shops</Link>
+                <Link to="/shops">{t("action.browseShops")}</Link>
               </Button>
             }
           />
@@ -195,9 +199,9 @@ function AccountOverview() {
       {recent.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-end justify-between">
-            <h2 className="font-display text-lg font-bold">Buy again</h2>
+            <h2 className="font-display text-lg font-bold">{t("account.buyAgain")}</h2>
             <Link to="/account/orders" className="text-sm font-medium text-primary">
-              Order history
+              {t("account.orderHistory")}
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -221,16 +225,16 @@ function AccountOverview() {
                       add({
                         productId: p.product_id!,
                         shopId: "",
-                        shopName: "Shop",
+                        shopName: t("account.shopFallback"),
                         name: p.product_name,
                         imagePath: p.image_url,
                         unitPrice: Number(p.unit_price),
                       });
-                      toast.success(`${p.product_name} added to cart`);
+                      toast.success(t("account.addedToCart", { product: p.product_name }));
                     }}
                   >
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    Add
+                    {t("action.add")}
                   </Button>
                 </div>
               </div>
@@ -241,13 +245,13 @@ function AccountOverview() {
 
       {/* Shortcuts */}
       <section className="space-y-3">
-        <h2 className="font-display text-lg font-bold">Quick actions</h2>
+        <h2 className="font-display text-lg font-bold">{t("account.quickActions")}</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { to: "/shops", label: "Browse shops", icon: Store },
-            { to: "/account/addresses", label: "Manage addresses", icon: MapPin },
-            { to: "/account/notifications", label: "Notifications", icon: Bell },
-            { to: "/account/help", label: "Get help", icon: ArrowRight },
+            { to: "/shops", label: t("action.browseShops"), icon: Store },
+            { to: "/account/addresses", label: t("account.manageAddresses"), icon: MapPin },
+            { to: "/account/notifications", label: t("nav.notifications"), icon: Bell },
+            { to: "/account/help", label: t("account.getHelp"), icon: ArrowRight },
           ].map((a) => (
             <Link
               key={a.label}

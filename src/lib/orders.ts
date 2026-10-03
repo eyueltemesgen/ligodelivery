@@ -101,6 +101,23 @@ export const ORDER_TABS = [
 
 export type OrderTab = (typeof ORDER_TABS)[number]["id"];
 
+/** Translation keys for the customer order tabs. */
+export const ORDER_TAB_KEYS: Record<OrderTab, string> = {
+  all: "orders.tabAll",
+  pending: "orders.tabPending",
+  confirmed: "orders.tabConfirmed",
+  preparing: "orders.tabPreparing",
+  out_for_delivery: "orders.tabOutForDelivery",
+  delivered: "orders.tabDelivered",
+  cancelled: "orders.tabCancelled",
+};
+
+/** Translation key for a backend order status (falls back to the raw value). */
+export const statusKey = (status: string) => `status.${status}`;
+
+/** Translation key for a backend payment status. */
+export const paymentStatusKey = (status: string) => `payStatus.${status}`;
+
 const TAB_STATUSES: Record<Exclude<OrderTab, "all">, string[]> = {
   pending: ["pending", "pending_payment", "payment_verification"],
   confirmed: ["confirmed"],

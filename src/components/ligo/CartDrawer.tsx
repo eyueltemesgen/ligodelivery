@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Minus, Plus, ShoppingBag, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { useI18n } from "@/lib/i18n";
 import { ETB } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export function CartDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   const { items, setQty, remove, clear, count, subtotal, shopName } = useCart();
+  const { t } = useI18n();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -29,20 +31,21 @@ export function CartDrawer({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
-            Your cart {count > 0 && <span className="text-muted-foreground">({count})</span>}
+            {t("cart.title")}{" "}
+            {count > 0 && <span className="text-muted-foreground">({count})</span>}
           </SheetTitle>
-          {shopName && <p className="text-xs text-muted-foreground">from {shopName}</p>}
+          {shopName && (
+            <p className="text-xs text-muted-foreground">{t("cart.from", { shop: shopName })}</p>
+          )}
         </SheetHeader>
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
             <ShoppingCart className="h-10 w-10 text-muted-foreground/40" />
-            <p className="font-semibold">Your cart is empty</p>
-            <p className="text-sm text-muted-foreground">
-              Add some items from a shop to get started.
-            </p>
+            <p className="font-semibold">{t("cart.empty")}</p>
+            <p className="text-sm text-muted-foreground">{t("cart.emptyHint")}</p>
             <Button asChild variant="outline" onClick={() => onOpenChange(false)}>
-              <Link to="/shops">Browse shops</Link>
+              <Link to="/shops">{t("action.browseShops")}</Link>
             </Button>
           </div>
         ) : (
@@ -55,13 +58,13 @@ export function CartDrawer({
                     alt={i.name}
                     className="h-16 w-16 shrink-0 rounded-lg object-cover"
                   />
-                  <div className="flex flex-1 flex-col">
+                  <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-semibold leading-tight">{i.name}</p>
                       <button
                         onClick={() => remove(i.productId)}
-                        aria-label={`Remove ${i.name}`}
-                        className="text-muted-foreground transition-colors hover:text-destructive"
+                        aria-label={t("product.removeAria", { name: i.name })}
+                        className="shrink-0 text-muted-foreground transition-colors hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -70,7 +73,7 @@ export function CartDrawer({
                       <div className="flex items-center gap-2 rounded-full border border-border px-1 py-0.5">
                         <button
                           onClick={() => setQty(i.productId, i.quantity - 1)}
-                          aria-label="Decrease quantity"
+                          aria-label={t("product.decreaseQty")}
                           className="rounded-full p-1 hover:bg-secondary"
                         >
                           <Minus className="h-3.5 w-3.5" />
@@ -80,7 +83,7 @@ export function CartDrawer({
                         </span>
                         <button
                           onClick={() => setQty(i.productId, i.quantity + 1)}
-                          aria-label="Increase quantity"
+                          aria-label={t("product.increaseQty")}
                           className="rounded-full p-1 hover:bg-secondary"
                         >
                           <Plus className="h-3.5 w-3.5" />
@@ -95,15 +98,15 @@ export function CartDrawer({
 
             <SheetFooter className="border-t border-border pt-4">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Subtotal</span>
+                <span className="text-sm text-muted-foreground">{t("cart.subtotal")}</span>
                 <span className="font-display text-lg font-bold">{ETB(subtotal)}</span>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={clear} className="flex-none">
-                  Clear
+                  {t("action.clear")}
                 </Button>
                 <Button asChild className="flex-1" onClick={() => onOpenChange(false)}>
-                  <Link to="/checkout">Checkout · {ETB(subtotal)}</Link>
+                  <Link to="/checkout">{t("cart.checkout", { amount: ETB(subtotal) })}</Link>
                 </Button>
               </div>
             </SheetFooter>
@@ -117,11 +120,12 @@ export function CartDrawer({
 /** Header trigger button with a live item-count badge. */
 export function CartTrigger({ onOpen }: { onOpen: () => void }) {
   const { count } = useCart();
+  const { t } = useI18n();
   return (
     <button
       onClick={onOpen}
       className="relative rounded-md p-2 transition-all duration-100 hover:bg-secondary active:scale-95"
-      aria-label="Open cart"
+      aria-label={t("cart.open")}
     >
       <ShoppingBag className="h-5 w-5" />
       {count > 0 && (
