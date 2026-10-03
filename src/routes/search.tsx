@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { searchQuery } from "@/lib/queries";
 import { ProductCard, ShopCard } from "@/components/ligo/Cards";
 import { ServiceCard } from "@/components/ligo/ServiceCards";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { ProductGridSkeleton, ShopGridSkeleton } from "@/components/ligo/Skeletons";
 import { GridSkeleton } from "@/components/account/States";
 
@@ -32,6 +33,7 @@ function SearchPage() {
       <p className="mt-2 text-muted-foreground">
         {q ? `Showing matches for “${q}”` : "Type something in the search bar above."}
       </p>
+      {q && <AdSlot placement="SEARCH_TOP" className="px-0 py-4" label="Sponsored" />}
       {isLoading && q && (
         <div className="mt-8 space-y-10">
           <ShopGridSkeleton count={3} />

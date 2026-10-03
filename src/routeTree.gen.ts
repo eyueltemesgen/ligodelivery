@@ -31,6 +31,7 @@ import { Route as AccountNotificationsRouteImport } from './routes/account.notif
 import { Route as AccountProfileRouteImport } from './routes/account.profile'
 import { Route as AccountWishlistRouteImport } from './routes/account.wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAdvertisingRouteImport } from './routes/admin.advertising'
 import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
@@ -163,6 +164,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdvertisingRoute = AdminAdvertisingRouteImport.update({
+  id: '/advertising',
+  path: '/advertising',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFinancialsRoute = AdminFinancialsRouteImport.update({
   id: '/financials',
   path: '/financials',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/profile': typeof AccountProfileRoute
   '/account/wishlist': typeof AccountWishlistRoute
+  '/admin/advertising': typeof AdminAdvertisingRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
@@ -333,6 +340,7 @@ export interface FileRoutesByTo {
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/profile': typeof AccountProfileRoute
   '/account/wishlist': typeof AccountWishlistRoute
+  '/admin/advertising': typeof AdminAdvertisingRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/profile': typeof AccountProfileRoute
   '/account/wishlist': typeof AccountWishlistRoute
+  '/admin/advertising': typeof AdminAdvertisingRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/account/notifications'
     | '/account/profile'
     | '/account/wishlist'
+    | '/admin/advertising'
     | '/admin/financials'
     | '/admin/login'
     | '/admin/map'
@@ -468,6 +478,7 @@ export interface FileRouteTypes {
     | '/account/notifications'
     | '/account/profile'
     | '/account/wishlist'
+    | '/admin/advertising'
     | '/admin/financials'
     | '/admin/login'
     | '/admin/map'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/account/notifications'
     | '/account/profile'
     | '/account/wishlist'
+    | '/admin/advertising'
     | '/admin/financials'
     | '/admin/login'
     | '/admin/map'
@@ -719,6 +731,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/advertising': {
+      id: '/admin/advertising'
+      path: '/advertising'
+      fullPath: '/admin/advertising'
+      preLoaderRoute: typeof AdminAdvertisingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/financials': {
       id: '/admin/financials'
       path: '/financials'
@@ -899,6 +918,7 @@ const AccountRouteWithChildren =
   AccountRoute._addFileChildren(AccountRouteChildren)
 
 interface AdminRouteChildren {
+  AdminAdvertisingRoute: typeof AdminAdvertisingRoute
   AdminFinancialsRoute: typeof AdminFinancialsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMapRoute: typeof AdminMapRoute
@@ -909,6 +929,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdvertisingRoute: AdminAdvertisingRoute,
   AdminFinancialsRoute: AdminFinancialsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminMapRoute: AdminMapRoute,

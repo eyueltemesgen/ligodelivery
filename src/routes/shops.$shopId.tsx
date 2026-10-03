@@ -11,9 +11,15 @@ import { useSaved } from "@/lib/saved";
 import { ProductCard } from "@/components/ligo/Cards";
 import { ProductGridSkeleton } from "@/components/ligo/Skeletons";
 import { ProductModal } from "@/components/ligo/ProductModal";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/shops/$shopId")({
+  validateSearch: (s: Record<string, unknown>): { product?: string } => {
+    const out: { product?: string } = {};
+    if (typeof s["product"] === "string" && s["product"]) out.product = s["product"];
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Shop menu — Ligo Delivery Bishoftu" },
@@ -30,6 +36,7 @@ export const Route = createFileRoute("/shops/$shopId")({
 
 function ShopDetail() {
   const { shopId } = Route.useParams();
+  const { product: productParam } = Route.useSearch();
   const { data: shop, isLoading } = useQuery(shopQuery(shopId));
   const { data: products = [] } = useQuery(shopProductsQuery(shopId));
   const { data: hours = [] } = useQuery(shopHoursQuery(shopId));
@@ -66,6 +73,13 @@ function ShopDetail() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [shop, sections]);
+
+  // Deep link from a sponsored product ad: /shops/:id?product=:productId
+  useEffect(() => {
+    if (!productParam || selected) return;
+    const match = products.find((p) => p.id === productParam);
+    if (match) setSelected(match);
+  }, [productParam, products, selected]);
 
   if (isLoading)
     return (
@@ -163,6 +177,8 @@ function ShopDetail() {
             )}
           </div>
         </div>
+
+        <AdSlot placement="SHOP_TOP" targeting={{ shopId }} className="px-0" label="Sponsored" />
 
         {/* Sticky category navigation */}
         {sections.length > 1 && (

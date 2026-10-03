@@ -20,6 +20,7 @@ import {
   servicesQuery,
 } from "@/lib/services";
 import { ServiceCard } from "@/components/ligo/ServiceCards";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { GridSkeleton } from "@/components/account/States";
 import { StorageImage } from "@/lib/media";
 import { ETB } from "@/lib/format";
@@ -139,6 +140,7 @@ function SpecialMomentsHome() {
 
   return (
     <div className="pb-16">
+      <AdSlot placement="SPECIAL_MOMENTS_TOP" label="Sponsored" />
       {/* Hero — landing only */}
       {!hasFilters && (
         <section className="relative overflow-hidden border-b border-border bg-surface">

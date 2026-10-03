@@ -9,6 +9,7 @@ import {
   Gauge,
   LayoutDashboard,
   Map as MapIcon,
+  Megaphone,
   Menu,
   Package,
   Percent,
@@ -64,6 +65,10 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: "/admin/services?tab=services", label: "Services", icon: Sparkles },
       { to: "/admin/services?tab=requests", label: "Requests", icon: ClipboardList },
     ],
+  },
+  {
+    label: "Growth",
+    items: [{ to: "/admin/advertising?tab=ads", label: "Advertising", icon: Megaphone }],
   },
   {
     label: "Finance",

@@ -1738,11 +1738,407 @@ export type Database = {
           },
         ]
       }
+      advertisers: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          shop_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          shop_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          shop_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertisers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_campaigns: {
+        Row: {
+          advertiser_id: string | null
+          budget: number | null
+          created_at: string
+          end_date: string | null
+          id: string
+          name: string
+          notes: string | null
+          objective: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id?: string | null
+          budget?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          objective?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string | null
+          budget?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          objective?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_campaigns_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_placements: {
+        Row: {
+          aspect_ratio: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          key: string
+          layout: string
+          max_ads: number
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          aspect_ratio?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          layout?: string
+          max_ads?: number
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          aspect_ratio?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          layout?: string
+          max_ads?: number
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ad_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_days: number
+          id: string
+          is_active: boolean
+          name: string
+          placements: string[]
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          placements?: string[]
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          placements?: string[]
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ads: {
+        Row: {
+          ad_type: string
+          advertiser_id: string | null
+          campaign_id: string | null
+          created_at: string
+          cta_label: string | null
+          end_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_type: string
+          link_value: string | null
+          name: string
+          placement_key: string
+          priority: number
+          sort_order: number
+          start_at: string | null
+          status: string
+          subtitle: string | null
+          target_category_id: string | null
+          target_device: string
+          target_location: string | null
+          target_page: string | null
+          target_product_id: string | null
+          target_service_category_slug: string | null
+          target_shop_id: string | null
+          title: string | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          ad_type?: string
+          advertiser_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          cta_label?: string | null
+          end_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_type?: string
+          link_value?: string | null
+          name: string
+          placement_key: string
+          priority?: number
+          sort_order?: number
+          start_at?: string | null
+          status?: string
+          subtitle?: string | null
+          target_category_id?: string | null
+          target_device?: string
+          target_location?: string | null
+          target_page?: string | null
+          target_product_id?: string | null
+          target_service_category_slug?: string | null
+          target_shop_id?: string | null
+          title?: string | null
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          ad_type?: string
+          advertiser_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          cta_label?: string | null
+          end_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_type?: string
+          link_value?: string | null
+          name?: string
+          placement_key?: string
+          priority?: number
+          sort_order?: number
+          start_at?: string | null
+          status?: string
+          subtitle?: string | null
+          target_category_id?: string | null
+          target_device?: string
+          target_location?: string | null
+          target_page?: string | null
+          target_product_id?: string | null
+          target_service_category_slug?: string | null
+          target_shop_id?: string | null
+          title?: string | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_placement_key_fkey"
+            columns: ["placement_key"]
+            isOneToOne: false
+            referencedRelation: "ad_placements"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      ad_impressions: {
+        Row: {
+          ad_id: string
+          bucket_hour: string
+          created_at: string
+          device: string | null
+          id: string
+          page_path: string | null
+          placement_key: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          bucket_hour?: string
+          created_at?: string
+          device?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          bucket_hour?: string
+          created_at?: string
+          device?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_impressions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_clicks: {
+        Row: {
+          ad_id: string
+          bucket_hour: string
+          created_at: string
+          device: string | null
+          id: string
+          page_path: string | null
+          placement_key: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          bucket_hour?: string
+          created_at?: string
+          device?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          bucket_hour?: string
+          created_at?: string
+          device?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_clicks_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_ad_analytics: {
+        Args: { p_from?: string | undefined; p_to?: string | undefined }
+        Returns: {
+          ad_id: string
+          ad_name: string
+          ad_type: string
+          advertiser_name: string | null
+          campaign_name: string | null
+          clicks: number
+          ctr: number
+          impressions: number
+          placement_key: string
+          status: string
+        }[]
+      }
       accept_order: { Args: { _order_id: string }; Returns: undefined }
       accept_service_quote: { Args: { p_request_id: string }; Returns: string }
       approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
@@ -1753,6 +2149,40 @@ export type Database = {
       }
       complete_delivery: {
         Args: { _order_id: string; _pin: string }
+        Returns: undefined
+      }
+      eligible_ads: {
+        Args: {
+          p_category?: string | undefined
+          p_device?: string | undefined
+          p_limit?: number | undefined
+          p_location?: string | undefined
+          p_page?: string | undefined
+          p_placement: string
+          p_product?: string | undefined
+          p_service_type?: string | undefined
+          p_shop?: string | undefined
+        }
+        Returns: Database["public"]["Tables"]["ads"]["Row"][]
+      }
+      record_ad_click: {
+        Args: {
+          p_ad_id: string
+          p_device?: string | undefined
+          p_path?: string | undefined
+          p_placement?: string | undefined
+          p_session?: string | undefined
+        }
+        Returns: undefined
+      }
+      record_ad_impression: {
+        Args: {
+          p_ad_id: string
+          p_device?: string | undefined
+          p_path?: string | undefined
+          p_placement?: string | undefined
+          p_session?: string | undefined
+        }
         Returns: undefined
       }
       has_role: {

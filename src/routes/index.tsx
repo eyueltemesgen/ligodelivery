@@ -11,6 +11,7 @@ import {
 } from "@/lib/fallbacks";
 import { bannersQuery, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
   CategoryCardSkeleton,
@@ -71,6 +72,7 @@ function Home() {
         <ActiveOrderBanner />
       </div>
       <BannerSlot placement="home_top" />
+      <AdSlot placement="HOME_TOP" label="Sponsored highlights" />
       <section className="border-b border-border bg-surface">
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
           <div>
@@ -189,6 +191,7 @@ function Home() {
       </section>
 
       <BannerSlot placement="home_middle" />
+      <AdSlot placement="HOME_MIDDLE" label="Sponsored" />
 
       <SpecialMomentsStrip />
 
@@ -267,6 +270,7 @@ function Home() {
       )}
 
       <BannerSlot placement="home_bottom" />
+      <AdSlot placement="HOME_BOTTOM" label="Sponsored" />
 
       <section className="container-ligo pb-16">
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">

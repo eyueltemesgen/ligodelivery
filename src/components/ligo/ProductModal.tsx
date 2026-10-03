@@ -5,6 +5,7 @@ import type { Product } from "@/lib/queries";
 import { ETB, discounted } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
 import { useCart } from "@/lib/cart";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -189,6 +190,13 @@ export function ProductModal({
               rows={2}
             />
           </div>
+
+          <AdSlot
+            placement="PRODUCT_RELATED"
+            targeting={{ productId: product.id, shopId: product.shop_id }}
+            className="px-0 py-1"
+            label="Sponsored products"
+          />
         </div>
 
         <div className="flex items-center gap-3 border-t border-border pt-4">
