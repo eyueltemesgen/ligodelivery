@@ -1206,6 +1206,39 @@ export type Database = {
         }
         Relationships: []
       }
+      report_history: {
+        Row: {
+          created_at: string
+          end_date: string
+          export_type: string
+          generated_by: string | null
+          id: string
+          range_label: string
+          report_type: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          export_type?: string
+          generated_by?: string | null
+          id?: string
+          range_label: string
+          report_type?: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          export_type?: string
+          generated_by?: string | null
+          id?: string
+          range_label?: string
+          report_type?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       rider_earnings: {
         Row: {
           amount: number

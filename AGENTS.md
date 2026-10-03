@@ -37,3 +37,13 @@
 - Flow reuses the existing order + payment pipeline: fixed-price bookings pay the service price, quote requests go `quote_requested → quoted → accepted → paid`. Service orders carry `order_type='service'` and a linked `service_request_id`, so `place_order` (products) is untouched.
 - Security: `service_requests` is INSERT-only for customers via RLS; status/quote/order changes go through the SECURITY DEFINER RPCs. `service_categories`/`services`/`service_addons` are publicly readable when active and writable by admins or the linked shop owner (`owns_shop`).
 
+
+## Admin Reports & Exports
+- Route: `src/routes/admin.reports.tsx` (`/admin/reports`, guarded by the `/admin` layout plus an explicit `AdminGate`), nav entry under Finance in `src/components/admin/AdminShell.tsx`. UI: `src/components/admin/ReportsAdmin.tsx`.
+- Single source of truth: `src/lib/reports.server.ts` `generateReport()` aggregates real tables (`orders`, `order_items`, `payment_proofs`, `riders`, `profiles`, `shops`, `products`) into one `ReportPayload`. The dashboard, Excel and PDF all render from that same payload, so on-screen and exported figures always match.
+- `src/lib/reports.ts` is client-safe (types, `resolvePeriod`, `buildBuckets`, labels, filename helpers, `RANGE_PRESETS`). `src/lib/reports.functions.ts` exposes protected server functions (`generateReportFn`, `exportReportFn`, `reportHistoryFn`) that call `assertAdmin()` (via the `is_admin()` RPC) on every entry point and run queries through the admin's own RLS-enforced session (defence in depth). `report-excel.ts` (ExcelJS) and `report-pdf.ts` (jsPDF + autotable) are server-only.
+- Timezone is Africa/Addis_Ababa (+03:00) via `resolvePeriod`; day buckets/`toLocalDateString` are local-date based. Period granularity: today->hour, week/month/custom->day, year->month.
+- Sales recognise delivered orders only; refunds are `payment_status='refunded'`; `netRevenue = delivered sales - refunds`. Unused payment methods render as zero (never invented).
+- Report history is optional: `supabase/migrations/20261003170000_report_history.sql` (admin-only RLS). Reads degrade gracefully to "unavailable" when the table is not applied; recording is best-effort and never breaks a report.
+- `exceljs` and `jspdf`/`jspdf-autotable` are dependencies, dynamically imported inside server functions so they stay out of the client bundle.
+
