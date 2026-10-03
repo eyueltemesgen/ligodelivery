@@ -38,6 +38,9 @@ export const DEFAULT_CONTENT = {
   offers_title: "Today's offers",
   shops_title: "Popular shops",
   trending_title: "Trending items",
+  special_moments_title: "Make every moment count.",
+  special_moments_subtitle:
+    "Surprises, gifts, catering and decor for birthdays, weddings, graduations and every celebration in between.",
   how_title: "How Ligo works",
   how_step1_title: "1. Choose",
   how_step1_text: "Browse Bishoftu shops and add items to your cart.",
@@ -70,6 +73,8 @@ export const CONTENT_FIELDS: { key: keyof SiteContent; label: string; long?: boo
   { key: "offers_title", label: "Offers section title" },
   { key: "shops_title", label: "Shops section title" },
   { key: "trending_title", label: "Trending section title" },
+  { key: "special_moments_title", label: "Special Moments title", long: true },
+  { key: "special_moments_subtitle", label: "Special Moments subtitle", long: true },
   { key: "how_title", label: "How it works title" },
   { key: "how_step1_title", label: "Step 1 title" },
   { key: "how_step1_text", label: "Step 1 text", long: true },

@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { searchQuery } from "@/lib/queries";
 import { ProductCard, ShopCard } from "@/components/ligo/Cards";
+import { ServiceCard } from "@/components/ligo/ServiceCards";
 import { ProductGridSkeleton, ShopGridSkeleton } from "@/components/ligo/Skeletons";
+import { GridSkeleton } from "@/components/account/States";
 
 export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>) => ({ q: typeof s["q"] === "string" ? s["q"] : "" }),
@@ -34,10 +36,21 @@ function SearchPage() {
         <div className="mt-8 space-y-10">
           <ShopGridSkeleton count={3} />
           <ProductGridSkeleton count={4} />
+          <GridSkeleton count={3} />
         </div>
       )}
       {data && (
         <>
+          {data.services.length > 0 && (
+            <section className="mt-8">
+              <h2 className="font-display text-xl font-bold">Special Moments</h2>
+              <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {data.services.map((s) => (
+                  <ServiceCard key={s.id} service={s} />
+                ))}
+              </div>
+            </section>
+          )}
           {data.shops.length > 0 && (
             <section className="mt-8">
               <h2 className="font-display text-xl font-bold">Shops</h2>
@@ -58,9 +71,12 @@ function SearchPage() {
               </div>
             </section>
           )}
-          {q && data.shops.length === 0 && data.products.length === 0 && (
-            <p className="mt-8 text-sm text-muted-foreground">Nothing matched your search.</p>
-          )}
+          {q &&
+            data.shops.length === 0 &&
+            data.products.length === 0 &&
+            data.services.length === 0 && (
+              <p className="mt-8 text-sm text-muted-foreground">Nothing matched your search.</p>
+            )}
         </>
       )}
     </div>

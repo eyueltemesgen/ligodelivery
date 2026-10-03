@@ -33,6 +33,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link to="/special-moments" className="hover:text-foreground">
+                Special Moments
+              </Link>
+            </li>
+            <li>
               <Link to="/account/orders" className="hover:text-foreground">
                 Track order
               </Link>

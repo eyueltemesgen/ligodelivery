@@ -8,6 +8,7 @@ import {
   Package,
   Plus,
   ShoppingCart,
+  Sparkles,
   Store,
   User,
   Wallet,
@@ -46,6 +47,12 @@ function AccountOverview() {
 
   const stats = [
     { label: "Orders", value: summary?.totalOrders ?? 0, to: "/account/orders", icon: Package },
+    {
+      label: "Special moments",
+      value: summary?.totalServiceRequests ?? 0,
+      to: "/account/requests",
+      icon: Sparkles,
+    },
     {
       label: "Saved products",
       value: summary?.wishlistCount ?? 0,

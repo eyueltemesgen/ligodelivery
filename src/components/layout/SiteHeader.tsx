@@ -37,6 +37,7 @@ const NAV = [
   { to: "/categories", label: "Categories" },
   { to: "/shops", label: "Shops" },
   { to: "/offers", label: "Offers" },
+  { to: "/special-moments", label: "Special Moments" },
   { to: "/account/orders", label: "Track order" },
 ];
 

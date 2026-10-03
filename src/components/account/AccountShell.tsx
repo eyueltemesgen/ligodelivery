@@ -9,6 +9,7 @@ import {
   LogOut,
   MapPin,
   Package,
+  Sparkles,
   User,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,12 +21,13 @@ type NavItem = {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  badgeKey?: "orders" | "wishlist" | "notifications";
+  badgeKey?: "orders" | "wishlist" | "notifications" | "requests";
 };
 
 const NAV: NavItem[] = [
   { to: "/account", label: "Overview", icon: LayoutDashboard },
   { to: "/account/orders", label: "My orders", icon: Package, badgeKey: "orders" },
+  { to: "/account/requests", label: "Special moments", icon: Sparkles, badgeKey: "requests" },
   { to: "/account/wishlist", label: "Saved products", icon: Heart, badgeKey: "wishlist" },
   { to: "/account/addresses", label: "Addresses", icon: MapPin },
   { to: "/account/profile", label: "Profile", icon: User },
@@ -40,6 +42,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const badgeFor = (key?: NavItem["badgeKey"]) => {
     if (!key || !summary) return 0;
     if (key === "orders") return summary.openOrders;
+    if (key === "requests") return summary.openServiceRequests;
     if (key === "wishlist") return summary.wishlistCount;
     return summary.unreadNotifications;
   };

@@ -23,6 +23,7 @@ import { Route as OffersRouteImport } from './routes/offers'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as SpecialMomentsRouteImport } from './routes/special-moments'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 import { Route as AccountHelpRouteImport } from './routes/account.help'
@@ -35,6 +36,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
+import { Route as AdminServicesRouteImport } from './routes/admin.services'
 import { Route as MerchantJoinRouteImport } from './routes/merchant.join'
 import { Route as MerchantLoginRouteImport } from './routes/merchant.login'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
@@ -44,8 +46,12 @@ import { Route as RiderJoinRouteImport } from './routes/rider.join'
 import { Route as RiderLoginRouteImport } from './routes/rider.login'
 import { Route as ShopsIndexRouteImport } from './routes/shops.index'
 import { Route as ShopsShopIdRouteImport } from './routes/shops.$shopId'
+import { Route as SpecialMomentsIndexRouteImport } from './routes/special-moments.index'
+import { Route as SpecialMomentsServiceIdRouteImport } from './routes/special-moments.$serviceId'
 import { Route as AccountOrdersIndexRouteImport } from './routes/account.orders.index'
 import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.orders.$orderId'
+import { Route as AccountRequestsIndexRouteImport } from './routes/account.requests.index'
+import { Route as AccountRequestsRequestIdRouteImport } from './routes/account.requests.$requestId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -117,6 +123,11 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpecialMomentsRoute = SpecialMomentsRouteImport.update({
+  id: '/special-moments',
+  path: '/special-moments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -177,6 +188,11 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
   path: '/riders',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminServicesRoute = AdminServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AdminRoute,
+} as any)
 const MerchantJoinRoute = MerchantJoinRouteImport.update({
   id: '/join',
   path: '/join',
@@ -222,6 +238,16 @@ const ShopsShopIdRoute = ShopsShopIdRouteImport.update({
   path: '/shops/$shopId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpecialMomentsIndexRoute = SpecialMomentsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SpecialMomentsRoute,
+} as any)
+const SpecialMomentsServiceIdRoute = SpecialMomentsServiceIdRouteImport.update({
+  id: '/$serviceId',
+  path: '/$serviceId',
+  getParentRoute: () => SpecialMomentsRoute,
+} as any)
 const AccountOrdersIndexRoute = AccountOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -232,6 +258,17 @@ const AccountOrdersOrderIdRoute = AccountOrdersOrderIdRouteImport.update({
   path: '/orders/$orderId',
   getParentRoute: () => AccountRoute,
 } as any)
+const AccountRequestsIndexRoute = AccountRequestsIndexRouteImport.update({
+  id: '/requests/',
+  path: '/requests/',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountRequestsRequestIdRoute =
+  AccountRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => AccountRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -248,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/special-moments': typeof SpecialMomentsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/help': typeof AccountHelpRoute
   '/account/notifications': typeof AccountNotificationsRoute
@@ -258,19 +296,24 @@ export interface FileRoutesByFullPath {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/services': typeof AdminServicesRoute
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
+  '/special-moments/$serviceId': typeof SpecialMomentsServiceIdRoute
   '/account/': typeof AccountIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/shops/': typeof ShopsIndexRoute
+  '/special-moments/': typeof SpecialMomentsIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
+  '/account/requests/$requestId': typeof AccountRequestsRequestIdRoute
   '/account/orders/': typeof AccountOrdersIndexRoute
+  '/account/requests/': typeof AccountRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -295,19 +338,24 @@ export interface FileRoutesByTo {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/services': typeof AdminServicesRoute
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
+  '/special-moments/$serviceId': typeof SpecialMomentsServiceIdRoute
   '/account': typeof AccountIndexRoute
   '/admin': typeof AdminIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/rider': typeof RiderIndexRoute
   '/shops': typeof ShopsIndexRoute
+  '/special-moments': typeof SpecialMomentsIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
+  '/account/requests/$requestId': typeof AccountRequestsRequestIdRoute
   '/account/orders': typeof AccountOrdersIndexRoute
+  '/account/requests': typeof AccountRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -325,6 +373,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/special-moments': typeof SpecialMomentsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/help': typeof AccountHelpRoute
   '/account/notifications': typeof AccountNotificationsRoute
@@ -335,19 +384,24 @@ export interface FileRoutesById {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/services': typeof AdminServicesRoute
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
+  '/special-moments/$serviceId': typeof SpecialMomentsServiceIdRoute
   '/account/': typeof AccountIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/shops/': typeof ShopsIndexRoute
+  '/special-moments/': typeof SpecialMomentsIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
+  '/account/requests/$requestId': typeof AccountRequestsRequestIdRoute
   '/account/orders/': typeof AccountOrdersIndexRoute
+  '/account/requests/': typeof AccountRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -366,6 +420,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/search'
+    | '/special-moments'
     | '/account/addresses'
     | '/account/help'
     | '/account/notifications'
@@ -376,19 +431,24 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/admin/services'
     | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
+    | '/special-moments/$serviceId'
     | '/account/'
     | '/admin/'
     | '/orders/'
     | '/rider/'
     | '/shops/'
+    | '/special-moments/'
     | '/account/orders/$orderId'
+    | '/account/requests/$requestId'
     | '/account/orders/'
+    | '/account/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -413,19 +473,24 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/admin/services'
     | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
+    | '/special-moments/$serviceId'
     | '/account'
     | '/admin'
     | '/orders'
     | '/rider'
     | '/shops'
+    | '/special-moments'
     | '/account/orders/$orderId'
+    | '/account/requests/$requestId'
     | '/account/orders'
+    | '/account/requests'
   id:
     | '__root__'
     | '/'
@@ -442,6 +507,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/search'
+    | '/special-moments'
     | '/account/addresses'
     | '/account/help'
     | '/account/notifications'
@@ -452,19 +518,24 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/riders'
+    | '/admin/services'
     | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
+    | '/special-moments/$serviceId'
     | '/account/'
     | '/admin/'
     | '/orders/'
     | '/rider/'
     | '/shops/'
+    | '/special-moments/'
     | '/account/orders/$orderId'
+    | '/account/requests/$requestId'
     | '/account/orders/'
+    | '/account/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -482,6 +553,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
+  SpecialMomentsRoute: typeof SpecialMomentsRouteWithChildren
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   RiderJoinRoute: typeof RiderJoinRoute
   RiderLoginRoute: typeof RiderLoginRoute
@@ -591,6 +663,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/special-moments': {
+      id: '/special-moments'
+      path: '/special-moments'
+      fullPath: '/special-moments'
+      preLoaderRoute: typeof SpecialMomentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/': {
       id: '/account/'
       path: '/'
@@ -675,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRidersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/services': {
+      id: '/admin/services'
+      path: '/services'
+      fullPath: '/admin/services'
+      preLoaderRoute: typeof AdminServicesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/merchant/join': {
       id: '/merchant/join'
       path: '/join'
@@ -738,6 +824,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopsShopIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/special-moments/': {
+      id: '/special-moments/'
+      path: '/'
+      fullPath: '/special-moments/'
+      preLoaderRoute: typeof SpecialMomentsIndexRouteImport
+      parentRoute: typeof SpecialMomentsRoute
+    }
+    '/special-moments/$serviceId': {
+      id: '/special-moments/$serviceId'
+      path: '/$serviceId'
+      fullPath: '/special-moments/$serviceId'
+      preLoaderRoute: typeof SpecialMomentsServiceIdRouteImport
+      parentRoute: typeof SpecialMomentsRoute
+    }
     '/account/orders/': {
       id: '/account/orders/'
       path: '/orders'
@@ -752,6 +852,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountOrdersOrderIdRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/requests/': {
+      id: '/account/requests/'
+      path: '/requests'
+      fullPath: '/account/requests/'
+      preLoaderRoute: typeof AccountRequestsIndexRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/requests/$requestId': {
+      id: '/account/requests/$requestId'
+      path: '/requests/$requestId'
+      fullPath: '/account/requests/$requestId'
+      preLoaderRoute: typeof AccountRequestsRequestIdRouteImport
+      parentRoute: typeof AccountRoute
+    }
   }
 }
 
@@ -763,7 +877,9 @@ interface AccountRouteChildren {
   AccountWishlistRoute: typeof AccountWishlistRoute
   AccountIndexRoute: typeof AccountIndexRoute
   AccountOrdersOrderIdRoute: typeof AccountOrdersOrderIdRoute
+  AccountRequestsRequestIdRoute: typeof AccountRequestsRequestIdRoute
   AccountOrdersIndexRoute: typeof AccountOrdersIndexRoute
+  AccountRequestsIndexRoute: typeof AccountRequestsIndexRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
@@ -774,7 +890,9 @@ const AccountRouteChildren: AccountRouteChildren = {
   AccountWishlistRoute: AccountWishlistRoute,
   AccountIndexRoute: AccountIndexRoute,
   AccountOrdersOrderIdRoute: AccountOrdersOrderIdRoute,
+  AccountRequestsRequestIdRoute: AccountRequestsRequestIdRoute,
   AccountOrdersIndexRoute: AccountOrdersIndexRoute,
+  AccountRequestsIndexRoute: AccountRequestsIndexRoute,
 }
 
 const AccountRouteWithChildren =
@@ -786,6 +904,7 @@ interface AdminRouteChildren {
   AdminMapRoute: typeof AdminMapRoute
   AdminOpsRoute: typeof AdminOpsRoute
   AdminRidersRoute: typeof AdminRidersRoute
+  AdminServicesRoute: typeof AdminServicesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -795,6 +914,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMapRoute: AdminMapRoute,
   AdminOpsRoute: AdminOpsRoute,
   AdminRidersRoute: AdminRidersRoute,
+  AdminServicesRoute: AdminServicesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -814,6 +934,20 @@ const MerchantRouteWithChildren = MerchantRoute._addFileChildren(
   MerchantRouteChildren,
 )
 
+interface SpecialMomentsRouteChildren {
+  SpecialMomentsServiceIdRoute: typeof SpecialMomentsServiceIdRoute
+  SpecialMomentsIndexRoute: typeof SpecialMomentsIndexRoute
+}
+
+const SpecialMomentsRouteChildren: SpecialMomentsRouteChildren = {
+  SpecialMomentsServiceIdRoute: SpecialMomentsServiceIdRoute,
+  SpecialMomentsIndexRoute: SpecialMomentsIndexRoute,
+}
+
+const SpecialMomentsRouteWithChildren = SpecialMomentsRoute._addFileChildren(
+  SpecialMomentsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
@@ -829,6 +963,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
+  SpecialMomentsRoute: SpecialMomentsRouteWithChildren,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   RiderJoinRoute: RiderJoinRoute,
   RiderLoginRoute: RiderLoginRoute,

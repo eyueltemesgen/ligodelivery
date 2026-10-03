@@ -10,6 +10,7 @@ import { isOrderOpen } from "@/lib/orders";
 export type OrderRow = {
   id: string;
   order_code: string;
+  order_type: string;
   status: string;
   payment_status: string;
   payment_method: string;
@@ -120,7 +121,7 @@ export const ordersQuery = (userId: string | undefined) => ({
       await supabase
         .from("orders")
         .select(
-          "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at",
+          "id,order_code,order_type,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at",
         )
         .eq("customer_id", userId!)
         .order("created_at", { ascending: false }),
@@ -273,6 +274,8 @@ export type AccountSummary = {
   wishlistCount: number;
   favoriteCount: number;
   unreadNotifications: number;
+  openServiceRequests: number;
+  totalServiceRequests: number;
 };
 
 /**
@@ -283,45 +286,55 @@ export const accountSummaryQuery = (userId: string | undefined) => ({
   queryKey: ["account-summary", userId],
   enabled: !!userId,
   queryFn: async (): Promise<AccountSummary> => {
-    const [orders, addressCount, wishlistCount, favoriteCount, unreadNotifications] =
-      await Promise.all([
-        soft<OrderRow[]>(
-          supabase
-            .from("orders")
-            .select(
-              "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at",
-            )
-            .eq("customer_id", userId!)
-            .order("created_at", { ascending: false })
-            .limit(30),
-          [],
-        ),
-        softCount(
-          supabase
-            .from("addresses")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", userId!),
-        ),
-        softCount(
-          supabase
-            .from("wishlist")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", userId!),
-        ),
-        softCount(
-          supabase
-            .from("shop_favorites")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", userId!),
-        ),
-        softCount(
-          supabase
-            .from("notifications")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", userId!)
-            .eq("is_read", false),
-        ),
-      ]);
+    const [
+      orders,
+      addressCount,
+      wishlistCount,
+      favoriteCount,
+      unreadNotifications,
+      serviceRequests,
+    ] = await Promise.all([
+      soft<OrderRow[]>(
+        supabase
+          .from("orders")
+          .select(
+            "id,order_code,order_type,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at",
+          )
+          .eq("customer_id", userId!)
+          .order("created_at", { ascending: false })
+          .limit(30),
+        [],
+      ),
+      softCount(
+        supabase
+          .from("addresses")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId!),
+      ),
+      softCount(
+        supabase
+          .from("wishlist")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId!),
+      ),
+      softCount(
+        supabase
+          .from("shop_favorites")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId!),
+      ),
+      softCount(
+        supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId!)
+          .eq("is_read", false),
+      ),
+      soft<{ status: string }[]>(
+        supabase.from("service_requests").select("status").eq("customer_id", userId!),
+        [],
+      ),
+    ]);
     const active = orders.find((o) => isOrderOpen(o.status)) ?? null;
     return {
       orders,
@@ -335,6 +348,10 @@ export const accountSummaryQuery = (userId: string | undefined) => ({
       wishlistCount,
       favoriteCount,
       unreadNotifications,
+      openServiceRequests: serviceRequests.filter(
+        (r) => !["completed", "cancelled"].includes(r.status),
+      ).length,
+      totalServiceRequests: serviceRequests.length,
     };
   },
 });

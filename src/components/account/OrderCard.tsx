@@ -92,6 +92,14 @@ export function OrderCard({ order }: { order: OrderRow }) {
           <p className="font-display text-sm font-bold">{order.order_code}</p>
           <p className="text-xs text-muted-foreground">{formatDate(order.created_at)}</p>
         </div>
+        {order.order_type === "service" && (
+          <Link
+            to="/account/requests"
+            className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-bold text-accent-foreground"
+          >
+            Special moment
+          </Link>
+        )}
         <span className="ml-auto">
           <StatusBadge status={order.status} />
         </span>

@@ -15,6 +15,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Sparkles,
   Store,
   Tags,
   Users,
@@ -55,6 +56,13 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: "/admin/ops?tab=customers", label: "Customers", icon: Users },
       { to: "/admin/ops?tab=products", label: "Products", icon: Package },
       { to: "/admin/ops?tab=categories", label: "Categories", icon: Tags },
+    ],
+  },
+  {
+    label: "Special Moments",
+    items: [
+      { to: "/admin/services?tab=services", label: "Services", icon: Sparkles },
+      { to: "/admin/services?tab=requests", label: "Requests", icon: ClipboardList },
     ],
   },
   {
@@ -248,7 +256,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
-              <p className="truncate font-display text-base font-extrabold text-primary">LIGO Admin</p>
+              <p className="truncate font-display text-base font-extrabold text-primary">
+                LIGO Admin
+              </p>
               <p className="truncate text-[11px] text-muted-foreground">
                 {dispatchPaused ? "Dispatch paused" : "All systems operational"}
               </p>
@@ -270,30 +280,30 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </Button>
           </div>
           <div className="hidden items-center gap-3 md:flex">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setSearchOpen(true)}
-            className="h-9 w-full max-w-sm justify-start bg-surface px-3 text-muted-foreground hover:border-primary/50"
-          >
-            <Search className="h-4 w-4" />
-            Search orders, riders, shops…
-            <kbd className="ml-auto rounded border border-border bg-background px-1.5 text-[10px] font-semibold">
-              ⌘K
-            </kbd>
-          </Button>
-          <span
-            className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-              dispatchPaused
-                ? "bg-destructive/10 text-destructive"
-                : "bg-primary-soft text-accent-foreground"
-            }`}
-          >
-            <Gauge className="h-3.5 w-3.5" />
-            {dispatchPaused ? "Dispatch Paused" : "All Systems Operational"}
-          </span>
-          <NotificationsCenter />
-          <AdminUserMenu />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSearchOpen(true)}
+              className="h-9 w-full max-w-sm justify-start bg-surface px-3 text-muted-foreground hover:border-primary/50"
+            >
+              <Search className="h-4 w-4" />
+              Search orders, riders, shops…
+              <kbd className="ml-auto rounded border border-border bg-background px-1.5 text-[10px] font-semibold">
+                ⌘K
+              </kbd>
+            </Button>
+            <span
+              className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                dispatchPaused
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-primary-soft text-accent-foreground"
+              }`}
+            >
+              <Gauge className="h-3.5 w-3.5" />
+              {dispatchPaused ? "Dispatch Paused" : "All Systems Operational"}
+            </span>
+            <NotificationsCenter />
+            <AdminUserMenu />
           </div>
         </header>
         <AdminCommandSearch open={searchOpen} onOpenChange={setSearchOpen} />

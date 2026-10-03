@@ -586,6 +586,7 @@ export type Database = {
           lng: number | null
           merchant_net: number
           order_code: string
+          order_type: string
           payment_method: string
           payment_status: string
           rider_id: string | null
@@ -617,6 +618,7 @@ export type Database = {
           lng?: number | null
           merchant_net?: number
           order_code?: string
+          order_type?: string
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
@@ -648,6 +650,7 @@ export type Database = {
           lng?: number | null
           merchant_net?: number
           order_code?: string
+          order_type?: string
           payment_method?: string
           payment_status?: string
           rider_id?: string | null
@@ -1317,13 +1320,433 @@ export type Database = {
           },
         ]
       }
+      service_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          emoji: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          addons: Json
+          anonymous_option: boolean
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          images: Json
+          includes: Json
+          is_active: boolean
+          is_featured: boolean
+          lead_time_hours: number
+          max_guests: number | null
+          min_guests: number | null
+          name: string
+          occasions: string[]
+          preparation_hours: number | null
+          price: number
+          price_unit: string | null
+          pricing_type: string
+          rating: number
+          requires_location: boolean
+          requires_recipient: boolean
+          requires_schedule: boolean
+          review_count: number
+          service_area: string | null
+          service_category_id: string
+          shop_id: string
+          slug: string | null
+          sort_order: number
+          starting_price: number | null
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          addons?: Json
+          anonymous_option?: boolean
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          images?: Json
+          includes?: Json
+          is_active?: boolean
+          is_featured?: boolean
+          lead_time_hours?: number
+          max_guests?: number | null
+          min_guests?: number | null
+          name: string
+          occasions?: string[]
+          preparation_hours?: number | null
+          price?: number
+          price_unit?: string | null
+          pricing_type?: string
+          rating?: number
+          requires_location?: boolean
+          requires_recipient?: boolean
+          requires_schedule?: boolean
+          review_count?: number
+          service_area?: string | null
+          service_category_id: string
+          shop_id: string
+          slug?: string | null
+          sort_order?: number
+          starting_price?: number | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          addons?: Json
+          anonymous_option?: boolean
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          images?: Json
+          includes?: Json
+          is_active?: boolean
+          is_featured?: boolean
+          lead_time_hours?: number
+          max_guests?: number | null
+          min_guests?: number | null
+          name?: string
+          occasions?: string[]
+          preparation_hours?: number | null
+          price?: number
+          price_unit?: string | null
+          pricing_type?: string
+          rating?: number
+          requires_location?: boolean
+          requires_recipient?: boolean
+          requires_schedule?: boolean
+          review_count?: number
+          service_area?: string | null
+          service_category_id?: string
+          shop_id?: string
+          slug?: string | null
+          sort_order?: number
+          starting_price?: number | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_options: {
+        Row: {
+          created_at: string
+          description: string | null
+          group_name: string | null
+          id: string
+          is_active: boolean
+          name: string
+          option_type: string
+          price_delta: number
+          service_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          group_name?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          option_type?: string
+          price_delta?: number
+          service_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          group_name?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          option_type?: string
+          price_delta?: number
+          service_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_options_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_requests: {
+        Row: {
+          admin_notes: string | null
+          budget: number | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          customer_id: string
+          customer_name: string | null
+          customer_phone: string | null
+          customization: Json
+          event_date: string | null
+          event_time: string | null
+          event_type: string | null
+          guest_count: number | null
+          id: string
+          keep_sender_anonymous: boolean
+          lat: number | null
+          lng: number | null
+          location: string | null
+          message: string | null
+          order_id: string | null
+          payment_method: string | null
+          payment_status: string
+          pricing_type: string
+          quoted_amount: number | null
+          quoted_at: string | null
+          quoted_notes: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          request_code: string
+          scheduled_at: string | null
+          service_category_slug: string | null
+          service_id: string | null
+          service_name: string
+          shop_id: string | null
+          special_instructions: string | null
+          status: string
+          subtotal: number
+          theme: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          budget?: number | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          customization?: Json
+          event_date?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          guest_count?: number | null
+          id?: string
+          keep_sender_anonymous?: boolean
+          lat?: number | null
+          lng?: number | null
+          location?: string | null
+          message?: string | null
+          order_id?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          pricing_type?: string
+          quoted_amount?: number | null
+          quoted_at?: string | null
+          quoted_notes?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          request_code?: string
+          scheduled_at?: string | null
+          service_category_slug?: string | null
+          service_id?: string | null
+          service_name: string
+          shop_id?: string | null
+          special_instructions?: string | null
+          status?: string
+          subtotal?: number
+          theme?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          budget?: number | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          customization?: Json
+          event_date?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          guest_count?: number | null
+          id?: string
+          keep_sender_anonymous?: boolean
+          lat?: number | null
+          lng?: number | null
+          location?: string | null
+          message?: string | null
+          order_id?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          pricing_type?: string
+          quoted_amount?: number | null
+          quoted_at?: string | null
+          quoted_notes?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          request_code?: string
+          scheduled_at?: string | null
+          service_category_slug?: string | null
+          service_id?: string | null
+          service_name?: string
+          shop_id?: string | null
+          special_instructions?: string | null
+          status?: string
+          subtotal?: number
+          theme?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_request_items: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          option_id: string | null
+          quantity: number
+          request_id: string
+          service_id: string | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          option_id?: string | null
+          quantity?: number
+          request_id: string
+          service_id?: string | null
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          option_id?: string | null
+          quantity?: number
+          request_id?: string
+          service_id?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_request_items_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "service_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_request_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       accept_order: { Args: { _order_id: string }; Returns: undefined }
+      accept_service_quote: { Args: { p_request_id: string }; Returns: string }
       approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
+      cancel_service_request: { Args: { p_request_id: string }; Returns: undefined }
       check_coupon: {
         Args: { p_code: string; p_delivery_fee: number; p_subtotal: number }
         Returns: Json
@@ -1364,6 +1787,29 @@ export type Database = {
       set_merchant_commission: {
         Args: { _merchant: string; _percent: number }
         Returns: undefined
+      }
+      submit_service_request: {
+        Args: {
+          p_budget?: number
+          p_customization?: Json
+          p_customer_name?: string
+          p_customer_phone?: string
+          p_event_date?: string
+          p_event_time?: string
+          p_event_type?: string
+          p_guest_count?: number
+          p_keep_sender_anonymous?: boolean
+          p_location?: string
+          p_message?: string
+          p_option_ids?: string[]
+          p_payment_method?: string
+          p_recipient_name?: string
+          p_recipient_phone?: string
+          p_service_id: string
+          p_special_instructions?: string
+          p_theme?: string
+        }
+        Returns: string
       }
       submit_merchant_application: {
         Args: {

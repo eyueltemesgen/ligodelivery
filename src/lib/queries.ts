@@ -149,13 +149,33 @@ export const offersQuery = {
 export const searchQuery = (term: string) => ({
   queryKey: ["search", term],
   queryFn: async () => {
-    if (!term.trim()) return { shops: [] as Shop[], products: [] as Product[] };
+    if (!term.trim()) return { shops: [] as Shop[], products: [] as Product[], services: [] };
     const like = `%${term.trim()}%`;
-    const [s, p] = await Promise.all([
+    // PostgREST `or=` filters are a comma/paren-delimited string, so the term
+    // must not carry filter syntax when it is interpolated below.
+    const safe = term
+      .trim()
+      .replace(/[,().%*\\]/g, " ")
+      .trim();
+    const [s, p, sv] = await Promise.all([
       supabase.from("shops").select("*").eq("is_active", true).ilike("name", like).limit(12),
       supabase.from("products").select("*").eq("is_active", true).ilike("name", like).limit(24),
+      safe
+        ? supabase
+            .from("services")
+            .select("*, shops(id,name,is_online,rating), service_categories(slug,name,emoji)")
+            .eq("is_active", true)
+            .or(`name.ilike.%${safe}%,summary.ilike.%${safe}%,description.ilike.%${safe}%`)
+            .limit(12)
+        : Promise.resolve({ data: [], error: null }),
     ]);
-    return { shops: (s.data ?? []) as Shop[], products: (p.data ?? []) as Product[] };
+    return {
+      shops: (s.data ?? []) as Shop[],
+      products: (p.data ?? []) as Product[],
+      services: (sv.error
+        ? []
+        : (sv.data ?? [])) as unknown as import("@/lib/services").ServiceWithShop[],
+    };
   },
 });
 

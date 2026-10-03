@@ -32,6 +32,7 @@ import {
   type MerchantPromotion,
 } from "@/lib/merchant";
 import { ShopHoursEditor } from "@/components/ligo/ShopHoursEditor";
+import { MerchantServices } from "@/components/ligo/MerchantServices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -323,6 +324,7 @@ function MerchantDashboard() {
             <PackageCheck className="mr-1.5 h-4 w-4" /> Products
           </TabsTrigger>
           <TabsTrigger value="shop">Shop</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="promotions">
             <Megaphone className="mr-1.5 h-4 w-4" /> Promote
           </TabsTrigger>
@@ -413,6 +415,14 @@ function MerchantDashboard() {
         {/* PRODUCTS */}
         <TabsContent value="products" className="mt-6 space-y-3">
           <ProductManager shopId={shops[0]?.id} products={products} />
+        </TabsContent>
+
+        {/* SERVICES */}
+        <TabsContent value="services" className="mt-6">
+          <MerchantServices
+            shopIds={shopIds}
+            shops={shops.map((s) => ({ id: s.id, name: s.name }))}
+          />
         </TabsContent>
 
         {/* SHOP */}
@@ -869,11 +879,7 @@ function ShopEditor({ shop }: { shop: Shop }) {
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label>Description</Label>
-          <Textarea
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <Label>Logo</Label>
@@ -1005,7 +1011,10 @@ function PromotionPanel({
           <h2 className="font-display text-lg font-bold">Your requests</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {promotions.map((p) => (
-              <li key={p.id} className="flex flex-wrap justify-between gap-2 border-b border-border pb-2">
+              <li
+                key={p.id}
+                className="flex flex-wrap justify-between gap-2 border-b border-border pb-2"
+              >
                 <span>{PROMOTION_LABEL[p.kind]}</span>
                 <span className="capitalize text-muted-foreground">
                   {p.status}

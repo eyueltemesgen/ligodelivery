@@ -18,6 +18,7 @@ import {
   ShopGridSkeleton,
 } from "@/components/ligo/Skeletons";
 import { ActiveOrderBanner } from "@/components/ligo/ActiveOrderBanner";
+import { SpecialMomentsStrip } from "@/components/ligo/SpecialMomentsStrip";
 import { StorageImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 
@@ -188,6 +189,8 @@ function Home() {
       </section>
 
       <BannerSlot placement="home_middle" />
+
+      <SpecialMomentsStrip />
 
       {offers.length > 0 && (
         <section className="container-ligo py-4">
