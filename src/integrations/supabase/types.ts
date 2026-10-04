@@ -605,6 +605,42 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_fee_rules: {
+        Row: {
+          created_at: string
+          fee: number
+          id: string
+          is_active: boolean
+          label: string | null
+          max_distance: number | null
+          min_distance: number
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fee?: number
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          max_distance?: number | null
+          min_distance?: number
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fee?: number
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          max_distance?: number | null
+          min_distance?: number
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       merchant_payouts: {
         Row: {
           commission_amount: number
@@ -924,6 +960,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          options: Json
           order_id: string
           product_id: string | null
           product_name: string
@@ -934,6 +971,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          options?: Json
           order_id: string
           product_id?: string | null
           product_name: string
@@ -944,6 +982,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          options?: Json
           order_id?: string
           product_id?: string | null
           product_name?: string
@@ -975,12 +1014,16 @@ export type Database = {
           coupon_id: string | null
           created_at: string
           customer_id: string
+          customer_lat: number | null
+          customer_lng: number | null
           customer_name: string | null
           customer_phone: string | null
           delivery_address: string | null
+          delivery_distance: number | null
           delivery_fee: number
           delivery_instructions: string | null
           delivery_pin: string | null
+          delivery_rule: string | null
           discount: number
           dispatched_at: string | null
           id: string
@@ -996,6 +1039,8 @@ export type Database = {
           scheduled_for: string | null
           service_request_id: string | null
           shop_id: string | null
+          shop_lat: number | null
+          shop_lng: number | null
           status: string
           subtotal: number
           tip: number
@@ -1009,12 +1054,16 @@ export type Database = {
           coupon_id?: string | null
           created_at?: string
           customer_id: string
+          customer_lat?: number | null
+          customer_lng?: number | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_address?: string | null
+          delivery_distance?: number | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null
+          delivery_rule?: string | null
           discount?: number
           dispatched_at?: string | null
           id?: string
@@ -1030,6 +1079,8 @@ export type Database = {
           scheduled_for?: string | null
           service_request_id?: string | null
           shop_id?: string | null
+          shop_lat?: number | null
+          shop_lng?: number | null
           status?: string
           subtotal?: number
           tip?: number
@@ -1043,12 +1094,16 @@ export type Database = {
           coupon_id?: string | null
           created_at?: string
           customer_id?: string
+          customer_lat?: number | null
+          customer_lng?: number | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_address?: string | null
+          delivery_distance?: number | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null
+          delivery_rule?: string | null
           discount?: number
           dispatched_at?: string | null
           id?: string
@@ -1064,6 +1119,8 @@ export type Database = {
           scheduled_for?: string | null
           service_request_id?: string | null
           shop_id?: string | null
+          shop_lat?: number | null
+          shop_lng?: number | null
           status?: string
           subtotal?: number
           tip?: number
@@ -1188,6 +1245,88 @@ export type Database = {
             columns: ["rider_id"]
             isOneToOne: false
             referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_option_groups: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_multi: boolean
+          is_required: boolean
+          name: string
+          product_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_multi?: boolean
+          is_required?: boolean
+          name: string
+          product_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_multi?: boolean
+          is_required?: boolean
+          name?: string
+          product_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_options: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          is_active: boolean
+          name: string
+          price_delta: number
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price_delta?: number
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_delta?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_options_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "product_option_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -2083,6 +2222,10 @@ export type Database = {
         }[]
       }
       approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
+      calculate_delivery_fee: {
+        Args: { p_lat: number; p_lng: number; p_shop_id: string }
+        Returns: Json
+      }
       check_coupon: {
         Args: { p_code: string; p_delivery_fee: number; p_subtotal: number }
         Returns: Json
@@ -2147,6 +2290,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      haversine_km: {
+        Args: { p_lat1: number; p_lat2: number; p_lng1: number; p_lng2: number }
+        Returns: number
+      }
       is_admin: { Args: never; Returns: boolean }
       is_approved_merchant: { Args: { _uid: string }; Returns: boolean }
       merchant_commission_percent: { Args: { _uid: string }; Returns: number }
@@ -2159,6 +2306,8 @@ export type Database = {
           p_delivery_address?: string
           p_delivery_instructions?: string
           p_items: Json
+          p_lat?: number
+          p_lng?: number
           p_payment_method: string
           p_shop_id: string
           p_tip?: number

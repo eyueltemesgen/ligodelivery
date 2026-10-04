@@ -15,6 +15,13 @@
       "when": 1791008832980,
       "tag": "0001_advertising_system",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791153236136,
+      "tag": "0002_delivery_fee_engine",
+      "breakpoints": true
     }
   ]
 }
