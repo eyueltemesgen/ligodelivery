@@ -19,48 +19,47 @@ export type Database = {
           advertiser_id: string | null
           budget: number | null
           created_at: string
-          ends_at: string | null
+          end_date: string | null
           id: string
           name: string
-          package_id: string | null
-          starts_at: string | null
+          notes: string | null
+          objective: string | null
+          start_date: string | null
           status: string
+          updated_at: string
         }
         Insert: {
           advertiser_id?: string | null
           budget?: number | null
           created_at?: string
-          ends_at?: string | null
+          end_date?: string | null
           id?: string
           name: string
-          package_id?: string | null
-          starts_at?: string | null
+          notes?: string | null
+          objective?: string | null
+          start_date?: string | null
           status?: string
+          updated_at?: string
         }
         Update: {
           advertiser_id?: string | null
           budget?: number | null
           created_at?: string
-          ends_at?: string | null
+          end_date?: string | null
           id?: string
           name?: string
-          package_id?: string | null
-          starts_at?: string | null
+          notes?: string | null
+          objective?: string | null
+          start_date?: string | null
           status?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ad_campaigns_advertiser_id_fkey"
+            foreignKeyName: "ad_campaigns_advertiser_id_fkey1"
             columns: ["advertiser_id"]
             isOneToOne: false
             referencedRelation: "advertisers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ad_campaigns_package_id_fkey"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "ad_packages"
             referencedColumns: ["id"]
           },
         ]
@@ -68,28 +67,40 @@ export type Database = {
       ad_clicks: {
         Row: {
           ad_id: string
+          bucket_hour: string
           created_at: string
           device: string | null
-          id: number
-          placement: string | null
+          id: string
+          page_path: string | null
+          placement_key: string
+          session_id: string
+          user_id: string | null
         }
         Insert: {
           ad_id: string
+          bucket_hour?: string
           created_at?: string
           device?: string | null
-          id?: never
-          placement?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
         }
         Update: {
           ad_id?: string
+          bucket_hour?: string
           created_at?: string
           device?: string | null
-          id?: never
-          placement?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "ad_clicks_ad_id_fkey"
+            foreignKeyName: "ad_clicks_ad_id_fkey1"
             columns: ["ad_id"]
             isOneToOne: false
             referencedRelation: "ads"
@@ -100,28 +111,40 @@ export type Database = {
       ad_impressions: {
         Row: {
           ad_id: string
+          bucket_hour: string
           created_at: string
           device: string | null
-          id: number
-          placement: string | null
+          id: string
+          page_path: string | null
+          placement_key: string
+          session_id: string
+          user_id: string | null
         }
         Insert: {
           ad_id: string
+          bucket_hour?: string
           created_at?: string
           device?: string | null
-          id?: never
-          placement?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
         }
         Update: {
           ad_id?: string
+          bucket_hour?: string
           created_at?: string
           device?: string | null
-          id?: never
-          placement?: string | null
+          id?: string
+          page_path?: string | null
+          placement_key?: string
+          session_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "ad_impressions_ad_id_fkey"
+            foreignKeyName: "ad_impressions_ad_id_fkey1"
             columns: ["ad_id"]
             isOneToOne: false
             referencedRelation: "ads"
@@ -132,57 +155,81 @@ export type Database = {
       ad_packages: {
         Row: {
           created_at: string
+          description: string | null
           duration_days: number
           id: string
           is_active: boolean
           name: string
           placements: string[]
           price: number
+          sort_order: number
+          updated_at: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           duration_days?: number
           id?: string
           is_active?: boolean
           name: string
           placements?: string[]
           price?: number
+          sort_order?: number
+          updated_at?: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           duration_days?: number
           id?: string
           is_active?: boolean
           name?: string
           placements?: string[]
           price?: number
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
       ad_placements: {
         Row: {
-          code: string
+          aspect_ratio: string
           created_at: string
+          description: string | null
+          id: string
           is_active: boolean
-          label: string
-          page: string
+          key: string
+          layout: string
+          max_ads: number
+          name: string
           sort_order: number
+          updated_at: string
         }
         Insert: {
-          code: string
+          aspect_ratio?: string
           created_at?: string
+          description?: string | null
+          id?: string
           is_active?: boolean
-          label: string
-          page?: string
+          key: string
+          layout?: string
+          max_ads?: number
+          name: string
           sort_order?: number
+          updated_at?: string
         }
         Update: {
-          code?: string
+          aspect_ratio?: string
           created_at?: string
+          description?: string | null
+          id?: string
           is_active?: boolean
-          label?: string
-          page?: string
+          key?: string
+          layout?: string
+          max_ads?: number
+          name?: string
           sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -259,23 +306,29 @@ export type Database = {
           campaign_id: string | null
           created_at: string
           cta_label: string | null
-          destination_id: string | null
-          destination_type: string
-          destination_url: string | null
-          ends_at: string | null
+          end_at: string | null
           id: string
           image_url: string | null
-          placement: string
+          is_active: boolean
+          link_type: string
+          link_value: string | null
+          name: string
+          placement_key: string
           priority: number
-          starts_at: string | null
+          sort_order: number
+          start_at: string | null
           status: string
           subtitle: string | null
           target_category_id: string | null
           target_device: string
           target_location: string | null
+          target_page: string | null
+          target_product_id: string | null
+          target_service_category_slug: string | null
           target_shop_id: string | null
-          title: string
+          title: string | null
           updated_at: string
+          weight: number
         }
         Insert: {
           ad_type?: string
@@ -283,23 +336,29 @@ export type Database = {
           campaign_id?: string | null
           created_at?: string
           cta_label?: string | null
-          destination_id?: string | null
-          destination_type?: string
-          destination_url?: string | null
-          ends_at?: string | null
+          end_at?: string | null
           id?: string
           image_url?: string | null
-          placement: string
+          is_active?: boolean
+          link_type?: string
+          link_value?: string | null
+          name: string
+          placement_key: string
           priority?: number
-          starts_at?: string | null
+          sort_order?: number
+          start_at?: string | null
           status?: string
           subtitle?: string | null
           target_category_id?: string | null
           target_device?: string
           target_location?: string | null
+          target_page?: string | null
+          target_product_id?: string | null
+          target_service_category_slug?: string | null
           target_shop_id?: string | null
-          title: string
+          title?: string | null
           updated_at?: string
+          weight?: number
         }
         Update: {
           ad_type?: string
@@ -307,55 +366,68 @@ export type Database = {
           campaign_id?: string | null
           created_at?: string
           cta_label?: string | null
-          destination_id?: string | null
-          destination_type?: string
-          destination_url?: string | null
-          ends_at?: string | null
+          end_at?: string | null
           id?: string
           image_url?: string | null
-          placement?: string
+          is_active?: boolean
+          link_type?: string
+          link_value?: string | null
+          name?: string
+          placement_key?: string
           priority?: number
-          starts_at?: string | null
+          sort_order?: number
+          start_at?: string | null
           status?: string
           subtitle?: string | null
           target_category_id?: string | null
           target_device?: string
           target_location?: string | null
+          target_page?: string | null
+          target_product_id?: string | null
+          target_service_category_slug?: string | null
           target_shop_id?: string | null
-          title?: string
+          title?: string | null
           updated_at?: string
+          weight?: number
         }
         Relationships: [
           {
-            foreignKeyName: "ads_advertiser_id_fkey"
+            foreignKeyName: "ads_advertiser_id_fkey1"
             columns: ["advertiser_id"]
             isOneToOne: false
             referencedRelation: "advertisers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ads_campaign_id_fkey"
+            foreignKeyName: "ads_campaign_id_fkey1"
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "ad_campaigns"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ads_placement_fkey"
-            columns: ["placement"]
+            foreignKeyName: "ads_placement_key_fkey"
+            columns: ["placement_key"]
             isOneToOne: false
             referencedRelation: "ad_placements"
-            referencedColumns: ["code"]
+            referencedColumns: ["key"]
           },
           {
-            foreignKeyName: "ads_target_category_id_fkey"
+            foreignKeyName: "ads_target_category_id_fkey1"
             columns: ["target_category_id"]
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ads_target_shop_id_fkey"
+            foreignKeyName: "ads_target_product_id_fkey"
+            columns: ["target_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_target_shop_id_fkey1"
             columns: ["target_shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -365,41 +437,44 @@ export type Database = {
       }
       advertisers: {
         Row: {
+          contact_email: string | null
           contact_name: string | null
+          contact_phone: string | null
           created_at: string
-          email: string | null
           id: string
           is_active: boolean
           name: string
           notes: string | null
-          phone: string | null
           shop_id: string | null
+          updated_at: string
         }
         Insert: {
+          contact_email?: string | null
           contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
-          email?: string | null
           id?: string
           is_active?: boolean
           name: string
           notes?: string | null
-          phone?: string | null
           shop_id?: string | null
+          updated_at?: string
         }
         Update: {
+          contact_email?: string | null
           contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
-          email?: string | null
           id?: string
           is_active?: boolean
           name?: string
           notes?: string | null
-          phone?: string | null
           shop_id?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "advertisers_shop_id_fkey"
+            foreignKeyName: "advertisers_shop_id_fkey1"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -849,7 +924,6 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
-          options: Json
           order_id: string
           product_id: string | null
           product_name: string
@@ -860,7 +934,6 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
-          options?: Json
           order_id: string
           product_id?: string | null
           product_name: string
@@ -871,7 +944,6 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
-          options?: Json
           order_id?: string
           product_id?: string | null
           product_name?: string
@@ -903,16 +975,12 @@ export type Database = {
           coupon_id: string | null
           created_at: string
           customer_id: string
-          customer_lat: number | null
-          customer_lng: number | null
           customer_name: string | null
           customer_phone: string | null
           delivery_address: string | null
-          delivery_distance: number | null
           delivery_fee: number
           delivery_instructions: string | null
           delivery_pin: string | null
-          delivery_rule: string | null
           discount: number
           dispatched_at: string | null
           id: string
@@ -928,8 +996,6 @@ export type Database = {
           scheduled_for: string | null
           service_request_id: string | null
           shop_id: string | null
-          shop_lat: number | null
-          shop_lng: number | null
           status: string
           subtotal: number
           tip: number
@@ -943,16 +1009,12 @@ export type Database = {
           coupon_id?: string | null
           created_at?: string
           customer_id: string
-          customer_lat?: number | null
-          customer_lng?: number | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_address?: string | null
-          delivery_distance?: number | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null
-          delivery_rule?: string | null
           discount?: number
           dispatched_at?: string | null
           id?: string
@@ -968,8 +1030,6 @@ export type Database = {
           scheduled_for?: string | null
           service_request_id?: string | null
           shop_id?: string | null
-          shop_lat?: number | null
-          shop_lng?: number | null
           status?: string
           subtotal?: number
           tip?: number
@@ -983,16 +1043,12 @@ export type Database = {
           coupon_id?: string | null
           created_at?: string
           customer_id?: string
-          customer_lat?: number | null
-          customer_lng?: number | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_address?: string | null
-          delivery_distance?: number | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null
-          delivery_rule?: string | null
           discount?: number
           dispatched_at?: string | null
           id?: string
@@ -1008,8 +1064,6 @@ export type Database = {
           scheduled_for?: string | null
           service_request_id?: string | null
           shop_id?: string | null
-          shop_lat?: number | null
-          shop_lng?: number | null
           status?: string
           subtotal?: number
           tip?: number
@@ -1029,6 +1083,13 @@ export type Database = {
             columns: ["rider_id"]
             isOneToOne: false
             referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
             referencedColumns: ["id"]
           },
           {
@@ -1127,124 +1188,6 @@ export type Database = {
             columns: ["rider_id"]
             isOneToOne: false
             referencedRelation: "riders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      delivery_fee_rules: {
-        Row: {
-          created_at: string
-          fee: number
-          id: string
-          is_active: boolean
-          label: string | null
-          max_distance: number | null
-          min_distance: number
-          priority: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          fee?: number
-          id?: string
-          is_active?: boolean
-          label?: string | null
-          max_distance?: number | null
-          min_distance?: number
-          priority?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          fee?: number
-          id?: string
-          is_active?: boolean
-          label?: string | null
-          max_distance?: number | null
-          min_distance?: number
-          priority?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      product_option_groups: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          is_multi: boolean
-          is_required: boolean
-          name: string
-          product_id: string
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          is_multi?: boolean
-          is_required?: boolean
-          name: string
-          product_id: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          is_multi?: boolean
-          is_required?: boolean
-          name?: string
-          product_id?: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_option_groups_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_options: {
-        Row: {
-          created_at: string
-          group_id: string
-          id: string
-          is_active: boolean
-          name: string
-          price_delta: number
-          sort_order: number
-        }
-        Insert: {
-          created_at?: string
-          group_id: string
-          id?: string
-          is_active?: boolean
-          name: string
-          price_delta?: number
-          sort_order?: number
-        }
-        Update: {
-          created_at?: string
-          group_id?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          price_delta?: number
-          sort_order?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_options_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "product_option_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -2124,11 +2067,22 @@ export type Database = {
           impressions: number
         }[]
       }
-      approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
-      calculate_delivery_fee: {
-        Args: { p_lat: number; p_lng: number; p_shop_id: string }
-        Returns: Json
+      admin_ad_analytics: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: {
+          ad_id: string
+          ad_name: string
+          ad_type: string
+          advertiser_name: string
+          campaign_name: string
+          clicks: number
+          ctr: number
+          impressions: number
+          placement_key: string
+          status: string
+        }[]
       }
+      approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
       check_coupon: {
         Args: { p_code: string; p_delivery_fee: number; p_subtotal: number }
         Returns: Json
@@ -2136,6 +2090,55 @@ export type Database = {
       complete_delivery: {
         Args: { _order_id: string; _pin: string }
         Returns: undefined
+      }
+      eligible_ads: {
+        Args: {
+          p_category?: string
+          p_device?: string
+          p_limit?: number
+          p_location?: string
+          p_page?: string
+          p_placement: string
+          p_product?: string
+          p_service_type?: string
+          p_shop?: string
+        }
+        Returns: {
+          ad_type: string
+          advertiser_id: string | null
+          campaign_id: string | null
+          created_at: string
+          cta_label: string | null
+          end_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_type: string
+          link_value: string | null
+          name: string
+          placement_key: string
+          priority: number
+          sort_order: number
+          start_at: string | null
+          status: string
+          subtitle: string | null
+          target_category_id: string | null
+          target_device: string
+          target_location: string | null
+          target_page: string | null
+          target_product_id: string | null
+          target_service_category_slug: string | null
+          target_shop_id: string | null
+          title: string | null
+          updated_at: string
+          weight: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ads"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       has_role: {
         Args: {
@@ -2147,7 +2150,6 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_approved_merchant: { Args: { _uid: string }; Returns: boolean }
       merchant_commission_percent: { Args: { _uid: string }; Returns: number }
-      owns_entity: { Args: { _entity_id: string; _entity_type: string }; Returns: boolean }
       owns_shop: { Args: { _shop: string }; Returns: boolean }
       place_order: {
         Args: {
@@ -2157,8 +2159,6 @@ export type Database = {
           p_delivery_address?: string
           p_delivery_instructions?: string
           p_items: Json
-          p_lat?: number
-          p_lng?: number
           p_payment_method: string
           p_shop_id: string
           p_tip?: number
@@ -2176,6 +2176,30 @@ export type Database = {
         }
         Returns: string
       }
+      record_ad_click: {
+        Args: {
+          p_ad_id: string
+          p_device?: string
+          p_path?: string
+          p_placement?: string
+          p_session?: string
+        }
+        Returns: undefined
+      }
+      record_ad_impression: {
+        Args: {
+          p_ad_id: string
+          p_device?: string
+          p_path?: string
+          p_placement?: string
+          p_session?: string
+        }
+        Returns: undefined
+      }
+      review_merchant: {
+        Args: { _merchant: string; _notes?: string; _status: string }
+        Returns: undefined
+      }
       review_service_request: {
         Args: {
           p_notes?: string
@@ -2183,10 +2207,6 @@ export type Database = {
           p_request: string
           p_status: string
         }
-        Returns: undefined
-      }
-      review_merchant: {
-        Args: { _merchant: string; _notes?: string; _status: string }
         Returns: undefined
       }
       set_merchant_commission: {
