@@ -49,13 +49,16 @@ export function isShopOpenNow(
   return withinWindow(shop.opens_at, shop.closes_at, now);
 }
 
-/** Human-readable reason a shop is closed, for checkout/lock messaging. */
+/**
+ * Human-readable reason a shop is closed, returned as a translation key so
+ * callers can render it in the active language via `t()`.
+ */
 export function closedReason(
   shop: { is_online?: boolean | null; opens_at?: string | null; closes_at?: string | null },
   hours?: ShopHoursRow[] | null,
 ) {
-  if (shop.is_online === false) return "This shop is temporarily offline.";
+  if (shop.is_online === false) return "shops.closedOffline";
   const today = hours?.find((h) => h.day_of_week === new Date().getDay());
-  if (today?.is_closed) return "This shop is closed today.";
-  return "This shop is currently outside its opening hours.";
+  if (today?.is_closed) return "shops.closedToday";
+  return "shops.closedOutsideHours";
 }

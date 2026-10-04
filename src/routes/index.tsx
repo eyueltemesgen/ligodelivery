@@ -11,7 +11,7 @@ import {
   FALLBACK_SHOPS,
   withFallback,
 } from "@/lib/fallbacks";
-import { bannersQuery, siteContentQuery } from "@/lib/content";
+import { DEFAULT_CONTENT, bannersQuery, siteContentQuery, type SiteContent } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
@@ -22,6 +22,17 @@ import {
 import { ActiveOrderBanner } from "@/components/ligo/ActiveOrderBanner";
 import { StorageImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
+import { useI18n, type TFunction } from "@/lib/i18n";
+
+/**
+ * Prefer admin-customized copy from the database, but fall back to the
+ * translated default when the stored value is still the shipped English text.
+ * This lets the UI translate while preserving intentional admin edits.
+ */
+const copy = (t: TFunction, content: SiteContent | undefined, key: keyof SiteContent, key2: string) => {
+  const db = content?.[key];
+  return db && db !== DEFAULT_CONTENT[key] ? String(db) : t(key2);
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,6 +55,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [quickCategory, setQuickCategory] = useState<string | null>(null);
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     ...categoriesQuery,
@@ -81,29 +93,33 @@ function Home() {
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
           <div>
             <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
-              {c?.hero_badge}
+              {copy(t, c, "hero_badge", "home.heroBadge")}
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
-              {c?.hero_title}
+              {copy(t, c, "hero_title", "home.heroTitle")}
             </h1>
-            <p className="mt-4 max-w-lg text-muted-foreground">{c?.hero_subtitle}</p>
+            <p className="mt-4 max-w-lg text-muted-foreground">
+              {copy(t, c, "hero_subtitle", "home.heroSubtitle")}
+            </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <Link to="/shops">{c?.hero_primary_cta}</Link>
+                <Link to="/shops">{copy(t, c, "hero_primary_cta", "home.heroPrimaryCta")}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/rider/join">{c?.hero_secondary_cta}</Link>
+                <Link to="/rider/join">
+                  {copy(t, c, "hero_secondary_cta", "home.heroSecondaryCta")}
+                </Link>
               </Button>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {[
-                { icon: Clock, t: "30 min average" },
-                { icon: Bike, t: "Local riders" },
-                { icon: ShieldCheck, t: "Verified payments" },
+                { icon: Clock, key: "home.featureAvgTime" },
+                { icon: Bike, key: "home.featureLocalRiders" },
+                { icon: ShieldCheck, key: "home.featureVerifiedPayments" },
               ].map((f) => (
-                <div key={f.t} className="flex items-center gap-2 text-sm font-medium">
-                  <f.icon className="h-4 w-4 text-primary" />
-                  {f.t}
+                <div key={f.key} className="flex items-center gap-2 text-sm font-medium">
+                  <f.icon className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="min-w-0">{t(f.key)}</span>
                 </div>
               ))}
             </div>
@@ -111,7 +127,7 @@ function Home() {
           {heroBanner?.image_url ? (
             <StorageImage
               path={heroBanner.image_url}
-              alt={heroBanner.title || "የኔ Go hero banner"}
+              alt={heroBanner.title || t("home.heroBannerAlt")}
               priority
               className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
             />
@@ -124,10 +140,12 @@ function Home() {
       </section>
 
       <section className="container-ligo py-10">
-        <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">{c?.categories_title}</h2>
-          <Link to="/categories" className="text-sm font-medium text-primary">
-            See all
+        <div className="flex items-end justify-between gap-3">
+          <h2 className="font-display text-2xl font-bold">
+            {copy(t, c, "categories_title", "home.categoriesTitle")}
+          </h2>
+          <Link to="/categories" className="shrink-0 text-sm font-medium text-primary">
+            {t("action.seeAll")}
           </Link>
         </div>
         {categoriesLoading ? (
@@ -138,25 +156,25 @@ function Home() {
           </div>
         ) : (
           <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-            {categories.slice(0, 12).map((c) => (
+            {categories.slice(0, 12).map((cat) => (
               <Link
-                key={c.id}
+                key={cat.id}
                 to="/shops"
-                search={{ category: c.id }}
+                search={{ category: cat.id }}
                 className="overflow-hidden rounded-xl border border-border bg-card text-center shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
               >
                 <StorageImage
-                  path={c.image_url}
-                  alt={c.name}
+                  path={cat.image_url}
+                  alt={cat.name}
                   className="h-20 w-full object-cover"
                 />
-                <p className="p-2 text-xs font-semibold">{c.name}</p>
+                <p className="line-clamp-2 p-2 text-xs font-semibold">{cat.name}</p>
               </Link>
             ))}
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Quick category filter">
+        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label={t("home.quickFilter")}>
           <button
             type="button"
             onClick={() => setQuickCategory(null)}
@@ -166,7 +184,7 @@ function Home() {
                 : "border-border bg-card hover:border-primary/50"
             }`}
           >
-            All
+            {t("home.all")}
           </button>
           {categories.slice(0, 8).map((cat) => (
             <button
@@ -188,7 +206,9 @@ function Home() {
               onClick={() => void navigate({ to: "/shops", search: { category: quickCategory } })}
               className="rounded-full border border-primary/40 bg-primary-soft px-3.5 py-1.5 text-sm font-semibold text-accent-foreground"
             >
-              View all in {categories.find((x) => x.id === quickCategory)?.name ?? "category"} →
+              {t("home.viewAllIn", {
+                category: categories.find((x) => x.id === quickCategory)?.name ?? "",
+              })}
             </button>
           )}
         </div>
@@ -200,16 +220,16 @@ function Home() {
         <section className="container-ligo py-8">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h2 className="font-display text-2xl font-bold">Make every moment count.</h2>
+              <h2 className="font-display text-2xl font-bold">{t("home.specialMomentsTitle")}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Gifts, surprises, catering and decoration — arranged from one place.
+                {t("home.specialMomentsSubtitle")}
               </p>
             </div>
             <Link
               to="/special-moments"
               className="inline-flex items-center gap-1 text-sm font-medium text-primary"
             >
-              Explore Special Moments
+              {t("home.exploreSpecialMoments")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -224,10 +244,12 @@ function Home() {
 
       {offers.length > 0 && (
         <section className="container-ligo py-4">
-          <div className="flex items-end justify-between">
-            <h2 className="font-display text-2xl font-bold">{c?.offers_title}</h2>
-            <Link to="/offers" className="text-sm font-medium text-primary">
-              See all
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="font-display text-2xl font-bold">
+              {copy(t, c, "offers_title", "home.offersTitle")}
+            </h2>
+            <Link to="/offers" className="shrink-0 text-sm font-medium text-primary">
+              {t("action.seeAll")}
             </Link>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -252,10 +274,12 @@ function Home() {
       )}
 
       <section className="container-ligo py-10">
-        <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">{c?.shops_title}</h2>
-          <Link to="/shops" className="text-sm font-medium text-primary">
-            See all
+        <div className="flex items-end justify-between gap-3">
+          <h2 className="font-display text-2xl font-bold">
+            {copy(t, c, "shops_title", "home.shopsTitle")}
+          </h2>
+          <Link to="/shops" className="shrink-0 text-sm font-medium text-primary">
+            {t("action.seeAll")}
           </Link>
         </div>
         {shopsLoading ? (
@@ -270,15 +294,15 @@ function Home() {
           </div>
         )}
         {!shopsLoading && featuredShops.length === 0 && (
-          <p className="mt-5 text-sm text-muted-foreground">
-            No shops in this category yet — try another one.
-          </p>
+          <p className="mt-5 text-sm text-muted-foreground">{t("home.noShopsInCategory")}</p>
         )}
       </section>
 
       {popularLoading ? (
         <section className="container-ligo pb-12">
-          <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
+          <h2 className="font-display text-2xl font-bold">
+            {copy(t, c, "trending_title", "home.trendingTitle")}
+          </h2>
           <div className="mt-5">
             <ProductGridSkeleton count={4} />
           </div>
@@ -286,7 +310,9 @@ function Home() {
       ) : (
         popular.length > 0 && (
           <section className="container-ligo pb-12">
-            <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
+            <h2 className="font-display text-2xl font-bold">
+              {copy(t, c, "trending_title", "home.trendingTitle")}
+            </h2>
             <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {popular.map((p) => (
                 <ProductCard key={p.id} product={p} />
@@ -300,17 +326,29 @@ function Home() {
 
       <section className="container-ligo pb-16">
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
-          <h2 className="font-display text-2xl font-bold">{c?.how_title}</h2>
+          <h2 className="font-display text-2xl font-bold">{copy(t, c, "how_title", "home.howTitle")}</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
             {[
-              { icon: Search, t: c?.how_step1_title, d: c?.how_step1_text },
-              { icon: ShieldCheck, t: c?.how_step2_title, d: c?.how_step2_text },
-              { icon: Bike, t: c?.how_step3_title, d: c?.how_step3_text },
+              {
+                icon: Search,
+                title: copy(t, c, "how_step1_title", "home.howStep1Title"),
+                text: copy(t, c, "how_step1_text", "home.howStep1Text"),
+              },
+              {
+                icon: ShieldCheck,
+                title: copy(t, c, "how_step2_title", "home.howStep2Title"),
+                text: copy(t, c, "how_step2_text", "home.howStep2Text"),
+              },
+              {
+                icon: Bike,
+                title: copy(t, c, "how_step3_title", "home.howStep3Title"),
+                text: copy(t, c, "how_step3_text", "home.howStep3Text"),
+              },
             ].map((s) => (
-              <div key={s.t}>
+              <div key={s.title}>
                 <s.icon className="h-6 w-6" />
-                <p className="mt-2 font-display font-bold">{s.t}</p>
-                <p className="text-sm opacity-90">{s.d}</p>
+                <p className="mt-2 font-display font-bold">{s.title}</p>
+                <p className="text-sm opacity-90">{s.text}</p>
               </div>
             ))}
           </div>

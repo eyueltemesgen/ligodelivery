@@ -30,6 +30,7 @@ import { AdminCommandSearch } from "@/components/admin/CommandSearch";
 import { NotificationsCenter } from "@/components/admin/NotificationsCenter";
 import { AdminUserMenu } from "@/components/admin/AdminUserMenu";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import {
   Sheet,
   SheetContent,
@@ -38,48 +39,49 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
+type NavItem = { to: string; labelKey: string; icon: React.ComponentType<{ className?: string }> };
 
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+const NAV_GROUPS: { labelKey: string; items: NavItem[] }[] = [
   {
-    label: "Operations",
+    labelKey: "admin.ops",
     items: [
-      { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/admin/ops?tab=orders", label: "Orders", icon: ClipboardList },
-      { to: "/admin/map", label: "Live Delivery Map", icon: MapIcon },
+      { to: "/admin", labelKey: "admin.dashboard", icon: LayoutDashboard },
+      { to: "/admin/ops?tab=orders", labelKey: "admin.orders", icon: ClipboardList },
+      { to: "/admin/map", labelKey: "admin.liveMap", icon: MapIcon },
     ],
   },
   {
-    label: "Network",
+    labelKey: "admin.network",
     items: [
-      { to: "/admin/riders", label: "Riders", icon: Bike },
-      { to: "/admin/ops?tab=shops", label: "Merchants", icon: Store },
-      { to: "/admin/ops?tab=customers", label: "Customers", icon: Users },
-      { to: "/admin/ops?tab=products", label: "Products", icon: Package },
-      { to: "/admin/ops?tab=categories", label: "Categories", icon: Tags },
-      { to: "/admin/ops?tab=special-moments", label: "Special Moments", icon: Sparkles },
+      { to: "/admin/riders", labelKey: "admin.riders", icon: Bike },
+      { to: "/admin/ops?tab=shops", labelKey: "admin.merchants", icon: Store },
+      { to: "/admin/ops?tab=customers", labelKey: "admin.customers", icon: Users },
+      { to: "/admin/ops?tab=products", labelKey: "admin.products", icon: Package },
+      { to: "/admin/ops?tab=categories", labelKey: "admin.categories", icon: Tags },
+      { to: "/admin/ops?tab=special-moments", labelKey: "nav.specialMoments", icon: Sparkles },
     ],
   },
   {
-    label: "Finance",
+    labelKey: "admin.finance",
     items: [
-      { to: "/admin/ops?tab=payments", label: "Payments", icon: ShieldCheck },
-      { to: "/admin/financials", label: "Financials & Earnings", icon: Wallet },
-      { to: "/admin/reports", label: "Reports", icon: BarChart3 },
+      { to: "/admin/ops?tab=payments", labelKey: "admin.payments", icon: ShieldCheck },
+      { to: "/admin/financials", labelKey: "admin.financials", icon: Wallet },
+      { to: "/admin/reports", labelKey: "admin.reports", icon: BarChart3 },
     ],
   },
   {
-    label: "Platform",
+    labelKey: "admin.platform",
     items: [
-      { to: "/admin/ops?tab=offers", label: "Offers & Coupons", icon: Percent },
-      { to: "/notifications", label: "Notifications", icon: Bell },
-      { to: "/admin/ops?tab=settings", label: "Settings", icon: Settings },
-      { to: "/admin/ops?tab=system", label: "System Users", icon: Wrench },
+      { to: "/admin/ops?tab=offers", labelKey: "admin.offersCoupons", icon: Percent },
+      { to: "/notifications", labelKey: "nav.notifications", icon: Bell },
+      { to: "/admin/ops?tab=settings", labelKey: "admin.settings", icon: Settings },
+      { to: "/admin/ops?tab=system", labelKey: "admin.systemUsers", icon: Wrench },
     ],
   },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -122,15 +124,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-4">
           {!collapsed && (
             <div>
-              <p className="font-display text-lg font-extrabold text-primary">የኔ Go Admin</p>
-              <p className="text-xs text-muted-foreground">Bishoftu · Hub 01</p>
+              <p className="font-display text-lg font-extrabold text-primary">{t("brand.admin")}</p>
+              <p className="text-xs text-muted-foreground">{t("admin.hub")}</p>
             </div>
           )}
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("admin.expandSidebar") : t("admin.collapseSidebar")}
             onClick={() => setCollapsed((v) => !v)}
             className="h-8 w-8 text-muted-foreground"
           >
@@ -139,16 +141,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="flex-1 space-y-4 overflow-y-auto p-2">
           {NAV_GROUPS.map((group) => (
-            <div key={group.label}>
+            <div key={group.labelKey}>
               {!collapsed && (
                 <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.label}
+                  {t(group.labelKey)}
                 </p>
               )}
               <ul className="space-y-0.5">
                 {group.items.map((item) => {
                   const [to] = item.to.split("?") as [string];
                   const active = item.to === "/admin" ? pathname === "/admin" : pathname === to;
+                  const label = t(item.labelKey);
                   // Nav entries span routes with different search schemas (ops tabs
                   // vs dashboard range), so the link props stay loosely typed here.
                   const linkProps = {
@@ -167,11 +170,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                             ? "bg-primary-soft text-accent-foreground"
                             : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                         }`}
-                        title={item.label}
+                        title={label}
                       >
                         <item.icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="truncate">{item.label}</span>}
-                        {!collapsed && item.label === "Orders" && pendingCount > 0 && (
+                        {!collapsed && <span className="truncate">{label}</span>}
+                        {!collapsed && item.labelKey === "admin.orders" && pendingCount > 0 && (
                           <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
                             {pendingCount}
                           </span>
@@ -189,19 +192,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" className="flex w-[86vw] max-w-xs flex-col p-0 md:hidden">
           <SheetHeader className="border-b border-border px-4 py-4 text-left">
-            <SheetTitle className="font-display text-primary">የኔ Go Admin</SheetTitle>
-            <SheetDescription>Bishoftu · Hub 01</SheetDescription>
+            <SheetTitle className="font-display text-primary">{t("brand.admin")}</SheetTitle>
+            <SheetDescription>{t("admin.hub")}</SheetDescription>
           </SheetHeader>
           <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
             {NAV_GROUPS.map((group) => (
-              <div key={group.label}>
+              <div key={group.labelKey}>
                 <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.label}
+                  {t(group.labelKey)}
                 </p>
                 <ul className="space-y-1">
                   {group.items.map((item) => {
                     const [to] = item.to.split("?") as [string];
                     const active = item.to === "/admin" ? pathname === "/admin" : pathname === to;
+                    const label = t(item.labelKey);
                     const linkProps = {
                       to,
                       ...(item.to.includes("?tab=")
@@ -221,8 +225,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                           }`}
                         >
                           <item.icon className="h-5 w-5 shrink-0" />
-                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                          {item.label === "Orders" && pendingCount > 0 && (
+                          <span className="min-w-0 flex-1 truncate">{label}</span>
+                          {item.labelKey === "admin.orders" && pendingCount > 0 && (
                             <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
                               {pendingCount}
                             </span>
@@ -245,17 +249,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               type="button"
               variant="ghost"
               size="icon"
-              aria-label="Open admin menu"
+              aria-label={t("admin.openMenu")}
               onClick={() => setMobileNavOpen(true)}
             >
               <Menu className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
               <p className="truncate font-display text-base font-extrabold text-primary">
-                የኔ Go Admin
+                {t("brand.admin")}
               </p>
               <p className="truncate text-[11px] text-muted-foreground">
-                {dispatchPaused ? "Dispatch paused" : "All systems operational"}
+                {dispatchPaused ? t("admin.dispatchPaused") : t("admin.allSystems")}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -271,34 +275,34 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className="h-10 w-full justify-start px-3 text-muted-foreground"
             >
               <Search className="h-4 w-4" />
-              <span className="truncate">Search orders, riders, shops…</span>
+              <span className="truncate">{t("admin.searchPlaceholder")}</span>
             </Button>
           </div>
           <div className="hidden items-center gap-3 md:flex">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setSearchOpen(true)}
-              className="h-9 w-full max-w-sm justify-start bg-surface px-3 text-muted-foreground hover:border-primary/50"
-            >
-              <Search className="h-4 w-4" />
-              Search orders, riders, shops…
-              <kbd className="ml-auto rounded border border-border bg-background px-1.5 text-[10px] font-semibold">
-                ⌘K
-              </kbd>
-            </Button>
-            <span
-              className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                dispatchPaused
-                  ? "bg-destructive/10 text-destructive"
-                  : "bg-primary-soft text-accent-foreground"
-              }`}
-            >
-              <Gauge className="h-3.5 w-3.5" />
-              {dispatchPaused ? "Dispatch Paused" : "All Systems Operational"}
-            </span>
-            <NotificationsCenter />
-            <AdminUserMenu />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setSearchOpen(true)}
+            className="h-9 w-full max-w-sm justify-start bg-surface px-3 text-muted-foreground hover:border-primary/50"
+          >
+            <Search className="h-4 w-4" />
+            {t("admin.searchPlaceholder")}
+            <kbd className="ml-auto rounded border border-border bg-background px-1.5 text-[10px] font-semibold">
+              ⌘K
+            </kbd>
+          </Button>
+          <span
+            className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+              dispatchPaused
+                ? "bg-destructive/10 text-destructive"
+                : "bg-primary-soft text-accent-foreground"
+            }`}
+          >
+            <Gauge className="h-3.5 w-3.5" />
+            {dispatchPaused ? t("admin.dispatchPausedTitle") : t("admin.allSystemsTitle")}
+          </span>
+          <NotificationsCenter />
+          <AdminUserMenu />
           </div>
         </header>
         <AdminCommandSearch open={searchOpen} onOpenChange={setSearchOpen} />

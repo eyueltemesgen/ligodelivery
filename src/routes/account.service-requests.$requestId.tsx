@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  REQUEST_STATUS_LABEL,
   acceptServiceQuote,
   addonsTotal,
   placeServiceOrder,
@@ -23,12 +22,14 @@ import {
   serviceRequestQuery,
   type ServiceRequestStatus,
 } from "@/lib/special-moments";
+import { occasionLabel } from "@/lib/service-catalog";
 import { ETB, formatDate } from "@/lib/format";
 import { supabaseErrorMessage } from "@/lib/supa-error";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { AccountState, CardSkeleton, ErrorState } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
 import { StorageImage } from "@/lib/media";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account/service-requests/$requestId")({
@@ -42,12 +43,12 @@ export const Route = createFileRoute("/account/service-requests/$requestId")({
 });
 
 const PAYMENT_METHODS = [
-  { id: "cash", label: "Cash on delivery" },
-  { id: "mobile_money", label: "Mobile Money" },
-  { id: "telebirr", label: "Telebirr" },
-  { id: "cbe", label: "CBE Birr" },
-  { id: "chapa", label: "Chapa" },
-  { id: "boa", label: "Bank of Abyssinia" },
+  { id: "cash", labelKey: "payment.cash" },
+  { id: "mobile_money", labelKey: "payment.mobile_money" },
+  { id: "telebirr", labelKey: "payment.telebirr" },
+  { id: "cbe", labelKey: "payment.cbe" },
+  { id: "chapa", labelKey: "payment.chapa" },
+  { id: "boa", labelKey: "payment.boa" },
 ];
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -63,6 +64,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 function RequestDetailPage() {
   const { requestId } = Route.useParams();
   const { user } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const {
     data: request,
@@ -86,11 +88,11 @@ function RequestDetailPage() {
     return (
       <AccountState
         icon={Send}
-        title="Request not found"
-        description="This request may have been removed or belongs to another account."
+        title={t("requests.notFound")}
+        description={t("requests.notFoundDesc")}
         action={
           <Button asChild>
-            <Link to="/account/service-requests">Back to my requests</Link>
+            <Link to="/account/service-requests">{t("requests.backToMyRequests")}</Link>
           </Button>
         }
       />
@@ -114,7 +116,7 @@ function RequestDetailPage() {
     setBusy(true);
     try {
       await acceptServiceQuote(request.id);
-      toast.success("Quote accepted — you can now complete payment.");
+      toast.success(t("requests.quoteAccepted"));
       await qc.invalidateQueries({ queryKey: ["service-request", requestId] });
       await qc.invalidateQueries({ queryKey: ["service-requests"] });
     } catch (err) {
@@ -133,7 +135,7 @@ function RequestDetailPage() {
         address: request.location ?? undefined,
         instructions: request.special_instructions ?? undefined,
       });
-      toast.success("Order placed — awaiting payment verification");
+      toast.success(t("requests.orderPlaced"));
       await qc.invalidateQueries({ queryKey: ["service-request", requestId] });
       window.location.assign(`/orders/${orderId}`);
     } catch (err) {
@@ -150,13 +152,13 @@ function RequestDetailPage() {
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
-        My requests
+        {t("requests.myRequests")}
       </Link>
 
       <AccountHeader
-        title={service?.name ?? "Special Moments request"}
+        title={service?.name ?? t("requests.requestFallback")}
         description={`${request.request_code} · ${
-          isQuoteType ? "Quote request" : "Booking"
+          isQuoteType ? t("requests.quoteRequest") : t("requests.booking")
         } · ${formatDate(request.created_at)}`}
         action={<StatusPill status={request.status} />}
       />
@@ -180,7 +182,7 @@ function RequestDetailPage() {
                 )}
                 <Button asChild size="sm" variant="outline" className="mt-2">
                   <Link to="/special-moments/service/$serviceId" params={{ serviceId: service.id }}>
-                    View service
+                    {t("requests.viewService")}
                   </Link>
                 </Button>
               </div>
@@ -188,12 +190,18 @@ function RequestDetailPage() {
           )}
 
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">Request details</h2>
+            <h2 className="font-display text-lg font-bold">{t("requests.detailsTitle")}</h2>
             <div className="mt-2">
-              <Row label="Occasion" value={request.occasion} />
-              <Row label="Type" value={request.surprise_type ?? request.event_type} />
               <Row
-                label="Date"
+                label={t("requests.fieldOccasion")}
+                value={occasionLabel(t, request.occasion ?? "")}
+              />
+              <Row
+                label={t("requests.fieldType")}
+                value={request.surprise_type ?? request.event_type}
+              />
+              <Row
+                label={t("requests.fieldDate")}
                 value={
                   request.event_date ? (
                     <span className="inline-flex items-center gap-1">
@@ -204,7 +212,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Time"
+                label={t("requests.fieldTime")}
                 value={
                   request.event_time ? (
                     <span className="inline-flex items-center gap-1">
@@ -215,7 +223,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Location"
+                label={t("requests.fieldLocation")}
                 value={
                   request.location ? (
                     <span className="inline-flex items-center gap-1">
@@ -226,7 +234,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Guests"
+                label={t("requests.fieldGuests")}
                 value={
                   request.guest_count != null ? (
                     <span className="inline-flex items-center gap-1">
@@ -237,15 +245,15 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Recipient"
+                label={t("requests.fieldRecipient")}
                 value={
                   request.recipient_name
-                    ? `${request.recipient_name}${request.is_anonymous ? " (anonymous sender)" : ""}`
+                    ? `${request.recipient_name}${request.is_anonymous ? ` ${t("requests.anonymousSender")}` : ""}`
                     : null
                 }
               />
               <Row
-                label="Theme / colours"
+                label={t("requests.fieldTheme")}
                 value={
                   request.theme ? (
                     <span className="inline-flex items-center gap-1">
@@ -256,7 +264,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Food preferences"
+                label={t("requests.fieldFood")}
                 value={
                   request.food_preferences ? (
                     <span className="inline-flex items-center gap-1">
@@ -266,26 +274,29 @@ function RequestDetailPage() {
                   ) : null
                 }
               />
-              <Row label="Budget" value={request.budget != null ? ETB(request.budget) : null} />
+              <Row
+                label={t("requests.fieldBudget")}
+                value={request.budget != null ? ETB(request.budget) : null}
+              />
             </div>
             {request.message && (
               <div className="mt-3 rounded-lg bg-surface p-3 text-sm">
                 <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <MessageSquareHeart className="h-3.5 w-3.5" />
-                  Message
+                  {t("requests.message")}
                 </p>
                 <p className="mt-1 whitespace-pre-line">{request.message}</p>
               </div>
             )}
             {request.special_instructions && (
               <p className="mt-3 text-sm text-muted-foreground">
-                Instructions: {request.special_instructions}
+                {t("requests.instructions", { text: request.special_instructions })}
               </p>
             )}
             {request.admin_notes && (
               <div className="mt-3 rounded-lg border border-primary/30 bg-primary-soft/50 p-3 text-sm">
                 <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground">
-                  Note from our team
+                  {t("requests.teamNote")}
                 </p>
                 <p className="mt-1">{request.admin_notes}</p>
               </div>
@@ -295,24 +306,35 @@ function RequestDetailPage() {
 
         <aside className="space-y-4 lg:sticky lg:top-20 lg:h-fit">
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">Summary</h2>
+            <h2 className="font-display text-lg font-bold">{t("requests.summary")}</h2>
             <div className="mt-2">
               <Row
-                label={request.quote_amount != null ? "Accepted quote" : "Service price"}
-                value={payableBase != null ? ETB(payableBase) : isQuoteType ? "Pending quote" : "—"}
+                label={
+                  request.quote_amount != null ? t("requests.acceptedQuote") : t("requests.servicePrice")
+                }
+                value={
+                  payableBase != null
+                    ? ETB(payableBase)
+                    : isQuoteType
+                      ? t("requests.pendingQuote")
+                      : "—"
+                }
               />
-              {addons > 0 && <Row label="Add-ons" value={ETB(addons)} />}
-              <Row label="Estimated total" value={total != null ? ETB(total) : "—"} />
+              {addons > 0 && <Row label={t("requests.addons")} value={ETB(addons)} />}
+              <Row
+                label={t("requests.estimatedTotal")}
+                value={total != null ? ETB(total) : "—"}
+              />
             </div>
 
             {request.order_id ? (
               <div className="mt-4 space-y-2">
                 <p className="rounded-lg bg-primary-soft px-3 py-2 text-sm font-medium text-accent-foreground">
-                  Paid order created for this request.
+                  {t("requests.paidOrderCreated")}
                 </p>
                 <Button asChild className="w-full">
                   <Link to="/orders/$orderId" params={{ orderId: request.order_id }}>
-                    View order
+                    {t("action.viewOrder")}
                   </Link>
                 </Button>
               </div>
@@ -323,12 +345,14 @@ function RequestDetailPage() {
                 disabled={busy}
                 onClick={() => void accept()}
               >
-                {busy ? "Accepting…" : `Accept quote — ${ETB(request.quote_amount ?? 0)}`}
+                {busy
+                  ? t("requests.accepting")
+                  : t("requests.acceptQuote", { amount: ETB(request.quote_amount ?? 0) })}
               </Button>
             ) : canPay ? (
               <div className="mt-4 space-y-3">
                 <div>
-                  <p className="mb-2 text-sm font-semibold">Payment method</p>
+                  <p className="mb-2 text-sm font-semibold">{t("requests.paymentMethod")}</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {PAYMENT_METHODS.map((m) => (
                       <button
@@ -340,30 +364,33 @@ function RequestDetailPage() {
                           method === m.id ? "border-primary bg-primary-soft" : "border-border",
                         )}
                       >
-                        {m.label}
+                        {t(m.labelKey)}
                       </button>
                     ))}
                   </div>
                 </div>
                 <Button className="w-full" size="lg" disabled={busy} onClick={() => void pay()}>
-                  {busy ? "Placing order…" : "Continue to payment"}
+                  {busy ? t("requests.placingOrder") : t("requests.continueToPayment")}
                 </Button>
               </div>
             ) : request.status === "quote_requested" ? (
               <p className="mt-4 rounded-lg bg-warning/15 px-3 py-2 text-sm text-warning-foreground">
-                Your quote request is with our team. You will be notified when a quote is ready.
+                {t("requests.quoteWithTeam")}
               </p>
             ) : (
               <p className="mt-4 rounded-lg bg-surface px-3 py-2 text-sm text-muted-foreground">
-                No payment is due right now.
+                {t("requests.noPaymentDue")}
               </p>
             )}
           </section>
 
           <section className="rounded-xl border border-border bg-card p-5 text-sm shadow-card">
-            <h2 className="font-display text-base font-bold">Status history</h2>
+            <h2 className="font-display text-base font-bold">{t("requests.statusHistory")}</h2>
             <p className="mt-2 text-muted-foreground">
-              {REQUEST_STATUS_LABEL[request.status]} · updated {formatDate(request.updated_at)}
+              {t("requests.statusUpdated", {
+                status: t(`reqStatus.${request.status}`),
+                date: formatDate(request.updated_at),
+              })}
             </p>
           </section>
         </aside>
@@ -373,9 +400,10 @@ function RequestDetailPage() {
 }
 
 function StatusPill({ status }: { status: ServiceRequestStatus }) {
+  const { t } = useI18n();
   return (
     <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-accent-foreground">
-      {REQUEST_STATUS_LABEL[status]}
+      {t(`reqStatus.${status}`)}
     </span>
   );
 }

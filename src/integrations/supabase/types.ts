@@ -479,6 +479,39 @@ export type Database = {
         }
         Relationships: []
       }
+      content_translations: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          field: string
+          id: string
+          language: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          field?: string
+          id?: string
+          language: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          field?: string
+          id?: string
+          language?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
@@ -2004,6 +2037,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_approved_merchant: { Args: { _uid: string }; Returns: boolean }
       merchant_commission_percent: { Args: { _uid: string }; Returns: number }
+      owns_entity: { Args: { _entity_id: string; _entity_type: string }; Returns: boolean }
       owns_shop: { Args: { _shop: string }; Returns: boolean }
       place_order: {
         Args: {

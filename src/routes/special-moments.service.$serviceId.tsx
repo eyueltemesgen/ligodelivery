@@ -28,6 +28,7 @@ import { ServiceCard } from "@/components/special-moments/ServiceCards";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/account/States";
 import { ETB } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/special-moments/service/$serviceId")({
   head: () => ({
@@ -45,6 +46,7 @@ export const Route = createFileRoute("/special-moments/service/$serviceId")({
 
 function ServiceDetailPage() {
   const { serviceId } = Route.useParams();
+  const { t } = useI18n();
   const { data: service, isLoading } = useQuery(serviceQuery(serviceId));
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
   const { data: addons = [] } = useQuery(serviceAddonsQuery(serviceId));
@@ -83,7 +85,7 @@ function ServiceDetailPage() {
           className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
-          {category?.name ?? "Special Moments"}
+          {category?.name ?? t("moments.title")}
         </Link>
       </div>
 
@@ -102,7 +104,7 @@ function ServiceDetailPage() {
                 <StorageImage
                   key={`${g}-${i}`}
                   path={g}
-                  alt={`${service.name} image ${i + 2}`}
+                  alt={t("moments.imageAlt", { name: service.name, index: i + 2 })}
                   className="h-24 w-full rounded-xl object-cover"
                 />
               ))}
@@ -114,7 +116,7 @@ function ServiceDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
               <meta.icon className="h-3.5 w-3.5" />
-              {category?.name ?? meta.noun}
+              {category?.name ?? t(meta.nameKey)}
             </span>
             {service.occasion && (
               <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -123,7 +125,7 @@ function ServiceDetailPage() {
             )}
             {isQuote && (
               <span className="rounded-full border border-primary/40 bg-primary-soft px-3 py-1 text-xs font-semibold text-accent-foreground">
-                Quote based
+                {t("moments.quoteBased")}
               </span>
             )}
           </div>
@@ -137,56 +139,56 @@ function ServiceDetailPage() {
               {shop.address && <span>· {shop.address}</span>}
               {isShopOpenNow(shop) ? (
                 <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
-                  Open now
+                  {t("moments.openNow")}
                 </span>
               ) : (
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                  Outside opening hours
+                  {t("moments.outsideHours")}
                 </span>
               )}
             </p>
           )}
 
           <p className="mt-4 font-display text-2xl font-extrabold text-primary">
-            {pricingLabel(service.pricing_type, service.price, service.starting_price)}
+            {pricingLabel(t, service.pricing_type, service.price, service.starting_price)}
           </p>
-          {isQuote && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              Send a request with your requirements — pricing is confirmed before you pay.
-            </p>
-          )}
+          {isQuote && <p className="mt-1 text-sm text-muted-foreground">{t("moments.quoteNote")}</p>}
 
           <div className="mt-5 flex flex-wrap gap-3">
             <Button size="lg" onClick={() => setBookingOpen(true)}>
-              {isQuote ? "Request a quote" : "Book now"}
+              {isQuote ? t("moments.requestQuote") : t("moments.bookNow")}
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/special-moments/search">Browse similar</Link>
+              <Link to="/special-moments/search">{t("moments.browseSimilar")}</Link>
             </Button>
           </div>
 
           <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
             {service.service_area && (
-              <InfoCell icon={MapPin} label="Service area" value={service.service_area} />
+              <InfoCell
+                icon={MapPin}
+                label={t("moments.serviceArea")}
+                value={service.service_area}
+              />
             )}
             {service.lead_time_hours > 0 && (
               <InfoCell
                 icon={Clock}
-                label="Notice required"
-                value={`${service.lead_time_hours} hours`}
+                label={t("moments.noticeRequired")}
+                value={t("moments.hoursCount", { hours: service.lead_time_hours })}
               />
             )}
             {service.available_from && (
               <InfoCell
                 icon={CalendarDays}
-                label="Available from"
+                label={t("moments.availableFrom")}
                 value={new Date(service.available_from).toLocaleDateString("en-GB")}
               />
             )}
             {service.available_to && (
               <InfoCell
                 icon={CalendarDays}
-                label="Available until"
+                label={t("moments.availableUntil")}
                 value={new Date(service.available_to).toLocaleDateString("en-GB")}
               />
             )}
@@ -198,7 +200,7 @@ function ServiceDetailPage() {
         <div className="space-y-6">
           {service.description && (
             <div>
-              <h2 className="font-display text-xl font-bold">About this service</h2>
+              <h2 className="font-display text-xl font-bold">{t("moments.aboutService")}</h2>
               <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
                 {service.description}
               </p>
@@ -207,7 +209,7 @@ function ServiceDetailPage() {
 
           {service.included_items.length > 0 && (
             <div>
-              <h2 className="font-display text-xl font-bold">What&apos;s included</h2>
+              <h2 className="font-display text-xl font-bold">{t("moments.whatsIncluded")}</h2>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                 {service.included_items.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm">
@@ -221,7 +223,7 @@ function ServiceDetailPage() {
 
           {addons.length > 0 && (
             <div>
-              <h2 className="font-display text-xl font-bold">Optional add-ons</h2>
+              <h2 className="font-display text-xl font-bold">{t("moments.optionalAddons")}</h2>
               <ul className="mt-3 space-y-2">
                 {addons.map((a) => (
                   <li
@@ -242,23 +244,19 @@ function ServiceDetailPage() {
           )}
 
           <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">How it works</h2>
+            <h2 className="font-display text-lg font-bold">{t("moments.howItWorks")}</h2>
             <ol className="mt-3 space-y-3 text-sm text-muted-foreground">
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                Share your occasion, date, location and any customisation.
+                {t("moments.howItWorksShare")}
               </li>
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                {isQuote
-                  ? "Our team confirms pricing and sends a quote you can accept."
-                  : "Confirm your details and continue to the secure payment step."}
+                {isQuote ? t("moments.howItWorksQuote2") : t("moments.howItWorksFixed2")}
               </li>
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                {isQuote
-                  ? "Pay once you accept the quote, then we prepare your service."
-                  : "We prepare and deliver your service on the scheduled date."}
+                {isQuote ? t("moments.howItWorksQuote3") : t("moments.howItWorksFixed3")}
               </li>
             </ol>
           </div>
@@ -271,28 +269,30 @@ function ServiceDetailPage() {
                 <meta.icon className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-display font-bold">{isQuote ? "Request a quote" : "Book now"}</p>
+                <p className="font-display font-bold">
+                  {isQuote ? t("moments.requestQuote") : t("moments.bookNow")}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {isQuote ? "Free to request" : "Pay after confirming details"}
+                  {isQuote ? t("moments.freeToRequest") : t("moments.payAfterConfirm")}
                 </p>
               </div>
             </div>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                Tell us the occasion and guests
+                {t("moments.tellOccasionGuests")}
               </li>
               <li className="flex items-center gap-2">
                 <Palette className="h-4 w-4 text-primary" />
-                Add customisation and a message
+                {t("moments.addCustomisation")}
               </li>
               <li className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                Pick your date and time
+                {t("moments.pickDateTime")}
               </li>
             </ul>
             <Button className="mt-4 w-full" size="lg" onClick={() => setBookingOpen(true)}>
-              {isQuote ? "Request a quote" : "Book now"}
+              {isQuote ? t("moments.requestQuote") : t("moments.bookNow")}
             </Button>
           </div>
         </aside>
@@ -300,7 +300,9 @@ function ServiceDetailPage() {
 
       {others.length > 0 && (
         <section className="container-ligo pb-16">
-          <h2 className="font-display text-xl font-bold">More in {category?.name ?? meta.noun}</h2>
+          <h2 className="font-display text-xl font-bold">
+            {t("moments.moreIn", { category: category?.name ?? t(meta.nameKey) })}
+          </h2>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {others.map((s) => (
               <ServiceCard key={s.id} service={s} />

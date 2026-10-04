@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account/addresses")({
   head: () => ({
@@ -78,6 +79,7 @@ const EMPTY_FORM: FormState = {
 
 function AddressesPage() {
   const { user, profile } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const { data = [], isLoading, isError, refetch } = useQuery(addressesQuery(user?.id));
   const [form, setForm] = useState<FormState | null>(null);
@@ -113,11 +115,11 @@ function AddressesPage() {
   const save = async () => {
     if (!form || !user) return;
     if (!form.address.trim()) {
-      toast.error("Street / landmark is required");
+      toast.error(t("addresses.streetRequired"));
       return;
     }
     if (form.phone.trim() && form.phone.trim().length < 9) {
-      toast.error("Enter a valid phone number");
+      toast.error(t("addresses.invalidPhone"));
       return;
     }
     setBusy(true);
@@ -157,7 +159,7 @@ function AddressesPage() {
     }
     setForm(null);
     invalidate();
-    toast.success(form.id ? "Address updated" : "Address saved");
+    toast.success(form.id ? t("addresses.updated") : t("addresses.saved"));
   };
 
   const makeDefault = async (a: AddressRow) => {
@@ -179,7 +181,7 @@ function AddressesPage() {
       return;
     }
     invalidate();
-    toast.success("Default address updated");
+    toast.success(t("addresses.defaultUpdated"));
   };
 
   const remove = async () => {
@@ -193,18 +195,18 @@ function AddressesPage() {
       return;
     }
     invalidate();
-    toast.success("Address removed");
+    toast.success(t("addresses.removed"));
   };
 
   return (
     <>
       <AccountHeader
-        title="Delivery addresses"
-        description="Save the places you order to so checkout takes seconds."
+        title={t("addresses.title")}
+        description={t("addresses.subtitle")}
         action={
           <Button size="sm" onClick={openNew}>
             <Plus className="mr-1.5 h-4 w-4" />
-            Add address
+            {t("addresses.add")}
           </Button>
         }
       />
@@ -216,12 +218,12 @@ function AddressesPage() {
       ) : data.length === 0 ? (
         <AccountState
           icon={MapPin}
-          title="No saved addresses"
-          description="Add your home, work or any spot in Bishoftu to speed up checkout."
+          title={t("addresses.none")}
+          description={t("addresses.noneDesc")}
           action={
             <Button onClick={openNew}>
               <Plus className="mr-1.5 h-4 w-4" />
-              Add your first address
+              {t("addresses.addFirst")}
             </Button>
           }
         />
@@ -242,7 +244,7 @@ function AddressesPage() {
                 {a.is_default && (
                   <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-accent-foreground">
                     <Star className="h-3 w-3 fill-primary text-primary" />
-                    Default
+                    {t("common.default")}
                   </span>
                 )}
               </div>
@@ -251,7 +253,9 @@ function AddressesPage() {
                 {[a.area, a.city].filter(Boolean).join(", ")}
               </p>
               {a.instructions && (
-                <p className="mt-1 text-xs text-muted-foreground">Note: {a.instructions}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("addresses.note", { text: a.instructions })}
+                </p>
               )}
               {(a.full_name || a.phone) && (
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -267,12 +271,12 @@ function AddressesPage() {
                     onClick={() => void makeDefault(a)}
                   >
                     <Check className="mr-1.5 h-3.5 w-3.5" />
-                    Set default
+                    {t("addresses.setDefault")}
                   </Button>
                 )}
                 <Button size="sm" variant="ghost" onClick={() => openEdit(a)}>
                   <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                  Edit
+                  {t("action.edit")}
                 </Button>
                 <Button
                   size="sm"
@@ -281,7 +285,7 @@ function AddressesPage() {
                   onClick={() => setDeleteTarget(a)}
                 >
                   <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                  Delete
+                  {t("action.delete")}
                 </Button>
               </div>
             </li>
@@ -292,10 +296,8 @@ function AddressesPage() {
       <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{form?.id ? "Edit address" : "Add a delivery address"}</DialogTitle>
-            <DialogDescription>
-              We deliver across Bishoftu. Add a clear landmark to help your rider.
-            </DialogDescription>
+            <DialogTitle>{form?.id ? t("addresses.editTitle") : t("addresses.addTitle")}</DialogTitle>
+            <DialogDescription>{t("addresses.dialogDesc")}</DialogDescription>
           </DialogHeader>
           {form && (
             <form
@@ -307,16 +309,16 @@ function AddressesPage() {
             >
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="label">Label</Label>
+                  <Label htmlFor="label">{t("addresses.label")}</Label>
                   <Input
                     id="label"
                     value={form.label}
                     onChange={(e) => setForm({ ...form, label: e.target.value })}
-                    placeholder="Home, Work…"
+                    placeholder={t("addresses.labelPlaceholder")}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="area">Area / Kebele</Label>
+                  <Label htmlFor="area">{t("addresses.area")}</Label>
                   <select
                     id="area"
                     value={form.area}
@@ -325,25 +327,25 @@ function AddressesPage() {
                   >
                     {AREAS.map((a) => (
                       <option key={a} value={a}>
-                        {a}
+                        {a === "Other" ? t("addresses.otherArea") : a}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="street">Street / landmark</Label>
+                <Label htmlFor="street">{t("addresses.street")}</Label>
                 <Input
                   id="street"
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder="e.g. near Bishoftu Hospital, blue gate"
+                  placeholder={t("addresses.streetPlaceholder")}
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="rec-name">Recipient name</Label>
+                  <Label htmlFor="rec-name">{t("addresses.recipientName")}</Label>
                   <Input
                     id="rec-name"
                     value={form.full_name}
@@ -351,7 +353,7 @@ function AddressesPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="rec-phone">Phone</Label>
+                  <Label htmlFor="rec-phone">{t("addresses.phone")}</Label>
                   <Input
                     id="rec-phone"
                     value={form.phone}
@@ -362,13 +364,13 @@ function AddressesPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="instr">Delivery instructions</Label>
+                <Label htmlFor="instr">{t("addresses.instructions")}</Label>
                 <Textarea
                   id="instr"
                   value={form.instructions}
                   onChange={(e) => setForm({ ...form, instructions: e.target.value })}
                   rows={2}
-                  placeholder="e.g. call on arrival, 3rd floor"
+                  placeholder={t("addresses.instructionsPlaceholder")}
                 />
               </div>
               <label className="flex items-center gap-2 text-sm">
@@ -378,14 +380,18 @@ function AddressesPage() {
                   onChange={(e) => setForm({ ...form, is_default: e.target.checked })}
                   className="h-4 w-4 rounded border-border"
                 />
-                Make this my default address
+                {t("addresses.makeDefault")}
               </label>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setForm(null)}>
-                  Cancel
+                  {t("action.cancel")}
                 </Button>
                 <Button type="submit" disabled={busy}>
-                  {busy ? "Saving…" : form.id ? "Save changes" : "Save address"}
+                  {busy
+                    ? t("action.saving")
+                    : form.id
+                      ? t("action.saveChanges")
+                      : t("addresses.saveAddress")}
                 </Button>
               </DialogFooter>
             </form>
@@ -396,14 +402,13 @@ function AddressesPage() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this address?</AlertDialogTitle>
+            <AlertDialogTitle>{t("addresses.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteTarget?.address} will be removed from your saved addresses. This can't be
-              undone.
+              {t("addresses.deleteBody", { address: deleteTarget?.address ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={busy}>{t("action.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -412,7 +417,7 @@ function AddressesPage() {
               disabled={busy}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {busy ? "Deleting…" : "Delete"}
+              {busy ? t("addresses.deleting") : t("action.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

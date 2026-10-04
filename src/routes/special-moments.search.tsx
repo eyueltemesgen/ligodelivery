@@ -10,10 +10,12 @@ import {
   type ServiceFilters,
 } from "@/lib/special-moments";
 import { ServiceCategoryPill, ServiceCard } from "@/components/special-moments/ServiceCards";
+import { occasionLabel } from "@/lib/service-catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GridSkeleton } from "@/components/account/States";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type SearchState = {
@@ -53,6 +55,7 @@ const OCCASION_OPTIONS = [...OCCASIONS, ...HOLIDAY_OCCASIONS];
 function SpecialMomentsSearch() {
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
 
   const [term, setTerm] = useState(search.q ?? "");
@@ -98,10 +101,8 @@ function SpecialMomentsSearch() {
     <div>
       <section className="border-b border-border bg-surface">
         <div className="container-ligo py-8">
-          <h1 className="font-display text-3xl font-extrabold">Find a Special Moment</h1>
-          <p className="mt-1 text-muted-foreground">
-            Search gifts, surprises, catering and decoration by occasion, price and location.
-          </p>
+          <h1 className="font-display text-3xl font-extrabold">{t("moments.searchTitle")}</h1>
+          <p className="mt-1 text-muted-foreground">{t("moments.searchBody")}</p>
 
           <form onSubmit={submit} className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
             <div className="relative">
@@ -109,29 +110,29 @@ function SpecialMomentsSearch() {
               <Input
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
-                placeholder="Birthday gift, holiday gift, wedding decoration…"
+                placeholder={t("moments.searchPlaceholder")}
                 className="h-11 pl-9"
-                aria-label="Search Special Moments"
+                aria-label={t("moments.searchAria")}
               />
             </div>
             <Button type="submit" size="lg" className="h-11">
-              Search
+              {t("action.search")}
             </Button>
             <div className="grid gap-3 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto]">
               <div className="space-y-1.5">
                 <Label htmlFor="sm-area" className="text-xs">
-                  Location
+                  {t("moments.location")}
                 </Label>
                 <Input
                   id="sm-area"
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  placeholder="Area or town"
+                  placeholder={t("moments.locationPlaceholder")}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sm-max" className="text-xs">
-                  Max price (ETB)
+                  {t("moments.maxPrice")}
                 </Label>
                 <Input
                   id="sm-max"
@@ -139,13 +140,13 @@ function SpecialMomentsSearch() {
                   min={0}
                   value={max}
                   onChange={(e) => setMax(e.target.value)}
-                  placeholder="Any"
+                  placeholder={t("moments.anyPrice")}
                 />
               </div>
               <div className="flex items-end">
                 <Button type="submit" variant="outline" className="w-full sm:w-auto">
                   <SlidersHorizontal className="mr-2 h-4 w-4" />
-                  Apply
+                  {t("moments.apply")}
                 </Button>
               </div>
             </div>
@@ -162,7 +163,7 @@ function SpecialMomentsSearch() {
                   : "border-border bg-card",
               )}
             >
-              All categories
+              {t("moments.allCategories")}
             </button>
             {categories.map((c) => (
               <button
@@ -192,7 +193,7 @@ function SpecialMomentsSearch() {
                   : "border-border text-muted-foreground",
               )}
             >
-              Any occasion
+              {t("moments.anyOccasion")}
             </button>
             {OCCASION_OPTIONS.map((o) => (
               <button
@@ -206,7 +207,7 @@ function SpecialMomentsSearch() {
                     : "border-border text-muted-foreground",
                 )}
               >
-                {o}
+                {occasionLabel(t, o)}
               </button>
             ))}
           </div>
@@ -216,8 +217,10 @@ function SpecialMomentsSearch() {
       <section className="container-ligo py-8">
         <p className="text-sm text-muted-foreground">
           {isLoading
-            ? "Searching…"
-            : `${services.length} service${services.length === 1 ? "" : "s"} found`}
+            ? t("moments.searching")
+            : services.length === 1
+              ? t("moments.resultsOne", { count: services.length })
+              : t("moments.resultsMany", { count: services.length })}
         </p>
         {isLoading ? (
           <div className="mt-5">
@@ -226,16 +229,16 @@ function SpecialMomentsSearch() {
         ) : services.length === 0 ? (
           <div className="mt-5 rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
             <Search className="mx-auto h-7 w-7 text-muted-foreground" />
-            <p className="mt-3 font-display font-bold">Nothing matched your search</p>
+            <p className="mt-3 font-display font-bold">{t("moments.nothingMatched")}</p>
             <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-              Try a different occasion, category or price range. New services are added regularly.
+              {t("moments.nothingMatchedBody")}
             </p>
             <Button
               variant="outline"
               className="mt-5"
               onClick={() => void navigate({ to: "/special-moments/search", search: {} })}
             >
-              Clear filters
+              {t("action.clearFilters")}
             </Button>
           </div>
         ) : (
@@ -248,7 +251,7 @@ function SpecialMomentsSearch() {
 
         {categories.length > 0 && (
           <div className="mt-10">
-            <h2 className="font-display text-lg font-bold">Jump to a category</h2>
+            <h2 className="font-display text-lg font-bold">{t("moments.jumpToCategory")}</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {categories.map((c) => (
                 <ServiceCategoryPill key={c.id} category={c} />

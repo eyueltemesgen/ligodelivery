@@ -21,11 +21,12 @@ import { categoriesQuery, type Product, type Shop } from "@/lib/queries";
 import { ETB } from "@/lib/format";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders";
 import { sounds } from "@/lib/audio";
+import { useI18n } from "@/lib/i18n";
 import { uploadImage } from "@/lib/media";
 import {
   MERCHANT_NEXT_STATUS,
-  MERCHANT_STATUS_LABEL,
-  PROMOTION_LABEL,
+  MERCHANT_STATUS_KEY,
+  PROMOTION_KEY,
   merchantProfileQuery,
   type MerchantOrder,
   type MerchantPayout,
@@ -66,19 +67,20 @@ export const Route = createFileRoute("/merchant")({
 
 function MerchantPage() {
   const { user, loading, isAdmin } = useAuth();
+  const { t } = useI18n();
   const { data: merchant, isLoading } = useQuery(merchantProfileQuery(user?.id));
 
   if (loading || isLoading)
-    return <div className="container-ligo py-16 text-muted-foreground">Loading…</div>;
+    return <div className="container-ligo py-16 text-muted-foreground">{t("merchant.loading")}</div>;
 
   if (!user)
     return (
       <Notice
         icon={ShieldAlert}
-        title="Sign in to your merchant account"
+        title={t("merchant.signInTitle")}
         action={
           <Button asChild>
-            <Link to="/merchant/login">Merchant sign-in</Link>
+            <Link to="/merchant/login">{t("merchant.signInCta")}</Link>
           </Button>
         }
       />
@@ -88,11 +90,11 @@ function MerchantPage() {
     return (
       <Notice
         icon={Store}
-        title="You don't have a merchant account yet"
-        body="Register your shop and the የኔ Go team will review it."
+        title={t("merchant.noAccountTitle")}
+        body={t("merchant.noAccountBody")}
         action={
           <Button asChild>
-            <Link to="/merchant/join">Become a merchant</Link>
+            <Link to="/merchant/join">{t("merchant.becomeMerchant")}</Link>
           </Button>
         }
       />
@@ -102,17 +104,19 @@ function MerchantPage() {
     return (
       <Notice
         icon={Clock}
-        title={`Application ${MERCHANT_STATUS_LABEL[merchant.status].toLowerCase()}`}
+        title={t("merchant.applicationStatus", {
+          status: t(MERCHANT_STATUS_KEY[merchant.status]).toLowerCase(),
+        })}
         body={
           merchant.review_notes ??
           (merchant.status === "rejected"
-            ? "Please update your details and submit again."
-            : "The የኔ Go team is reviewing your shop. You'll be notified when it's approved.")
+            ? t("merchant.rejectedBody")
+            : t("merchant.reviewingBody"))
         }
         action={
           merchant.status === "rejected" || merchant.status === "pending" ? (
             <Button asChild variant="outline">
-              <Link to="/merchant/join">Update my application</Link>
+              <Link to="/merchant/join">{t("merchant.updateApplication")}</Link>
             </Button>
           ) : undefined
         }
@@ -147,6 +151,7 @@ function Notice({
 
 function MerchantDashboard() {
   const { user, isAdmin } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const { data: merchant } = useQuery(merchantProfileQuery(user?.id));
 
@@ -228,8 +233,8 @@ function MerchantDashboard() {
       const latest = activeOrders[0];
       if (latest) {
         sounds.newOrder();
-        toast.success(`New order ${latest.order_code}`, {
-          description: `Total ${ETB(latest.total)}`,
+        toast.success(t("merchant.newOrderToast", { code: latest.order_code }), {
+          description: t("merchant.orderTotal", { amount: ETB(latest.total) }),
         });
       }
     }
@@ -276,7 +281,7 @@ function MerchantDashboard() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["merchant-orders"] });
-    toast.success(`Order moved to ${STATUS_LABEL[next]}`);
+    toast.success(t("merchant.orderMoved", { status: STATUS_LABEL[next] }));
   };
 
   const toggleOnline = async (shopId: string, value: boolean) => {
@@ -286,7 +291,7 @@ function MerchantDashboard() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["merchant-shops"] });
-    toast.success(value ? "Store open — customers can order" : "Store closed for new orders");
+    toast.success(value ? t("merchant.storeOpenToast") : t("merchant.storeClosedToast"));
   };
 
   return (
@@ -294,16 +299,14 @@ function MerchantDashboard() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-extrabold sm:text-3xl">
-            {merchant?.business_name ?? shops[0]?.name ?? "Merchant dashboard"}
+            {merchant?.business_name ?? shops[0]?.name ?? t("merchant.dashboardFallback")}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Live orders, catalog, promotions and earnings for your store.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("merchant.dashboardSubtitle")}</p>
         </div>
         {shops[0] && (
           <label className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-2.5">
             <span className="text-sm font-medium">
-              {shops[0].is_online ? "🟢 Store open" : "⚫ Store closed"}
+              {shops[0].is_online ? `🟢 ${t("merchant.storeOpen")}` : `⚫ ${t("merchant.storeClosed")}`}
             </span>
             <Switch
               checked={shops[0].is_online}
@@ -315,40 +318,40 @@ function MerchantDashboard() {
 
       <Tabs defaultValue="overview" className="mt-6">
         <TabsList className="flex w-full flex-nowrap overflow-x-auto">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">{t("merchant.tabOverview")}</TabsTrigger>
           <TabsTrigger value="orders">
-            <BellRing className="mr-1.5 h-4 w-4" /> Orders ({activeOrders.length})
+            <BellRing className="mr-1.5 h-4 w-4" /> {t("merchant.tabOrders")} ({activeOrders.length})
           </TabsTrigger>
           <TabsTrigger value="products">
-            <PackageCheck className="mr-1.5 h-4 w-4" /> Products
+            <PackageCheck className="mr-1.5 h-4 w-4" /> {t("merchant.tabProducts")}
           </TabsTrigger>
-          <TabsTrigger value="shop">Shop</TabsTrigger>
+          <TabsTrigger value="shop">{t("merchant.tabShop")}</TabsTrigger>
           <TabsTrigger value="promotions">
-            <Megaphone className="mr-1.5 h-4 w-4" /> Promote
+            <Megaphone className="mr-1.5 h-4 w-4" /> {t("merchant.tabPromote")}
           </TabsTrigger>
           <TabsTrigger value="earnings">
-            <Wallet className="mr-1.5 h-4 w-4" /> Earnings
+            <Wallet className="mr-1.5 h-4 w-4" /> {t("merchant.tabEarnings")}
           </TabsTrigger>
         </TabsList>
 
         {/* OVERVIEW */}
         <TabsContent value="overview" className="mt-6 space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Today's orders" value={String(todays.length)} />
+            <Stat label={t("merchant.statTodayOrders")} value={String(todays.length)} />
             <Stat
-              label="Today's sales"
+              label={t("merchant.statTodaySales")}
               value={ETB(todays.reduce((s, o) => s + Number(o.total), 0))}
             />
-            <Stat label="Active orders" value={String(activeOrders.length)} />
-            <Stat label="Completed" value={String(delivered.length)} />
-            <Stat label="Cancelled" value={String(cancelled.length)} />
-            <Stat label="Products" value={String(products.length)} />
-            <Stat label="Average order" value={ETB(aov)} />
-            <Stat label="Net earnings" value={ETB(net)} />
+            <Stat label={t("merchant.statActiveOrders")} value={String(activeOrders.length)} />
+            <Stat label={t("merchant.statCompleted")} value={String(delivered.length)} />
+            <Stat label={t("merchant.statCancelled")} value={String(cancelled.length)} />
+            <Stat label={t("merchant.statProducts")} value={String(products.length)} />
+            <Stat label={t("merchant.statAverageOrder")} value={ETB(aov)} />
+            <Stat label={t("merchant.statNetEarnings")} value={ETB(net)} />
           </div>
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold">
-              <LineChart className="h-4 w-4 text-primary" /> Last 7 days
+              <LineChart className="h-4 w-4 text-primary" /> {t("merchant.last7Days")}
             </h2>
             <WeeklyBars orders={orders} />
           </section>
@@ -357,7 +360,7 @@ function MerchantDashboard() {
         {/* ORDERS */}
         <TabsContent value="orders" className="mt-6 space-y-3">
           {activeOrders.length === 0 ? (
-            <Empty text="No active orders right now. New orders appear here instantly." />
+            <Empty text={t("merchant.noActiveOrders")} />
           ) : (
             activeOrders.map((o) => {
               const next = MERCHANT_NEXT_STATUS[o.status];
@@ -378,7 +381,7 @@ function MerchantDashboard() {
                         </span>
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {o.customer_name ?? "Customer"} · {o.customer_phone ?? "—"} ·{" "}
+                        {o.customer_name ?? t("merchant.customerFallback")} · {o.customer_phone ?? "—"} ·{" "}
                         {new Date(o.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -395,11 +398,11 @@ function MerchantDashboard() {
                       <span className="font-display text-lg font-bold">{ETB(o.total)}</span>
                       {next ? (
                         <Button size="sm" onClick={() => void advance(o.id, next.to)}>
-                          {next.label}
+                          {t(next.labelKey)}
                         </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">
-                          Waiting on the rider / የኔ Go team
+                          {t("merchant.waitingOnRider")}
                         </span>
                       )}
                     </div>
@@ -420,7 +423,7 @@ function MerchantDashboard() {
           {shops.map((s) => (
             <ShopEditor key={s.id} shop={s} />
           ))}
-          {shops.length === 0 && <Empty text="No shop is linked to your account yet." />}
+          {shops.length === 0 && <Empty text={t("merchant.noShopLinked")} />}
         </TabsContent>
 
         {/* PROMOTIONS */}
@@ -436,31 +439,31 @@ function MerchantDashboard() {
         {/* EARNINGS */}
         <TabsContent value="earnings" className="mt-6 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Total sales (delivered)" value={ETB(revenue)} />
+            <Stat label={t("merchant.totalSalesDelivered")} value={ETB(revenue)} />
             <Stat
-              label={`የኔ Go commission (${Number(merchant?.commission_percent ?? 10)}%)`}
+              label={t("merchant.commissionLabel", {
+                percent: Number(merchant?.commission_percent ?? 10),
+              })}
               value={ETB(commission)}
             />
-            <Stat label="Your net amount" value={ETB(net)} />
-            <Stat label="Paid out" value={ETB(paidOut)} />
+            <Stat label={t("merchant.yourNetAmount")} value={ETB(net)} />
+            <Stat label={t("merchant.paidOut")} value={ETB(paidOut)} />
           </div>
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">Payout history</h2>
+            <h2 className="font-display text-lg font-bold">{t("merchant.payoutHistory")}</h2>
             {payouts.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                No payouts recorded yet. የኔ Go settles merchant balances manually.
-              </p>
+              <p className="mt-3 text-sm text-muted-foreground">{t("merchant.noPayouts")}</p>
             ) : (
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-left text-xs uppercase text-muted-foreground">
                     <tr>
-                      <th className="py-2">Date</th>
-                      <th>Gross</th>
-                      <th>Commission</th>
-                      <th>Net</th>
-                      <th>Status</th>
-                      <th>Reference</th>
+                      <th className="py-2">{t("merchant.colDate")}</th>
+                      <th>{t("merchant.colGross")}</th>
+                      <th>{t("merchant.colCommission")}</th>
+                      <th>{t("merchant.colNet")}</th>
+                      <th>{t("merchant.colStatus")}</th>
+                      <th>{t("merchant.colReference")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -581,13 +584,14 @@ const emptyDraft: ProductDraft = {
 function ProductManager({ shopId, products }: { shopId: string | undefined; products: Product[] }) {
   const qc = useQueryClient();
   const { user } = useAuth();
+  const { t } = useI18n();
   const { data: categories = [] } = useQuery(categoriesQuery);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<ProductDraft>(emptyDraft);
   const [image, setImage] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (!shopId) return <Empty text="No shop linked yet — products appear once your shop is live." />;
+  if (!shopId) return <Empty text={t("merchant.noShopProducts")} />;
 
   const openNew = () => {
     setDraft(emptyDraft);
@@ -611,12 +615,12 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
 
   const save = async () => {
     if (!draft.name.trim()) {
-      toast.error("Product name is required");
+      toast.error(t("merchant.productNameRequired"));
       return;
     }
     const price = Number(draft.price);
     if (!Number.isFinite(price) || price < 0) {
-      toast.error("Enter a valid price");
+      toast.error(t("merchant.invalidPrice"));
       return;
     }
     setBusy(true);
@@ -636,11 +640,11 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
         ? await supabase.from("products").update(payload).eq("id", draft.id)
         : await supabase.from("products").insert(payload);
       if (error) throw error;
-      toast.success(draft.id ? "Product updated" : "Product added");
+      toast.success(draft.id ? t("merchant.productUpdated") : t("merchant.productAdded"));
       setOpen(false);
       void qc.invalidateQueries({ queryKey: ["merchant-products"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save the product");
+      toast.error(err instanceof Error ? err.message : t("merchant.productSaveFailed"));
     } finally {
       setBusy(false);
     }
@@ -652,7 +656,7 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
       toast.error(error.message);
       return;
     }
-    toast.success("Product deleted");
+    toast.success(t("merchant.productDeleted"));
     void qc.invalidateQueries({ queryKey: ["merchant-products"] });
   };
 
@@ -668,14 +672,16 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
   return (
     <>
       <div className="flex justify-between gap-3">
-        <p className="text-sm text-muted-foreground">{products.length} products</p>
+        <p className="text-sm text-muted-foreground">
+          {t("merchant.productsCount", { count: products.length })}
+        </p>
         <Button size="sm" onClick={openNew}>
-          <Plus className="mr-1.5 h-4 w-4" /> Add product
+          <Plus className="mr-1.5 h-4 w-4" /> {t("merchant.addProduct")}
         </Button>
       </div>
 
       {products.length === 0 ? (
-        <Empty text="No products yet — add your first item so customers can order." />
+        <Empty text={t("merchant.noProducts")} />
       ) : (
         products.map((p) => (
           <div
@@ -686,7 +692,7 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
               type="button"
               onClick={() => openEdit(p)}
               className="min-w-0 flex-1 text-left"
-              aria-label={`Edit ${p.name}`}
+              aria-label={`${t("merchant.edit")} ${p.name}`}
             >
               <p className="truncate text-sm font-semibold">{p.name}</p>
               <p className="text-xs text-muted-foreground">
@@ -696,17 +702,17 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
             </button>
             <label className="flex items-center gap-2 text-sm">
               <span className={p.in_stock ? "text-primary" : "text-muted-foreground"}>
-                {p.in_stock ? "In stock" : "Out of stock"}
+                {p.in_stock ? t("merchant.inStock") : t("merchant.outOfStock")}
               </span>
               <Switch checked={p.in_stock} onCheckedChange={(v) => void setStock(p.id, v)} />
             </label>
             <Button size="sm" variant="outline" onClick={() => openEdit(p)}>
-              Edit
+              {t("merchant.edit")}
             </Button>
             <Button
               size="icon"
               variant="ghost"
-              aria-label={`Delete ${p.name}`}
+              aria-label={`${t("admin.deleteTranslation")} ${p.name}`}
               onClick={() => void remove(p.id)}
             >
               <Trash2 className="h-4 w-4 text-destructive" />
@@ -718,18 +724,18 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{draft.id ? "Edit product" : "Add product"}</DialogTitle>
+            <DialogTitle>{draft.id ? t("merchant.editProduct") : t("merchant.addProduct")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Name</Label>
+              <Label>{t("admin.fieldName")}</Label>
               <Input
                 value={draft.name}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Description</Label>
+              <Label>{t("merchant.description")}</Label>
               <Textarea
                 rows={3}
                 value={draft.description}
@@ -738,7 +744,7 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Price (ETB)</Label>
+                <Label>{t("merchant.priceEtb")}</Label>
                 <Input
                   inputMode="decimal"
                   value={draft.price}
@@ -746,7 +752,7 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Discount %</Label>
+                <Label>{t("merchant.discountPercent")}</Label>
                 <Input
                   inputMode="numeric"
                   value={draft.discount_percent}
@@ -755,13 +761,13 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Category</Label>
+              <Label>{t("merchant.category")}</Label>
               <select
                 className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={draft.category_id}
                 onChange={(e) => setDraft({ ...draft, category_id: e.target.value })}
               >
-                <option value="">No category</option>
+                <option value="">{t("merchant.noCategory")}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -770,7 +776,7 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Product image</Label>
+              <Label>{t("merchant.productImage")}</Label>
               <Input
                 type="file"
                 accept="image/*"
@@ -782,15 +788,15 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
                 checked={draft.in_stock}
                 onCheckedChange={(v) => setDraft({ ...draft, in_stock: v })}
               />
-              Available for ordering
+              {t("merchant.availableForOrdering")}
             </label>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("action.cancel")}
             </Button>
             <Button onClick={() => void save()} disabled={busy}>
-              {busy ? "Saving…" : "Save product"}
+              {busy ? t("merchant.saving") : t("merchant.saveProduct")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -802,6 +808,7 @@ function ProductManager({ shopId, products }: { shopId: string | undefined; prod
 function ShopEditor({ shop }: { shop: Shop }) {
   const qc = useQueryClient();
   const { user } = useAuth();
+  const { t } = useI18n();
   const [name, setName] = useState(shop.name);
   const [description, setDescription] = useState(shop.description ?? "");
   const [phone, setPhone] = useState(shop.phone ?? "");
@@ -824,7 +831,7 @@ function ShopEditor({ shop }: { shop: Shop }) {
       toast.error(error.message);
       return;
     }
-    toast.success("Shop details saved");
+    toast.success(t("merchant.shopDetailsSaved"));
     void qc.invalidateQueries({ queryKey: ["merchant-shops"] });
   };
 
@@ -836,10 +843,10 @@ function ShopEditor({ shop }: { shop: Shop }) {
           ? await supabase.from("shops").update({ image_url: path }).eq("id", shop.id)
           : await supabase.from("shops").update({ cover_url: path }).eq("id", shop.id);
       if (error) throw error;
-      toast.success("Image updated");
+      toast.success(t("merchant.imageUpdated"));
       void qc.invalidateQueries({ queryKey: ["merchant-shops"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not upload the image");
+      toast.error(err instanceof Error ? err.message : t("merchant.imageUploadFailed"));
     }
   };
 
@@ -849,26 +856,26 @@ function ShopEditor({ shop }: { shop: Shop }) {
         <div>
           <h2 className="font-display text-xl font-bold">{shop.name}</h2>
           <p className="text-sm text-muted-foreground">
-            {isShopOpenNow(shop) ? "Open for orders right now" : "Currently closed for orders"}
+            {isShopOpenNow(shop) ? t("merchant.openNow") : t("merchant.closedNow")}
           </p>
         </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>Shop name</Label>
+          <Label>{t("merchant.shopName")}</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label>Phone</Label>
+          <Label>{t("mjoin.phoneNumber")}</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label>Address</Label>
+          <Label>{t("merchant.address")}</Label>
           <Input value={address} onChange={(e) => setAddress(e.target.value)} />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label>Description</Label>
+          <Label>{t("merchant.description")}</Label>
           <Textarea
             rows={3}
             value={description}
@@ -876,7 +883,7 @@ function ShopEditor({ shop }: { shop: Shop }) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Logo</Label>
+          <Label>{t("merchant.logo")}</Label>
           <Input
             type="file"
             accept="image/*"
@@ -887,7 +894,7 @@ function ShopEditor({ shop }: { shop: Shop }) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Cover image</Label>
+          <Label>{t("merchant.coverImage")}</Label>
           <Input
             type="file"
             accept="image/*"
@@ -899,10 +906,10 @@ function ShopEditor({ shop }: { shop: Shop }) {
         </div>
       </div>
       <Button className="mt-4" onClick={() => void save()} disabled={busy}>
-        {busy ? "Saving…" : "Save shop details"}
+        {busy ? t("merchant.saving") : t("merchant.saveShopDetails")}
       </Button>
 
-      <h3 className="mt-6 font-display text-base font-bold">Weekly opening hours</h3>
+      <h3 className="mt-6 font-display text-base font-bold">{t("merchant.weeklyHours")}</h3>
       <div className="mt-3">
         <ShopHoursEditor
           shopId={shop.id}
@@ -926,6 +933,7 @@ function PromotionPanel({
   promotions: MerchantPromotion[];
 }) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [kind, setKind] = useState<MerchantPromotion["kind"]>("featured_shop");
   const [productId, setProductId] = useState("");
   const [message, setMessage] = useState("");
@@ -947,41 +955,39 @@ function PromotionPanel({
       return;
     }
     setMessage("");
-    toast.success("Promotion request sent to the የኔ Go team");
+    toast.success(t("merchant.promotionSent"));
     void qc.invalidateQueries({ queryKey: ["merchant-promotions"] });
   };
 
   return (
     <>
       <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <h2 className="font-display text-lg font-bold">Promote your business</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Request premium placement on የኔ Go. The የኔ Go team reviews each request and sets the price.
-        </p>
+        <h2 className="font-display text-lg font-bold">{t("merchant.promoteTitle")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("merchant.promoteBody")}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label>Promotion type</Label>
+            <Label>{t("merchant.promotionType")}</Label>
             <select
               className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
               value={kind}
               onChange={(e) => setKind(e.target.value as MerchantPromotion["kind"])}
             >
-              {Object.entries(PROMOTION_LABEL).map(([k, v]) => (
+              {Object.entries(PROMOTION_KEY).map(([k, key]) => (
                 <option key={k} value={k}>
-                  {v}
+                  {t(key)}
                 </option>
               ))}
             </select>
           </div>
           {kind === "featured_product" && (
             <div className="space-y-1.5">
-              <Label>Product</Label>
+              <Label>{t("merchant.product")}</Label>
               <select
                 className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={productId}
                 onChange={(e) => setProductId(e.target.value)}
               >
-                <option value="">Select a product</option>
+                <option value="">{t("merchant.selectProduct")}</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -991,22 +997,22 @@ function PromotionPanel({
             </div>
           )}
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Message to the የኔ Go team (optional)</Label>
+            <Label>{t("merchant.messageToTeam")}</Label>
             <Textarea rows={2} value={message} onChange={(e) => setMessage(e.target.value)} />
           </div>
         </div>
         <Button className="mt-4" onClick={() => void request()} disabled={busy}>
-          {busy ? "Sending…" : "Send promotion request"}
+          {busy ? t("merchant.sending") : t("merchant.sendPromotionRequest")}
         </Button>
       </section>
 
       {promotions.length > 0 && (
         <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold">Your requests</h2>
+          <h2 className="font-display text-lg font-bold">{t("merchant.yourRequests")}</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {promotions.map((p) => (
               <li key={p.id} className="flex flex-wrap justify-between gap-2 border-b border-border pb-2">
-                <span>{PROMOTION_LABEL[p.kind]}</span>
+                <span>{t(PROMOTION_KEY[p.kind])}</span>
                 <span className="capitalize text-muted-foreground">
                   {p.status}
                   {p.price != null && ` · ${ETB(p.price)}`}

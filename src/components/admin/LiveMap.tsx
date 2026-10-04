@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useI18n } from "@/lib/i18n";
 
 export type LiveMapRider = {
   id: string;
@@ -56,6 +57,7 @@ export default function LiveMap({
   destinations: LiveMapDestination[];
   onSelectRider: (riderId: string) => void;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const riderMarkers = useRef(new Map<string, L.Marker>());
@@ -180,35 +182,35 @@ export default function LiveMap({
     <div className="relative h-full w-full">
       <div ref={ref} className="h-full w-full" />
       <div className="absolute bottom-3 left-3 z-[1000] rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-card">
-        <p className="font-semibold">Legend</p>
+        <p className="font-semibold">{t("map.legend")}</p>
         <p className="mt-1 flex items-center gap-2">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.idle }}
           />{" "}
-          Rider online
+          {t("map.riderOnline")}
           <span
             className="ml-2 inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.delivering }}
           />{" "}
-          On delivery
+          {t("map.onDelivery")}
           <span
             className="ml-2 inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.offline }}
           />{" "}
-          Offline
+          {t("map.offline")}
         </p>
         <p className="mt-0.5 flex items-center gap-2">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.shop }}
           />{" "}
-          Merchant
+          {t("map.merchant")}
           <span
             className="ml-2 inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.dest }}
           />{" "}
-          Destination
+          {t("map.destination")}
         </p>
       </div>
     </div>

@@ -1,26 +1,14 @@
 import { Check, CircleDot, XCircle } from "lucide-react";
-import { STATUS_LABEL, TIMELINE, timelineIndex, type OrderStatus } from "@/lib/orders";
+import { TIMELINE, timelineIndex, type OrderStatus } from "@/lib/orders";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-/** Short, mobile-friendly labels for the vertical progress timeline. */
-const STEP_LABEL: Partial<Record<OrderStatus, string>> = {
-  pending_payment: "Order placed",
-  confirmed: "Order confirmed",
-  preparing: "Preparing",
-  ready_for_pickup: "Ready for delivery",
-  dispatched: "Assigned for delivery",
-  accepted: "Rider assigned",
-  arrived_at_merchant: "Rider at shop",
-  picked_up: "Picked up",
-  on_the_way: "Out for delivery",
-  delivered: "Delivered",
-};
 
 /**
  * Vertical order timeline. Completed steps are marked, the current step is
  * highlighted, and everything after it stays muted — easy to scan on a phone.
  */
 export function OrderTimeline({ status }: { status: string }) {
+  const { t } = useI18n();
   const cancelled = status === "cancelled";
   const currentIndex = timelineIndex(status);
 
@@ -32,10 +20,8 @@ export function OrderTimeline({ status }: { status: string }) {
             <XCircle className="h-4 w-4" />
           </span>
           <div className="pb-1">
-            <p className="text-sm font-semibold text-destructive">Order cancelled</p>
-            <p className="text-xs text-muted-foreground">
-              This order was cancelled and is no longer being fulfilled.
-            </p>
+            <p className="text-sm font-semibold text-destructive">{t("step.cancelled")}</p>
+            <p className="text-xs text-muted-foreground">{t("step.cancelledBody")}</p>
           </div>
         </li>
       </ol>
@@ -87,9 +73,9 @@ export function OrderTimeline({ status }: { status: string }) {
                       : "text-muted-foreground",
                 )}
               >
-                {STEP_LABEL[step] ?? STATUS_LABEL[step]}
+                {t(`step.${step as OrderStatus}`)}
               </p>
-              {current && <p className="mt-0.5 text-xs text-primary">Current status</p>}
+              {current && <p className="mt-0.5 text-xs text-primary">{t("step.current")}</p>}
             </div>
           </li>
         );

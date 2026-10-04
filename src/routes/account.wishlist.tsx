@@ -13,6 +13,7 @@ import { AccountHeader } from "@/components/account/AccountShell";
 import { ShopCard } from "@/components/ligo/Cards";
 import { AccountState, ErrorState, GridSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account/wishlist")({
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/account/wishlist")({
 
 function WishlistPage() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [tab, setTab] = useState<"products" | "shops">("products");
 
   const {
@@ -44,27 +46,27 @@ function WishlistPage() {
 
   return (
     <>
-      <AccountHeader title="Saved" description="Products and shops you've saved for later." />
+      <AccountHeader title={t("account.saved")} description={t("account.savedDesc")} />
 
       <div className="flex gap-2">
         {(
           [
-            { id: "products", label: `Products (${saved.length})`, icon: Heart },
-            { id: "shops", label: `Shops (${favorites.length})`, icon: Store },
+            { id: "products", label: t("account.productsCount", { count: saved.length }), icon: Heart },
+            { id: "shops", label: t("account.shopsCount", { count: favorites.length }), icon: Store },
           ] as const
-        ).map((t) => (
+        ).map((tabItem) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            onClick={() => setTab(tabItem.id)}
             className={cn(
               "flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-              tab === t.id
+              tab === tabItem.id
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-card text-muted-foreground hover:border-primary/40",
             )}
           >
-            <t.icon className="h-4 w-4" />
-            {t.label}
+            <tabItem.icon className="h-4 w-4" />
+            {tabItem.label}
           </button>
         ))}
       </div>
@@ -77,11 +79,11 @@ function WishlistPage() {
         ) : saved.length === 0 ? (
           <AccountState
             icon={Heart}
-            title="No saved products yet"
-            description="Tap the heart on any product to save it here for quick reordering."
+            title={t("account.noSavedProducts")}
+            description={t("account.noSavedProductsDesc")}
             action={
               <Button asChild>
-                <Link to="/shops">Browse products</Link>
+                <Link to="/shops">{t("account.browseProducts")}</Link>
               </Button>
             }
           />
@@ -99,11 +101,11 @@ function WishlistPage() {
       ) : favorites.length === 0 ? (
         <AccountState
           icon={Store}
-          title="No favorite shops yet"
-          description="Follow a shop to keep it one tap away whenever you're hungry."
+          title={t("account.noFavoriteShops")}
+          description={t("account.noFavoriteShopsDesc")}
           action={
             <Button asChild>
-              <Link to="/shops">Discover shops</Link>
+              <Link to="/shops">{t("account.discoverShops")}</Link>
             </Button>
           }
         />
@@ -121,14 +123,17 @@ function WishlistPage() {
 function SavedProductCard({ row }: { row: WishlistRow }) {
   const { add } = useCart();
   const { toggleProduct } = useSaved();
+  const { t } = useI18n();
   const product = row.products;
   const [busy, setBusy] = useState(false);
 
   if (!product || !product.is_active) {
     return (
       <div className="overflow-hidden rounded-xl border border-border bg-card p-4 shadow-card">
-        <p className="text-sm font-semibold">{product?.name ?? "Product unavailable"}</p>
-        <p className="mt-1 text-xs text-muted-foreground">This product is no longer available.</p>
+        <p className="text-sm font-semibold">
+          {product?.name ?? t("account.productUnavailable")}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("account.productUnavailableDesc")}</p>
         <Button
           variant="outline"
           size="sm"
@@ -136,7 +141,7 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
           onClick={() => void toggleProduct(row.product_id)}
         >
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-          Remove
+          {t("action.remove")}
         </Button>
       </div>
     );
@@ -158,7 +163,7 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
           className="h-28 w-full object-cover"
         />
         <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-          {product.shops?.name ?? "Shop"}
+          {product.shops?.name ?? t("account.shopFallback")}
         </span>
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-3">
@@ -179,21 +184,21 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
               add({
                 productId: product.id,
                 shopId: product.shop_id,
-                shopName: product.shops?.name ?? "Shop",
+                shopName: product.shops?.name ?? t("account.shopFallback"),
                 name: product.name,
                 imagePath: product.image_url,
                 unitPrice: price,
               });
-              toast.success(`${product.name} added to cart`);
+              toast.success(t("account.addedToCart", { product: product.name }));
             }}
           >
             <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-            {product.in_stock ? "Add" : "Out"}
+            {product.in_stock ? t("action.add") : t("account.outOfStockShort")}
           </Button>
           <Button
             size="icon"
             variant="outline"
-            aria-label="Remove from saved"
+            aria-label={t("account.removeFromSaved")}
             disabled={busy}
             onClick={() => {
               setBusy(true);
@@ -210,18 +215,19 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
 
 function FavoriteShopCard({ row }: { row: FavoriteRow }) {
   const { toggleShop } = useSaved();
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   if (!row.shops)
     return (
       <div className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <p className="text-sm font-semibold">Shop unavailable</p>
+        <p className="text-sm font-semibold">{t("account.shopUnavailable")}</p>
         <Button
           variant="outline"
           size="sm"
           className="mt-3 w-full"
           onClick={() => void toggleShop(row.shop_id)}
         >
-          Remove
+          {t("action.remove")}
         </Button>
       </div>
     );
@@ -252,7 +258,7 @@ function FavoriteShopCard({ row }: { row: FavoriteRow }) {
         }}
       >
         <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-        Remove from favorites
+        {t("account.removeFromFavorites")}
       </Button>
     </div>
   );

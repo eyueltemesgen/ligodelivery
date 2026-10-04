@@ -4,17 +4,18 @@ import { useMemo, useState } from "react";
 import { CalendarDays, MapPin, Sparkles, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  REQUEST_STATUS_LABEL,
   serviceRequestsQuery,
   servicesByIdsQuery,
   addonsTotal,
   type ServiceRequest,
   type ServiceRequestStatus,
 } from "@/lib/special-moments";
+import { occasionLabel } from "@/lib/service-catalog";
 import { ETB, formatDate } from "@/lib/format";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account/service-requests/")({
@@ -48,6 +49,7 @@ export function ServiceRequestCard({
   request: ServiceRequest;
   serviceName?: string | undefined;
 }) {
+  const { t } = useI18n();
   const price = request.quote_amount;
   return (
     <Link
@@ -58,7 +60,7 @@ export function ServiceRequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-display text-sm font-bold">
-            {serviceName ?? "Special Moments service"}
+            {serviceName ?? t("requests.serviceFallback")}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {request.request_code} · {formatDate(request.created_at)}
@@ -70,11 +72,11 @@ export function ServiceRequestCard({
             STATUS_TONE[request.status],
           )}
         >
-          {REQUEST_STATUS_LABEL[request.status]}
+          {t(`reqStatus.${request.status}`)}
         </span>
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {request.occasion && <span>{request.occasion}</span>}
+        {request.occasion && <span>{occasionLabel(t, request.occasion)}</span>}
         {request.event_date && (
           <span className="flex items-center gap-1">
             <CalendarDays className="h-3.5 w-3.5" />
@@ -91,19 +93,19 @@ export function ServiceRequestCard({
         {request.guest_count != null && (
           <span className="flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {request.guest_count} guests
+            {t("requests.guests", { count: request.guest_count })}
           </span>
         )}
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {request.request_type === "quote" ? "Quote request" : "Booking"}
+          {request.request_type === "quote" ? t("requests.quoteRequest") : t("requests.booking")}
         </span>
         <span className="font-display text-sm font-bold text-primary">
           {price != null
             ? ETB(price + addonsTotal(request.addons))
             : request.status === "quote_requested"
-              ? "Awaiting quote"
+              ? t("requests.awaitingQuote")
               : "—"}
         </span>
       </div>
@@ -111,15 +113,16 @@ export function ServiceRequestCard({
   );
 }
 
-const FILTERS: { id: "all" | "open" | "scheduled" | "completed"; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "open", label: "Open" },
-  { id: "scheduled", label: "Scheduled" },
-  { id: "completed", label: "Completed" },
+const FILTERS: { id: "all" | "open" | "scheduled" | "completed"; labelKey: string }[] = [
+  { id: "all", labelKey: "requests.filterAll" },
+  { id: "open", labelKey: "requests.filterOpen" },
+  { id: "scheduled", labelKey: "requests.filterScheduled" },
+  { id: "completed", labelKey: "requests.filterCompleted" },
 ];
 
 function ServiceRequestsPage() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const { data = [], isLoading, isError, refetch } = useQuery(serviceRequestsQuery(user?.id));
   const serviceIds = useMemo(
     () => [...new Set(data.map((r) => r.service_id).filter(Boolean))] as string[],
@@ -138,10 +141,7 @@ function ServiceRequestsPage() {
 
   return (
     <>
-      <AccountHeader
-        title="Special Moments"
-        description="Your gift, surprise, catering and decoration requests, quotes and scheduled services."
-      />
+      <AccountHeader title={t("requests.title")} description={t("requests.subtitle")} />
 
       <div className="-mx-4 overflow-x-auto px-4">
         <div className="flex w-max gap-2 pb-1">
@@ -157,7 +157,7 @@ function ServiceRequestsPage() {
                   : "border-border bg-card text-muted-foreground hover:border-primary/40",
               )}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
@@ -170,20 +170,16 @@ function ServiceRequestsPage() {
       ) : filtered.length === 0 ? (
         <AccountState
           icon={Sparkles}
-          title={data.length === 0 ? "No Special Moments yet" : "Nothing in this filter"}
-          description={
-            data.length === 0
-              ? "Book a gift, surprise, catering or decoration service and it will appear here with its status."
-              : "Try another filter to see more of your requests."
-          }
+          title={data.length === 0 ? t("requests.none") : t("requests.noneInFilter")}
+          description={data.length === 0 ? t("requests.noneDesc") : t("requests.noneInFilterDesc")}
           action={
             data.length === 0 ? (
               <Button asChild>
-                <Link to="/special-moments">Explore Special Moments</Link>
+                <Link to="/special-moments">{t("requests.explore")}</Link>
               </Button>
             ) : (
               <Button variant="outline" onClick={() => setFilter("all")}>
-                Show all
+                {t("requests.showAll")}
               </Button>
             )
           }

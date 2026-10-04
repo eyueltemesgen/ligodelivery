@@ -3,6 +3,7 @@ import { Bike, ClipboardList, Star, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
 import { STATUS_LABEL, statusTone, type OrderStatus } from "@/lib/orders";
+import { useI18n } from "@/lib/i18n";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
 import { TierBadge } from "@/components/ligo/TierBadge";
 import {
@@ -38,6 +39,7 @@ export function RiderDossier({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useI18n();
   const { data } = useQuery({
     queryKey: ["rider-dossier", riderId],
     enabled: open && !!riderId,
@@ -103,10 +105,8 @@ export function RiderDossier({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Rider dossier</DialogTitle>
-          <DialogDescription>
-            Delivery history, earnings, customer ratings and dispatch behaviour.
-          </DialogDescription>
+          <DialogTitle>{t("ados.title")}</DialogTitle>
+          <DialogDescription>{t("ados.desc")}</DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
@@ -117,7 +117,7 @@ export function RiderDossier({
               className="h-12 w-12 text-base"
             />
             <span
-              aria-label={identity?.isOnline ? "Online" : "Offline"}
+              aria-label={identity?.isOnline ? t("ariders.online") : t("ariders.offline")}
               className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card ${
                 identity?.isOnline ? "bg-primary" : "bg-muted-foreground/40"
               }`}
@@ -126,7 +126,8 @@ export function RiderDossier({
           <div className="min-w-0 flex-1">
             <p className="truncate font-display font-bold">{riderName}</p>
             <p className="text-xs capitalize text-muted-foreground">
-              {identity?.isOnline ? "Online now" : "Offline"} · {identity?.vehicleType ?? "—"}
+              {identity?.isOnline ? t("ados.onlineNow") : t("ados.offline")} ·{" "}
+              {identity?.vehicleType ?? "—"}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -146,38 +147,42 @@ export function RiderDossier({
         <div className="grid gap-3 sm:grid-cols-3">
           <Stat
             icon={ClipboardList}
-            label="Deliveries"
+            label={t("ados.statDeliveries")}
             value={String(data?.deliveries ?? 0)}
-            hint={`${(data?.totalKm ?? 0).toFixed(1)} km covered`}
+            hint={t("ados.kmCovered", { km: (data?.totalKm ?? 0).toFixed(1) })}
           />
           <Stat
             icon={Wallet}
-            label="Total earnings"
+            label={t("ados.statTotalEarnings")}
             value={ETB(data?.totalEarnings ?? 0)}
-            hint={`${ETB(data?.pendingEarnings ?? 0)} unpaid`}
+            hint={t("ados.unpaid", { amount: ETB(data?.pendingEarnings ?? 0) })}
           />
           <Stat
             icon={Star}
-            label="Rating"
+            label={t("ados.statRating")}
             value={data?.avgRating != null ? `${data.avgRating.toFixed(2)} ★` : "—"}
-            hint={`${data?.ratingCount ?? 0} customer ratings`}
+            hint={t("ados.ratingCount", { count: data?.ratingCount ?? 0 })}
           />
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2 text-sm">
           <span className="flex items-center gap-2 text-muted-foreground">
-            <Bike className="h-4 w-4" /> Offer acceptance
+            <Bike className="h-4 w-4" /> {t("ados.offerAcceptance")}
           </span>
           <span className="font-semibold">
             {data?.acceptanceRate != null
-              ? `${data.acceptanceRate}% (${data.accepted} accepted · ${data.declined} declined)`
-              : "No offers yet"}
+              ? t("ados.acceptanceRate", {
+                  rate: data.acceptanceRate,
+                  accepted: data.accepted,
+                  declined: data.declined,
+                })
+              : t("ados.noOffers")}
           </span>
         </div>
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Payout requests
+            {t("ados.payoutRequests")}
           </p>
           {data?.payoutRequests.length ? (
             <ul className="max-h-36 space-y-1.5 overflow-y-auto">
@@ -200,19 +205,19 @@ export function RiderDossier({
                   </span>
                   <span className="ml-auto text-xs text-muted-foreground">
                     {formatDate(p.created_at)}
-                    {p.processed_at ? ` · processed ${formatDate(p.processed_at)}` : ""}
+                    {p.processed_at ? t("ados.processed", { date: formatDate(p.processed_at) }) : ""}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No payout requests yet.</p>
+            <p className="text-sm text-muted-foreground">{t("ados.noPayouts")}</p>
           )}
         </div>
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Recent deliveries
+            {t("ados.recentDeliveries")}
           </p>
           {data?.recentOrders.length ? (
             <ul className="max-h-56 space-y-1.5 overflow-y-auto">
@@ -233,7 +238,7 @@ export function RiderDossier({
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No deliveries recorded yet.</p>
+            <p className="text-sm text-muted-foreground">{t("ados.noDeliveries")}</p>
           )}
         </div>
       </DialogContent>

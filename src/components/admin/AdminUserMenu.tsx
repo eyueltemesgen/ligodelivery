@@ -1,6 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { LogOut, ShieldCheck, UserRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,9 +23,10 @@ const initial = (name: string) =>
 
 export function AdminUserMenu() {
   const { profile, signOut } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
-  const name = profile?.full_name || "Admin";
+  const name = profile?.full_name || t("admin.adminFallback");
   const email = profile?.email || "";
 
   const handleSignOut = async () => {
@@ -37,7 +40,7 @@ export function AdminUserMenu() {
         <button
           type="button"
           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-secondary"
-          aria-label="Admin user menu"
+          aria-label={t("admin.userMenuAria")}
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
             {initial(name) || <UserRound className="h-4 w-4" />}
@@ -57,15 +60,20 @@ export function AdminUserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-          Bishoftu · Hub 01 (production)
+          {t("admin.hubProduction")}
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+          <span className="text-xs font-medium text-muted-foreground">{t("language.label")}</span>
+          <LanguageSwitcher />
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => void handleSignOut()}
           className="gap-2 text-destructive focus:text-destructive"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {t("action.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
