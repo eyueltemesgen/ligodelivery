@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/orders";
 import { useMediaUrl } from "@/lib/media";
 import { formatDate } from "@/lib/format";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 import { RiderDossier } from "@/components/admin/RiderDossier";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
 import { TierBadge } from "@/components/ligo/TierBadge";
@@ -65,22 +67,23 @@ type RiderRow = {
     | undefined;
 };
 
-const COMMISSION_TIERS = [
-  { key: "standard", label: "Standard" },
-  { key: "silver", label: "Silver" },
-  { key: "gold", label: "Gold" },
+const COMMISSION_TIERS: { key: string; labelKey: TranslationKey }[] = [
+  { key: "standard", labelKey: "ar_tier_standard" },
+  { key: "silver", labelKey: "ar_tier_silver" },
+  { key: "gold", labelKey: "ar_tier_gold" },
 ];
 
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+const STATUS_BADGE: Record<string, { labelKey: TranslationKey; className: string }> = {
   pending_verification: {
-    label: "Pending review",
+    labelKey: "ar_status_pending",
     className: "bg-warning/20 text-warning-foreground",
   },
-  approved: { label: "Approved", className: "bg-primary-soft text-accent-foreground" },
-  rejected: { label: "Rejected", className: "bg-destructive/10 text-destructive" },
+  approved: { labelKey: "ar_status_approved", className: "bg-primary-soft text-accent-foreground" },
+  rejected: { labelKey: "ar_status_rejected", className: "bg-destructive/10 text-destructive" },
 };
 
 function RiderApprovalQueue() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [rejectTarget, setRejectTarget] = useState<RiderRow | null>(null);
   const [dossierTarget, setDossierTarget] = useState<RiderRow | null>(null);
@@ -133,7 +136,7 @@ function RiderApprovalQueue() {
       "rider",
     );
     void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
-    toast.success("Rider approved — they can now go online");
+    toast.success(t("ar_approved_toast"));
   };
 
   const setCommissionTier = async (r: RiderRow, tier: string) => {
@@ -146,9 +149,8 @@ function RiderApprovalQueue() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
-    toast.success(
-      `Commission tier set to ${COMMISSION_TIERS.find((t) => t.key === tier)?.label ?? tier}`,
-    );
+    const tierKey = COMMISSION_TIERS.find((x) => x.key === tier)?.labelKey;
+    toast.success(t("ar_tier_set", { tier: tierKey ? t(tierKey) : tier }));
   };
 
   const pendingCount = riders.filter(
@@ -158,11 +160,11 @@ function RiderApprovalQueue() {
   return (
     <div>
       <p className="text-sm text-muted-foreground">
-        {pendingCount} application{pendingCount === 1 ? "" : "s"} awaiting review
+        {t("ar_awaiting_review", { count: pendingCount })}
       </p>
       <div className="mt-4 space-y-3">
         {riders.length === 0 && (
-          <p className="text-sm text-muted-foreground">No rider applications yet.</p>
+          <p className="text-sm text-muted-foreground">{t("ar_no_apps")}</p>
         )}
         {riders.map((r) => {
           const badge =
@@ -178,16 +180,16 @@ function RiderApprovalQueue() {
                       className="h-11 w-11 text-base"
                     />
                     <span
-                      aria-label={r.is_online ? "Online" : "Offline"}
+                      aria-label={r.is_online ? t("ar_online") : t("ar_offline")}
                       className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card ${
                         r.is_online ? "bg-primary" : "bg-muted-foreground/40"
                       }`}
                     />
                   </div>
                   <div>
-                    <p className="font-semibold">{r.profile?.full_name || "Rider"}</p>
+                    <p className="font-semibold">{r.profile?.full_name || t("rd_rider")}</p>
                     <p className="text-xs text-muted-foreground">
-                      {r.profile?.phone ?? "—"} · {r.profile?.email ?? "—"} · joined{" "}
+                      {r.profile?.phone ?? "—"} · {r.profile?.email ?? "—"} · {t("ar_joined")}{" "}
                       {formatDate(r.created_at)}
                     </p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -196,7 +198,7 @@ function RiderApprovalQueue() {
                           r.is_online ? "bg-primary" : "bg-muted-foreground/40"
                         }`}
                       />
-                      {r.is_online ? "Online now" : "Offline"} ·{" "}
+                      {r.is_online ? t("ar_online_now") : t("ar_offline")} ·{" "}
                       <span className="capitalize">{r.vehicle_type}</span>
                     </p>
                   </div>
@@ -205,45 +207,50 @@ function RiderApprovalQueue() {
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.className}`}
                   >
-                    {badge.label}
+                    {t(badge.labelKey)}
                   </span>
-                  <DocTag ok={!!r.id_document_url} label="ID doc" />
-                  <DocTag ok={!!r.license_document_url} label="License" />
+                  <DocTag ok={!!r.id_document_url} label={t("ar_id_doc")} />
+                  <DocTag ok={!!r.license_document_url} label={t("ar_license")} />
                   <TierBadge tier={r.commission_tier} />
                 </div>
               </div>
 
               <div className="mt-3 grid gap-1 text-sm sm:grid-cols-2">
                 <p>
-                  <span className="text-muted-foreground">Vehicle:</span>{" "}
+                  <span className="text-muted-foreground">{t("ar_vehicle")}:</span>{" "}
                   <span className="capitalize">{r.vehicle_type}</span> ·{" "}
-                  <span className="text-muted-foreground">National ID:</span> {r.national_id || "—"}
+                  <span className="text-muted-foreground">{t("ar_national_id")}:</span>{" "}
+                  {r.national_id || "—"}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Payout:</span>{" "}
-                  {r.payout_method === "telebirr" ? "Telebirr" : "Bank account"} ·{" "}
+                  <span className="text-muted-foreground">{t("ar_payout")}:</span>{" "}
+                  {r.payout_method === "telebirr" ? t("ar_telebirr") : t("ar_bank_account")} ·{" "}
                   {r.payout_account || "—"} ({r.payout_account_name || "—"})
                 </p>
               </div>
-              {r.notes && <p className="mt-1 text-sm text-muted-foreground">Notes: {r.notes}</p>}
+              {r.notes && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("ar_notes")}: {r.notes}
+                </p>
+              )}
 
               <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                <DocLink path={r.id_document_url} label="National ID document" />
-                <DocLink path={r.license_document_url} label="Driver's license" />
+                <DocLink path={r.id_document_url} label={t("ar_national_id_doc")} />
+                <DocLink path={r.license_document_url} label={t("ar_drivers_license")} />
               </div>
 
               {r.review_notes && (
                 <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
-                  Review feedback: {r.review_notes}
+                  {t("ar_review_feedback")}: {r.review_notes}
                 </p>
               )}
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button size="sm" variant="secondary" onClick={() => setDossierTarget(r)}>
-                  <NotebookText className="mr-2 h-4 w-4" /> View dossier
+                  <NotebookText className="mr-2 h-4 w-4" /> {t("ar_view_dossier")}
                 </Button>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Commission tier</span>
+                  <span className="text-xs text-muted-foreground">{t("ar_commission_tier")}</span>
                   <Select
                     value={r.commission_tier}
                     onValueChange={(tier) => void setCommissionTier(r, tier)}
@@ -252,9 +259,9 @@ function RiderApprovalQueue() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COMMISSION_TIERS.map((t) => (
-                        <SelectItem key={t.key} value={t.key}>
-                          {t.label}
+                      {COMMISSION_TIERS.map((tier) => (
+                        <SelectItem key={tier.key} value={tier.key}>
+                          {t(tier.labelKey)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -262,17 +269,17 @@ function RiderApprovalQueue() {
                 </div>
                 {!r.is_approved && (
                   <Button size="sm" onClick={() => void approve(r)}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" /> Approve rider
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> {t("ar_approve")}
                   </Button>
                 )}
                 {r.is_approved && (
                   <Button size="sm" variant="outline" onClick={() => setRejectTarget(r)}>
-                    Suspend
+                    {t("ar_suspend")}
                   </Button>
                 )}
                 {!r.is_approved && (
                   <Button size="sm" variant="outline" onClick={() => setRejectTarget(r)}>
-                    <XCircle className="mr-2 h-4 w-4" /> Reject / request resubmission
+                    <XCircle className="mr-2 h-4 w-4" /> {t("ar_reject_resubmit")}
                   </Button>
                 )}
               </div>
@@ -283,7 +290,7 @@ function RiderApprovalQueue() {
 
       <RiderDossier
         riderId={dossierTarget?.id ?? null}
-        riderName={dossierTarget?.profile?.full_name || "Rider"}
+        riderName={dossierTarget?.profile?.full_name || t("rd_rider")}
         identity={{
           avatarUrl: dossierTarget?.profile?.avatar_url,
           vehicleType: dossierTarget?.vehicle_type,
@@ -320,9 +327,10 @@ function DocTag({ ok, label }: { ok: boolean; label: string }) {
 }
 
 function DocLink({ path, label }: { path: string | null; label: string }) {
+  const { t } = useLanguage();
   const url = useMediaUrl(path);
   if (!path) return <span className="text-muted-foreground">{label}: —</span>;
-  if (!url) return <span className="text-muted-foreground">{label}: loading…</span>;
+  if (!url) return <span className="text-muted-foreground">{label}: {t("ar_loading")}</span>;
   return (
     <a
       href={url}
@@ -344,6 +352,7 @@ function RejectDialog({
   onClose: () => void;
   onDone: () => void;
 }) {
+  const { t } = useLanguage();
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -355,7 +364,7 @@ function RejectDialog({
     e.preventDefault();
     if (!rider) return;
     if (!notes.trim()) {
-      toast.error("Add feedback notes so the rider knows what to fix");
+      toast.error(t("ar_feedback_required"));
       return;
     }
     setBusy(true);
@@ -374,7 +383,7 @@ function RejectDialog({
       `Please review and resubmit: ${notes.trim()}`,
       "rider",
     );
-    toast.success("Feedback sent to the rider");
+    toast.success(t("ar_feedback_sent"));
     onDone();
   };
 
@@ -382,29 +391,28 @@ function RejectDialog({
     <Dialog open={!!rider} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Reject / request resubmission</DialogTitle>
+          <DialogTitle>{t("ar_reject_title")}</DialogTitle>
           <DialogDescription>
-            Tell {rider?.profile?.full_name || "the rider"} what to fix. They'll see this message on
-            their pending-approval screen.
+            {t("ar_reject_desc", { name: rider?.profile?.full_name || t("rd_rider") })}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="notes">Feedback notes</Label>
+            <Label htmlFor="notes">{t("ar_feedback_notes")}</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. License photo is blurry — please upload a clearer picture."
+              placeholder={t("ar_feedback_placeholder")}
               rows={4}
             />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t("ar_cancel")}
             </Button>
             <Button type="submit" variant="destructive" disabled={busy}>
-              {busy ? "Sending…" : "Send feedback"}
+              {busy ? t("ar_sending") : t("ar_send_feedback")}
             </Button>
           </DialogFooter>
         </form>
