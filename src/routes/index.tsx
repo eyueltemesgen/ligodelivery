@@ -22,6 +22,7 @@ import {
 import { ActiveOrderBanner } from "@/components/ligo/ActiveOrderBanner";
 import { StorageImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,6 +45,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [quickCategory, setQuickCategory] = useState<string | null>(null);
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     ...categoriesQuery,
@@ -97,9 +99,9 @@ function Home() {
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {[
-                { icon: Clock, t: "30 min average" },
-                { icon: Bike, t: "Local riders" },
-                { icon: ShieldCheck, t: "Verified payments" },
+                { icon: Clock, t: t("home_feature_avg") },
+                { icon: Bike, t: t("home_feature_riders") },
+                { icon: ShieldCheck, t: t("home_feature_payments") },
               ].map((f) => (
                 <div key={f.t} className="flex items-center gap-2 text-sm font-medium">
                   <f.icon className="h-4 w-4 text-primary" />
@@ -127,7 +129,7 @@ function Home() {
         <div className="flex items-end justify-between">
           <h2 className="font-display text-2xl font-bold">{c?.categories_title}</h2>
           <Link to="/categories" className="text-sm font-medium text-primary">
-            See all
+            {t("home_see_all")}
           </Link>
         </div>
         {categoriesLoading ? (
@@ -156,7 +158,7 @@ function Home() {
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Quick category filter">
+        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label={t("home_quick_filter")}>
           <button
             type="button"
             onClick={() => setQuickCategory(null)}
@@ -166,7 +168,7 @@ function Home() {
                 : "border-border bg-card hover:border-primary/50"
             }`}
           >
-            All
+            {t("home_all")}
           </button>
           {categories.slice(0, 8).map((cat) => (
             <button
@@ -188,7 +190,8 @@ function Home() {
               onClick={() => void navigate({ to: "/shops", search: { category: quickCategory } })}
               className="rounded-full border border-primary/40 bg-primary-soft px-3.5 py-1.5 text-sm font-semibold text-accent-foreground"
             >
-              View all in {categories.find((x) => x.id === quickCategory)?.name ?? "category"} →
+              {t("home_view_all_in")}{" "}
+              {categories.find((x) => x.id === quickCategory)?.name ?? t("home_category")} →
             </button>
           )}
         </div>
@@ -200,16 +203,14 @@ function Home() {
         <section className="container-ligo py-8">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h2 className="font-display text-2xl font-bold">Make every moment count.</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Gifts, surprises, catering and decoration — arranged from one place.
-              </p>
+              <h2 className="font-display text-2xl font-bold">{t("home_moments_title")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("home_moments_subtitle")}</p>
             </div>
             <Link
               to="/special-moments"
               className="inline-flex items-center gap-1 text-sm font-medium text-primary"
             >
-              Explore Special Moments
+              {t("home_explore_moments")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -227,7 +228,7 @@ function Home() {
           <div className="flex items-end justify-between">
             <h2 className="font-display text-2xl font-bold">{c?.offers_title}</h2>
             <Link to="/offers" className="text-sm font-medium text-primary">
-              See all
+              {t("home_see_all")}
             </Link>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -255,7 +256,7 @@ function Home() {
         <div className="flex items-end justify-between">
           <h2 className="font-display text-2xl font-bold">{c?.shops_title}</h2>
           <Link to="/shops" className="text-sm font-medium text-primary">
-            See all
+            {t("home_see_all")}
           </Link>
         </div>
         {shopsLoading ? (
@@ -270,9 +271,7 @@ function Home() {
           </div>
         )}
         {!shopsLoading && featuredShops.length === 0 && (
-          <p className="mt-5 text-sm text-muted-foreground">
-            No shops in this category yet — try another one.
-          </p>
+          <p className="mt-5 text-sm text-muted-foreground">{t("home_no_shops")}</p>
         )}
       </section>
 

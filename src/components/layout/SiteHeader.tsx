@@ -18,9 +18,11 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/lib/cart";
 import { CartDrawer, CartTrigger } from "@/components/ligo/CartDrawer";
 import { useQuery } from "@tanstack/react-query";
@@ -35,16 +37,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV = [
-  { to: "/categories", label: "Categories" },
-  { to: "/shops", label: "Shops" },
-  { to: "/special-moments", label: "Special Moments" },
-  { to: "/offers", label: "Offers" },
-  { to: "/account/orders", label: "Track order" },
-];
+  { to: "/categories", key: "nav_categories" },
+  { to: "/shops", key: "nav_shops" },
+  { to: "/special-moments", key: "nav_special_moments" },
+  { to: "/offers", key: "nav_offers" },
+  { to: "/account/orders", key: "nav_track_order" },
+] as const;
 
 export function SiteHeader() {
   const { user, profile, isAdmin, isRider, isMerchant, signOut } = useAuth();
   const { data: content } = useQuery(siteContentQuery);
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -68,9 +71,9 @@ export function SiteHeader() {
           <Input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Search for burgers, milk, pharmacy…"
+            placeholder={t("search_placeholder")}
             className="h-10 pl-9"
-            aria-label="Search የኔ Go"
+            aria-label={t("search_label")}
           />
         </form>
         <nav className="hidden items-center gap-1 lg:flex">
@@ -80,11 +83,12 @@ export function SiteHeader() {
               to={n.to}
               className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              {n.label}
+              {t(n.key)}
             </Link>
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <LanguageToggle />
           <ThemeToggle />
           <CartTrigger onOpen={() => setCartOpen(true)} />
           {user ? (
@@ -103,44 +107,44 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link to="/account">
                     <User className="mr-2 h-4 w-4" />
-                    My account
+                    {t("my_account")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/account/orders">
                     <Package className="mr-2 h-4 w-4" />
-                    My orders
+                    {t("my_orders")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/account/service-requests">
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Special Moments
+                    {t("nav_special_moments")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/account/wishlist">
                     <Heart className="mr-2 h-4 w-4" />
-                    Saved products
+                    {t("saved_products")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/account/addresses">
                     <MapPin className="mr-2 h-4 w-4" />
-                    Addresses
+                    {t("addresses")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/account/notifications">
                     <Bell className="mr-2 h-4 w-4" />
-                    Notifications
+                    {t("notifications")}
                   </Link>
                 </DropdownMenuItem>
                 {isRider && (
                   <DropdownMenuItem asChild>
                     <Link to="/rider">
                       <ShoppingBag className="mr-2 h-4 w-4" />
-                      Rider portal
+                      {t("rider_portal")}
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -148,7 +152,7 @@ export function SiteHeader() {
                   <DropdownMenuItem asChild>
                     <Link to="/merchant">
                       <Store className="mr-2 h-4 w-4" />
-                      Merchant portal
+                      {t("merchant_portal")}
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -156,31 +160,31 @@ export function SiteHeader() {
                   <DropdownMenuItem asChild>
                     <Link to="/admin">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Admin dashboard
+                      {t("admin_dashboard")}
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => void signOut()}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                  {t("sign_out")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
               <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-                <Link to="/login">Login</Link>
+                <Link to="/login">{t("login")}</Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/register">Sign up</Link>
+                <Link to="/register">{t("sign_up")}</Link>
               </Button>
             </div>
           )}
           <button
             className="rounded-md p-2 transition-all duration-100 hover:bg-secondary active:scale-95 lg:hidden"
             onClick={() => setOpen((o) => !o)}
-            aria-label="Menu"
+            aria-label={t("menu")}
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -192,9 +196,9 @@ export function SiteHeader() {
           <Input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Search የኔ Go"
+            placeholder={t("search_label")}
             className="h-10 pl-9"
-            aria-label="Search የኔ Go"
+            aria-label={t("search_label")}
           />
         </form>
       </div>
@@ -208,7 +212,7 @@ export function SiteHeader() {
                 onClick={() => setOpen(false)}
                 className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary"
               >
-                {n.label}
+                {t(n.key)}
               </Link>
             ))}
             <Link
@@ -216,7 +220,7 @@ export function SiteHeader() {
               onClick={() => setOpen(false)}
               className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary"
             >
-              Become a rider
+              {t("become_rider")}
             </Link>
           </div>
         </nav>
@@ -228,33 +232,34 @@ export function SiteHeader() {
 
 export function MobileTabBar() {
   const { count } = useCart();
+  const { t } = useLanguage();
   const tabs = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/shops", label: "Shops", icon: Store },
-    { to: "/cart", label: "Cart", icon: ShoppingCart, badge: count },
-    { to: "/account/orders", label: "Orders", icon: Package },
-    { to: "/account", label: "Account", icon: User },
+    { to: "/", label: t("tab_home"), icon: Home },
+    { to: "/shops", label: t("tab_shops"), icon: Store },
+    { to: "/cart", label: t("tab_cart"), icon: ShoppingCart, badge: count },
+    { to: "/account/orders", label: t("tab_orders"), icon: Package },
+    { to: "/account", label: t("tab_account"), icon: User },
   ];
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background md:hidden">
       <ul className="grid grid-cols-5">
-        {tabs.map((t) => (
-          <li key={t.to}>
+        {tabs.map((tab) => (
+          <li key={tab.to}>
             <Link
-              to={t.to}
+              to={tab.to}
               className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium text-muted-foreground"
               activeProps={{ className: "text-primary" }}
-              activeOptions={{ exact: t.to === "/" }}
+              activeOptions={{ exact: tab.to === "/" }}
             >
               <span className="relative">
-                <t.icon className="h-5 w-5" />
-                {!!t.badge && (
+                <tab.icon className="h-5 w-5" />
+                {!!tab.badge && (
                   <span className="absolute -right-2 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
-                    {t.badge}
+                    {tab.badge}
                   </span>
                 )}
               </span>
-              {t.label}
+              {tab.label}
             </Link>
           </li>
         ))}

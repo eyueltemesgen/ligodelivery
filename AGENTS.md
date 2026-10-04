@@ -40,3 +40,9 @@
 ## Layout gotcha: overlapping content must stack above media
 - `StorageImage` renders a `relative` wrapper (positioned), so any sibling block that is *pulled up* over it with a negative margin must itself be positioned. Otherwise CSS paint order draws the positioned image above the non-positioned block, hiding the block's top (e.g. a shop name in a card overlapping the cover).
 - On the shop detail page (`src/routes/shops.$shopId.tsx`) the card uses `container-ligo relative z-10 -mt-10` for exactly this reason. Keep the `relative z-10` when touching that overlap.
+
+## Language switcher (English / አማርኛ)
+- Copy lives in `src/lib/i18n.ts` (`translations.en` / `translations.am`, `TranslationKey`). Add new UI strings there, not inline.
+- Provider/hook: `src/hooks/useLanguage.tsx` — mirrors `useTheme`; persists to `localStorage` key `ligo-lang` and sets `document.documentElement.lang`. Defaults to English unless the browser language starts with `am`.
+- Button: `src/components/LanguageToggle.tsx`, rendered in the header next to `ThemeToggle`.
+- Wired through `src/components/layout/SiteHeader.tsx`, `SiteFooter.tsx`, and `src/routes/index.tsx` only. It is purely additive — do not replace DB-driven content (e.g. `site_content` hero/brand copy) with translation keys.

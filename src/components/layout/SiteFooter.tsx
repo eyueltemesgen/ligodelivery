@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/Logo";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { siteContentQuery } from "@/lib/content";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export function SiteFooter() {
   const { data: c } = useQuery(siteContentQuery);
+  const { t } = useLanguage();
 
   return (
     <footer className="mt-16 border-t border-border bg-surface">
@@ -15,54 +17,58 @@ export function SiteFooter() {
           <p className="text-sm text-muted-foreground">{c?.footer_tagline}</p>
         </div>
         <div>
-          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">Explore</h3>
+          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">
+            {t("footer_explore")}
+          </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
               <Link to="/shops" className="hover:text-foreground">
-                Shops
+                {t("nav_shops")}
               </Link>
             </li>
             <li>
               <Link to="/categories" className="hover:text-foreground">
-                Categories
+                {t("nav_categories")}
               </Link>
             </li>
             <li>
               <Link to="/offers" className="hover:text-foreground">
-                Offers
+                {t("nav_offers")}
               </Link>
             </li>
             <li>
               <Link to="/account/orders" className="hover:text-foreground">
-                Track order
+                {t("nav_track_order")}
               </Link>
             </li>
           </ul>
         </div>
         <div>
           <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">
-            Work with us
+            {t("footer_work")}
           </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
               <Link to="/rider/join" className="hover:text-foreground">
-                Become a rider
+                {t("become_rider")}
               </Link>
             </li>
             <li>
               <Link to="/account" className="hover:text-foreground">
-                My account
+                {t("my_account")}
               </Link>
             </li>
             <li>
               <Link to="/account/help" className="hover:text-foreground">
-                Help & support
+                {t("footer_help")}
               </Link>
             </li>
           </ul>
         </div>
         <div>
-          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">Contact</h3>
+          <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide">
+            {t("footer_contact")}
+          </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary" />
@@ -88,10 +94,10 @@ export function SiteFooter() {
       </div>
       <div className="space-y-1 border-t border-border py-4 text-center text-xs text-muted-foreground">
         <p>
-          © {new Date().getFullYear()} {c?.brand_name}. All rights reserved.
+          © {new Date().getFullYear()} {c?.brand_name}. {t("footer_rights")}
         </p>
         <p>
-          Developed by {c?.developer_name} · {c?.company_name}
+          {t("footer_developed_by")} {c?.developer_name} · {c?.company_name}
         </p>
       </div>
     </footer>
