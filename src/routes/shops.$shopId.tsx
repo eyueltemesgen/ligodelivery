@@ -71,7 +71,7 @@ function ShopDetail() {
     return (
       <div>
         <Skeleton className="h-56 w-full rounded-none" />
-        <div className="container-ligo -mt-10 pb-12">
+        <div className="container-ligo relative z-10 -mt-10 pb-12">
           <div className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-pop">
             <Skeleton className="h-7 w-1/3" />
             <Skeleton className="h-4 w-2/3" />
@@ -103,7 +103,7 @@ function ShopDetail() {
           priority
         />
       </div>
-      <div className="container-ligo -mt-10 pb-12">
+      <div className="container-ligo relative z-10 -mt-10 pb-12">
         <div className="rounded-xl border border-border bg-card p-5 shadow-pop">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-display text-2xl font-extrabold">{shop.name}</h1>
