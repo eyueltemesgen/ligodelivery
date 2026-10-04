@@ -18,7 +18,7 @@ import { ETB, formatDate } from "@/lib/format";
 import {
   OCCASIONS,
   HOLIDAY_OCCASIONS,
-  REQUEST_STATUS_LABEL,
+  REQUEST_STATUS_LABEL_KEY,
   type Service,
   type ServiceAddon,
   type ServiceCategory,
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const slugify = (s: string) =>
   s
@@ -68,12 +69,13 @@ const REQUEST_STATUS_OPTIONS: ServiceRequestStatus[] = [
 
 /** Top-level Special Moments console embedded in the existing admin dashboard. */
 export function SpecialMomentsAdmin() {
+  const { t } = useLanguage();
   return (
     <Tabs defaultValue="requests" className="mt-4">
       <TabsList className="h-auto w-max">
-        <TabsTrigger value="requests">Requests</TabsTrigger>
-        <TabsTrigger value="services">Services</TabsTrigger>
-        <TabsTrigger value="categories">Categories</TabsTrigger>
+        <TabsTrigger value="requests">{t("sma_tab_requests")}</TabsTrigger>
+        <TabsTrigger value="services">{t("sma_tab_services")}</TabsTrigger>
+        <TabsTrigger value="categories">{t("sma_tab_categories")}</TabsTrigger>
       </TabsList>
       <TabsContent value="requests">
         <RequestsQueue />
@@ -93,6 +95,7 @@ export function SpecialMomentsAdmin() {
 /* ------------------------------------------------------------------ */
 
 function RequestsQueue() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<"all" | ServiceRequestStatus>("all");
   const { data: requests = [], isError } = useQuery({
@@ -124,7 +127,7 @@ function RequestsQueue() {
     statusFilter === "all" ? requests : requests.filter((r) => r.status === statusFilter);
 
   if (isError) {
-    return <p className="mt-4 text-sm text-muted-foreground">Could not load requests.</p>;
+    return <p className="mt-4 text-sm text-muted-foreground">{t("sma_could_not_load")}</p>;
   }
 
   return (
@@ -140,7 +143,7 @@ function RequestsQueue() {
               : "border-border",
           )}
         >
-          All ({requests.length})
+          {t("sma_all")} ({requests.length})
         </button>
         {REQUEST_STATUS_OPTIONS.map((s) => {
           const n = requests.filter((r) => r.status === s).length;
@@ -156,14 +159,14 @@ function RequestsQueue() {
                   : "border-border",
               )}
             >
-              {REQUEST_STATUS_LABEL[s]} ({n})
+              {t(REQUEST_STATUS_LABEL_KEY[s])} ({n})
             </button>
           );
         })}
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No requests in this view.</p>
+        <p className="text-sm text-muted-foreground">{t("sma_no_requests_view")}</p>
       ) : (
         <ul className="space-y-3">
           {filtered.map((r) => (
@@ -191,6 +194,7 @@ function RequestRow({
   serviceName?: string | undefined;
   onChanged: () => void;
 }) {
+  const { t } = useLanguage();
   const [quote, setQuote] = useState(
     request.quote_amount != null ? String(request.quote_amount) : "",
   );
@@ -209,7 +213,7 @@ function RequestRow({
         ...(notes ? { p_notes: notes } : {}),
       });
       if (error) throw error;
-      toast.success(`Request marked ${status}`);
+      toast.success(t("sma_request_marked", { status: t(REQUEST_STATUS_LABEL_KEY[status]) }));
       onChanged();
     } catch (err) {
       toast.error(supabaseErrorMessage(err));
@@ -218,33 +222,33 @@ function RequestRow({
     }
   };
 
-  const reveal = request.recipient_name ? `For ${request.recipient_name}` : null;
+  const reveal = request.recipient_name ? t("sma_for_recipient", { name: request.recipient_name }) : null;
 
   return (
     <li className="rounded-xl border border-border bg-card p-4 shadow-card">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-display text-sm font-bold">
-            {serviceName ?? "Unlinked service"}
+            {serviceName ?? t("sma_unlinked_service")}
             {request.is_anonymous && (
               <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase">
-                Anonymous
+                {t("sma_anonymous")}
               </span>
             )}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {request.request_code} ·{" "}
-            {request.request_type === "quote" ? "Quote request" : "Booking"} ·{" "}
+            {request.request_type === "quote" ? t("sma_quote_request") : t("sma_booking")} ·{" "}
             {formatDate(request.created_at)}
           </p>
         </div>
-        <Badge variant="secondary">{REQUEST_STATUS_LABEL[request.status]}</Badge>
+        <Badge variant="secondary">{t(REQUEST_STATUS_LABEL_KEY[request.status])}</Badge>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {request.occasion && <span>Occasion: {request.occasion}</span>}
+        {request.occasion && <span>{t("sma_occasion_label")} {request.occasion}</span>}
         {(request.surprise_type || request.event_type) && (
-          <span>Type: {request.surprise_type ?? request.event_type}</span>
+          <span>{t("sma_type_label")} {request.surprise_type ?? request.event_type}</span>
         )}
         {request.event_date && (
           <span className="flex items-center gap-1">
@@ -256,7 +260,7 @@ function RequestRow({
         {request.guest_count != null && (
           <span className="flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {request.guest_count} guests
+            {t("sma_guests", { count: request.guest_count })}
           </span>
         )}
         {reveal && <span>{reveal}</span>}
@@ -267,13 +271,13 @@ function RequestRow({
         onClick={() => setOpen((v) => !v)}
         className="mt-2 text-xs font-semibold text-primary"
       >
-        {open ? "Hide details" : "Customer & event details"}
+        {open ? t("sma_hide_details") : t("sma_customer_event_details")}
       </button>
 
       {open && (
         <div className="mt-3 space-y-2 rounded-lg bg-surface p-3 text-sm">
           <p>
-            <span className="text-muted-foreground">Customer:</span> {request.customer_name ?? "—"}{" "}
+            <span className="text-muted-foreground">{t("sma_customer_label")}</span> {request.customer_name ?? "—"}{" "}
             {request.customer_phone ? `· ${request.customer_phone}` : ""}
           </p>
           {request.location && (
@@ -282,22 +286,22 @@ function RequestRow({
               {request.location}
             </p>
           )}
-          {request.recipient_phone && <p>Recipient phone: {request.recipient_phone}</p>}
-          {request.theme && <p>Theme / colours: {request.theme}</p>}
-          {request.food_preferences && <p>Food preferences: {request.food_preferences}</p>}
-          {request.budget != null && <p>Budget: {ETB(request.budget)}</p>}
-          {request.message && <p>Message: {request.message}</p>}
-          {request.special_instructions && <p>Instructions: {request.special_instructions}</p>}
+          {request.recipient_phone && <p>{t("sma_recipient_phone")} {request.recipient_phone}</p>}
+          {request.theme && <p>{t("sma_theme")} {request.theme}</p>}
+          {request.food_preferences && <p>{t("sma_food_prefs")} {request.food_preferences}</p>}
+          {request.budget != null && <p>{t("sma_budget")} {ETB(request.budget)}</p>}
+          {request.message && <p>{t("sma_message")} {request.message}</p>}
+          {request.special_instructions && <p>{t("sma_instructions")} {request.special_instructions}</p>}
           {request.addons.length > 0 && (
-            <p>Add-ons: {request.addons.map((a) => `${a.name} (${ETB(a.price)})`).join(", ")}</p>
+            <p>{t("sma_addons_label")} {request.addons.map((a) => `${a.name} (${ETB(a.price)})`).join(", ")}</p>
           )}
-          {request.order_id && <p className="text-primary">Order created for this request.</p>}
+          {request.order_id && <p className="text-primary">{t("sma_order_created")}</p>}
         </div>
       )}
 
       <div className="mt-3 grid gap-2 sm:grid-cols-[140px_1fr]">
         <div className="space-y-1">
-          <Label className="text-xs">Quote amount (ETB)</Label>
+          <Label className="text-xs">{t("sma_quote_amount")}</Label>
           <Input
             type="number"
             min={0}
@@ -308,11 +312,11 @@ function RequestRow({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Internal / customer note</Label>
+          <Label className="text-xs">{t("sma_internal_note")}</Label>
           <Input
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Visible to the customer"
+            placeholder={t("sma_visible_to_customer")}
             className="h-9"
           />
         </div>
@@ -320,7 +324,7 @@ function RequestRow({
 
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" disabled={busy} onClick={() => void review("quoted")}>
-          Send quote
+          {t("sma_send_quote")}
         </Button>
         <Button
           size="sm"
@@ -328,7 +332,7 @@ function RequestRow({
           disabled={busy}
           onClick={() => void review("confirmed")}
         >
-          Confirm
+          {t("sma_confirm")}
         </Button>
         <Button
           size="sm"
@@ -336,7 +340,7 @@ function RequestRow({
           disabled={busy}
           onClick={() => void review("completed")}
         >
-          Complete
+          {t("sma_complete")}
         </Button>
         <Button
           size="sm"
@@ -345,7 +349,7 @@ function RequestRow({
           disabled={busy}
           onClick={() => void review("cancelled")}
         >
-          Cancel
+          {t("sma_cancel")}
         </Button>
       </div>
     </li>
@@ -357,6 +361,7 @@ function RequestRow({
 /* ------------------------------------------------------------------ */
 
 function CategoriesAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: rows = [] } = useQuery({
     queryKey: ["admin-service-categories"],
@@ -399,7 +404,7 @@ function CategoriesAdmin() {
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-service-categories"] });
       void qc.invalidateQueries({ queryKey: ["service-categories"] });
-      toast.success("Category created");
+      toast.success(t("sma_category_created"));
     } catch (err) {
       toast.error(supabaseErrorMessage(err));
     } finally {
@@ -422,7 +427,7 @@ function CategoriesAdmin() {
 
   const remove = async (id: string, name: string) => {
     if (
-      !window.confirm(`Delete category "${name}"? Services keep their data but lose this category.`)
+      !window.confirm(t("sma_delete_category_confirm", { name }))
     )
       return;
     const { error } = await supabase.from("service_categories").delete().eq("id", id);
@@ -431,7 +436,7 @@ function CategoriesAdmin() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-service-categories"] });
-    toast.success("Category deleted");
+    toast.success(t("sma_category_deleted"));
   };
 
   return (
@@ -440,26 +445,26 @@ function CategoriesAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New category</h3>
+        <h3 className="font-display font-bold">{t("sma_new_category")}</h3>
         <Input
-          placeholder="Name"
+          placeholder={t("sma_name")}
           value={draft.name}
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           required
         />
         <Input
-          placeholder="Tagline"
+          placeholder={t("sma_tagline")}
           value={draft.tagline}
           onChange={(e) => setDraft({ ...draft, tagline: e.target.value })}
         />
         <Textarea
-          placeholder="Description"
+          placeholder={t("sma_description")}
           value={draft.description}
           onChange={(e) => setDraft({ ...draft, description: e.target.value })}
         />
         <Input
           type="number"
-          placeholder="Sort order"
+          placeholder={t("sma_sort_order")}
           value={draft.sort_order}
           onChange={(e) => setDraft({ ...draft, sort_order: e.target.value })}
         />
@@ -469,12 +474,12 @@ function CategoriesAdmin() {
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
         <Button type="submit" disabled={busy}>
-          {busy ? "Creating…" : "Create category"}
+          {busy ? t("sma_creating") : t("sma_create_category")}
         </Button>
       </form>
 
       <ul className="space-y-2">
-        {rows.length === 0 && <li className="text-sm text-muted-foreground">No categories yet.</li>}
+        {rows.length === 0 && <li className="text-sm text-muted-foreground">{t("sma_no_categories")}</li>}
         {rows.map((c) => (
           <li key={c.id} className="rounded-xl border border-border bg-card p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -499,7 +504,7 @@ function CategoriesAdmin() {
                   }
                 />
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Active
+                  {t("sma_active")}
                   <Switch
                     checked={c.is_active}
                     onCheckedChange={(v) => void patch(c.id, { is_active: v })}
@@ -509,7 +514,7 @@ function CategoriesAdmin() {
                   size="icon"
                   variant="ghost"
                   className="text-destructive hover:text-destructive"
-                  aria-label={`Delete ${c.name}`}
+                  aria-label={t("sma_delete_named", { name: c.name })}
                   onClick={() => void remove(c.id, c.name)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -596,6 +601,7 @@ const toForm = (s: Service): ServiceForm => ({
 });
 
 function ServicesAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<ServiceForm | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -664,7 +670,7 @@ function ServicesAdmin() {
             .eq("id", editing.id)
         : await supabase.from("services").insert(payload as never);
       if (error) throw error;
-      toast.success(editing.id ? "Service updated" : "Service created");
+      toast.success(editing.id ? t("sma_service_updated") : t("sma_service_created"));
       setEditing(null);
       setImageFile(null);
       invalidate();
@@ -688,7 +694,7 @@ function ServicesAdmin() {
   };
 
   const remove = async (id: string, name: string) => {
-    if (!window.confirm(`Delete "${name}"? Existing requests keep their record but lose the link.`))
+    if (!window.confirm(t("sma_delete_service_confirm", { name })))
       return;
     const { error } = await supabase.from("services").delete().eq("id", id);
     if (error) {
@@ -700,9 +706,9 @@ function ServicesAdmin() {
         toast.error(supabaseErrorMessage(error));
         return;
       }
-      toast.success("Referenced by orders — hidden from the app instead");
+      toast.success(t("sma_referenced_hidden"));
     } else {
-      toast.success("Service deleted");
+      toast.success(t("sma_service_deleted"));
     }
     invalidate();
   };
@@ -711,24 +717,23 @@ function ServicesAdmin() {
     <div className="mt-4 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-display text-lg font-bold">Services</h3>
+          <h3 className="font-display text-lg font-bold">{t("sma_services_heading")}</h3>
           <p className="text-sm text-muted-foreground">
-            Gifts, surprises, holiday gifts, catering and decoration packages.
+            {t("sma_services_desc")}
           </p>
         </div>
         <Button onClick={() => setEditing(emptyForm())}>
           <Plus className="mr-2 h-4 w-4" />
-          New service
+          {t("sma_new_service")}
         </Button>
       </div>
 
       {services.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center">
           <Sparkles className="mx-auto h-7 w-7 text-muted-foreground" />
-          <p className="mt-3 font-display font-bold">No services yet</p>
+          <p className="mt-3 font-display font-bold">{t("sma_no_services")}</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Create your first Special Moments service. It becomes visible in the app as soon as it
-            is active — nothing is shown to customers before that.
+            {t("sma_no_services_desc")}
           </p>
         </div>
       ) : (
@@ -749,14 +754,14 @@ function ServicesAdmin() {
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto p-5 sm:w-full">
           <DialogHeader>
             <DialogTitle className="font-display text-xl font-extrabold">
-              {editing?.id ? "Edit service" : "New service"}
+              {editing?.id ? t("sma_edit_service") : t("sma_new_service")}
             </DialogTitle>
           </DialogHeader>
           {editing && (
             <form onSubmit={save} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label>Name</Label>
+                  <Label>{t("sma_name")}</Label>
                   <Input
                     value={editing.name}
                     onChange={(e) =>
@@ -770,18 +775,18 @@ function ServicesAdmin() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Slug</Label>
+                  <Label>{t("sma_slug")}</Label>
                   <Input
                     value={editing.slug}
                     onChange={(e) => setEditing({ ...editing, slug: slugify(e.target.value) })}
-                    placeholder="auto-generated"
+                    placeholder={t("sma_auto_generated")}
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label>Category</Label>
+                  <Label>{t("sma_category")}</Label>
                   <Select
                     value={editing.service_category_id || "none"}
                     onValueChange={(v) =>
@@ -789,10 +794,10 @@ function ServicesAdmin() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose a category" />
+                      <SelectValue placeholder={t("sma_choose_category")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Uncategorised</SelectItem>
+                      <SelectItem value="none">{t("sma_uncategorised")}</SelectItem>
                       {categories.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.name}
@@ -802,7 +807,7 @@ function ServicesAdmin() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Provider (shop)</Label>
+                  <Label>{t("sma_provider")}</Label>
                   <Select
                     value={editing.shop_id || "none"}
                     onValueChange={(v) =>
@@ -810,10 +815,10 @@ function ServicesAdmin() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Link a shop" />
+                      <SelectValue placeholder={t("sma_link_shop")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">No linked shop</SelectItem>
+                      <SelectItem value="none">{t("sma_no_linked_shop")}</SelectItem>
                       {shops.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
                           {s.name}
@@ -826,7 +831,7 @@ function ServicesAdmin() {
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label>Pricing</Label>
+                  <Label>{t("sma_pricing")}</Label>
                   <Select
                     value={editing.pricing_type}
                     onValueChange={(v) =>
@@ -837,13 +842,13 @@ function ServicesAdmin() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="fixed">Fixed price</SelectItem>
-                      <SelectItem value="quote">Request a quote</SelectItem>
+                      <SelectItem value="fixed">{t("sma_fixed_price")}</SelectItem>
+                      <SelectItem value="quote">{t("sma_request_quote")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Price (ETB)</Label>
+                  <Label>{t("sma_price_etb")}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -853,7 +858,7 @@ function ServicesAdmin() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Starting price</Label>
+                  <Label>{t("sma_starting_price")}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -865,12 +870,12 @@ function ServicesAdmin() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label>Occasion</Label>
+                  <Label>{t("sma_occasion")}</Label>
                   <Input
                     list="admin-sm-occasions"
                     value={editing.occasion}
                     onChange={(e) => setEditing({ ...editing, occasion: e.target.value })}
-                    placeholder="e.g. Birthday, Holiday"
+                    placeholder={t("sma_occasion_placeholder")}
                   />
                   <datalist id="admin-sm-occasions">
                     {[...OCCASIONS, ...HOLIDAY_OCCASIONS].map((o) => (
@@ -879,17 +884,17 @@ function ServicesAdmin() {
                   </datalist>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Service area</Label>
+                  <Label>{t("sma_service_area")}</Label>
                   <Input
                     value={editing.service_area}
                     onChange={(e) => setEditing({ ...editing, service_area: e.target.value })}
-                    placeholder="e.g. Bishoftu and nearby"
+                    placeholder={t("sma_service_area_placeholder")}
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label>Description</Label>
+                <Label>{t("sma_description")}</Label>
                 <Textarea
                   value={editing.description}
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
@@ -898,18 +903,18 @@ function ServicesAdmin() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>What&apos;s included (one per line)</Label>
+                <Label>{t("sma_included")}</Label>
                 <Textarea
                   value={editing.included_items}
                   onChange={(e) => setEditing({ ...editing, included_items: e.target.value })}
                   rows={3}
-                  placeholder={"Setup and delivery\nBalloons and flowers"}
+                  placeholder={t("sma_included_placeholder")}
                 />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label>Lead time (hours)</Label>
+                  <Label>{t("sma_lead_time")}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -918,7 +923,7 @@ function ServicesAdmin() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Available from</Label>
+                  <Label>{t("sma_available_from")}</Label>
                   <Input
                     type="date"
                     value={editing.available_from}
@@ -926,7 +931,7 @@ function ServicesAdmin() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Available to</Label>
+                  <Label>{t("sma_available_to")}</Label>
                   <Input
                     type="date"
                     value={editing.available_to}
@@ -936,7 +941,7 @@ function ServicesAdmin() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Main image</Label>
+                <Label>{t("sma_main_image")}</Label>
                 <Input
                   type="file"
                   accept="image/*"
@@ -945,7 +950,7 @@ function ServicesAdmin() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Gallery image paths (one per line, optional)</Label>
+                <Label>{t("sma_gallery")}</Label>
                 <Textarea
                   value={editing.gallery}
                   onChange={(e) => setEditing({ ...editing, gallery: e.target.value })}
@@ -959,17 +964,17 @@ function ServicesAdmin() {
                     checked={editing.is_active}
                     onCheckedChange={(v) => setEditing({ ...editing, is_active: v })}
                   />
-                  Active
+                  {t("sma_active")}
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <Switch
                     checked={editing.is_featured}
                     onCheckedChange={(v) => setEditing({ ...editing, is_featured: v })}
                   />
-                  Featured
+                  {t("sma_featured")}
                 </label>
                 <div className="flex items-center gap-2 text-sm">
-                  <Label className="text-xs">Sort</Label>
+                  <Label className="text-xs">{t("sma_sort")}</Label>
                   <Input
                     type="number"
                     value={editing.sort_order}
@@ -981,10 +986,10 @@ function ServicesAdmin() {
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                  Cancel
+                  {t("sma_cancel")}
                 </Button>
                 <Button type="submit" disabled={busy}>
-                  {busy ? "Saving…" : editing.id ? "Save changes" : "Create service"}
+                  {busy ? t("sma_saving") : editing.id ? t("sma_save_changes") : t("sma_create_service")}
                 </Button>
               </div>
             </form>
@@ -1006,6 +1011,7 @@ function ServiceAdminRow({
   onToggle: (p: Record<string, unknown>) => void;
   onDelete: () => void;
 }) {
+  const { t } = useLanguage();
   const [addonsOpen, setAddonsOpen] = useState(false);
   return (
     <li className="rounded-xl border border-border bg-card p-3 shadow-card">
@@ -1016,37 +1022,37 @@ function ServiceAdminRow({
             {service.pricing_type === "fixed"
               ? service.price != null
                 ? ETB(service.price)
-                : "No price set"
-              : "Quote based"}
+                : t("sma_no_price")
+              : t("sma_quote_based")}
             {service.occasion ? ` · ${service.occasion}` : ""}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            Featured
+            {t("sma_featured")}
             <Switch
               checked={service.is_featured}
               onCheckedChange={(v) => onToggle({ is_featured: v })}
             />
           </label>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            Active
+            {t("sma_active")}
             <Switch
               checked={service.is_active}
               onCheckedChange={(v) => onToggle({ is_active: v })}
             />
           </label>
           <Button size="sm" variant="outline" onClick={() => setAddonsOpen((v) => !v)}>
-            Add-ons
+            {t("sma_addons")}
           </Button>
-          <Button size="icon" variant="ghost" aria-label={`Edit ${service.name}`} onClick={onEdit}>
+          <Button size="icon" variant="ghost" aria-label={t("sma_edit_named", { name: service.name })} onClick={onEdit}>
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
             className="text-destructive hover:text-destructive"
-            aria-label={`Delete ${service.name}`}
+            aria-label={t("sma_delete_named", { name: service.name })}
             onClick={onDelete}
           >
             <Trash2 className="h-4 w-4" />
@@ -1059,6 +1065,7 @@ function ServiceAdminRow({
 }
 
 function AddonsEditor({ serviceId }: { serviceId: string }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const key = ["admin-service-addons", serviceId];
   const { data: addons = [] } = useQuery({
@@ -1094,7 +1101,7 @@ function AddonsEditor({ serviceId }: { serviceId: string }) {
     setName("");
     setPrice("");
     void qc.invalidateQueries({ queryKey: key });
-    toast.success("Add-on added");
+    toast.success(t("sma_addon_added"));
   };
 
   const remove = async (id: string) => {
@@ -1105,7 +1112,7 @@ function AddonsEditor({ serviceId }: { serviceId: string }) {
   return (
     <div className="mt-3 rounded-lg bg-surface p-3">
       {addons.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No add-ons yet.</p>
+        <p className="text-xs text-muted-foreground">{t("sma_no_addons")}</p>
       ) : (
         <ul className="space-y-1.5">
           {addons.map((a) => (
@@ -1117,7 +1124,7 @@ function AddonsEditor({ serviceId }: { serviceId: string }) {
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7 text-destructive hover:text-destructive"
-                aria-label={`Remove ${a.name}`}
+                aria-label={t("sma_remove_named", { name: a.name })}
                 onClick={() => void remove(a.id)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -1130,7 +1137,7 @@ function AddonsEditor({ serviceId }: { serviceId: string }) {
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Add-on name"
+          placeholder={t("sma_addon_name")}
           className="h-9 max-w-[200px]"
         />
         <Input
@@ -1138,12 +1145,12 @@ function AddonsEditor({ serviceId }: { serviceId: string }) {
           min={0}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          placeholder="Price"
+          placeholder={t("sma_price")}
           className="h-9 w-28"
         />
         <Button size="sm" type="submit" variant="outline">
           <Plus className="mr-1.5 h-3.5 w-3.5" />
-          Add
+          {t("sma_add")}
         </Button>
       </form>
     </div>
@@ -1152,10 +1159,11 @@ function AddonsEditor({ serviceId }: { serviceId: string }) {
 
 /** Fallback tile used when a service list is empty in the admin console. */
 export function NoServicesHint() {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
       <ImageOff className="h-4 w-4" />
-      No services to show.
+      {t("sma_no_services_show")}
     </div>
   );
 }

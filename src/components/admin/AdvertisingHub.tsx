@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
 const card = "rounded-xl border border-border bg-card p-4 shadow-card";
@@ -37,15 +38,16 @@ const toLocal = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
 const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
 
 export function AdvertisingHub() {
+  const { t } = useLanguage();
   return (
     <Tabs defaultValue="ads" className="space-y-4">
       <div className="-mx-1 overflow-x-auto px-1">
         <TabsList className="w-max">
-          <TabsTrigger value="ads">Ads & analytics</TabsTrigger>
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="advertisers">Advertisers</TabsTrigger>
-          <TabsTrigger value="packages">Packages</TabsTrigger>
-          <TabsTrigger value="placements">Placements</TabsTrigger>
+          <TabsTrigger value="ads">{t("adv_tab_ads")}</TabsTrigger>
+          <TabsTrigger value="campaigns">{t("adv_tab_campaigns")}</TabsTrigger>
+          <TabsTrigger value="advertisers">{t("adv_tab_advertisers")}</TabsTrigger>
+          <TabsTrigger value="packages">{t("adv_tab_packages")}</TabsTrigger>
+          <TabsTrigger value="placements">{t("adv_tab_placements")}</TabsTrigger>
         </TabsList>
       </div>
       <TabsContent value="ads"><AdsManager /></TabsContent>
@@ -128,6 +130,7 @@ const EMPTY: AdForm = {
 };
 
 function AdsManager() {
+  const { t } = useLanguage();
   const L = useLookups();
   const run = useRun();
   const [form, setForm] = useState<AdForm>(EMPTY);
@@ -180,11 +183,11 @@ function AdsManager() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
-      toast.error("Add a title");
+      toast.error(t("adv_err_add_title"));
       return;
     }
     if (form.destination_type === "external" && !destUrl()) {
-      toast.error("External link must start with http:// or https://");
+      toast.error(t("adv_err_external_link"));
       return;
     }
     const row = {
@@ -209,8 +212,8 @@ function AdsManager() {
       target_location: form.target_location || null,
     };
     const ok = form.id
-      ? await run(supabase.from("ads").update(row).eq("id", form.id), "Ad updated")
-      : await run(supabase.from("ads").insert(row), "Ad published");
+      ? await run(supabase.from("ads").update(row).eq("id", form.id), t("adv_ok_ad_updated"))
+      : await run(supabase.from("ads").insert(row), t("adv_ok_ad_published"));
     if (ok) setForm(EMPTY);
   };
 
@@ -234,10 +237,10 @@ function AdsManager() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { icon: Megaphone, label: "Live ads", v: String(ads.filter(isLive).length) },
-          { icon: Eye, label: "Impressions", v: totImp.toLocaleString() },
-          { icon: MousePointerClick, label: "Clicks", v: totClk.toLocaleString() },
-          { icon: Percent, label: "CTR", v: `${ctr(totImp, totClk).toFixed(2)}%` },
+          { icon: Megaphone, label: t("adv_live_ads"), v: String(ads.filter(isLive).length) },
+          { icon: Eye, label: t("adv_impressions"), v: totImp.toLocaleString() },
+          { icon: MousePointerClick, label: t("adv_clicks"), v: totClk.toLocaleString() },
+          { icon: Percent, label: t("adv_ctr"), v: `${ctr(totImp, totClk).toFixed(2)}%` },
         ].map((s) => (
           <div key={s.label} className={card}>
             <s.icon className="h-5 w-5 text-primary" />
@@ -249,53 +252,53 @@ function AdsManager() {
 
       <form onSubmit={save} className={card}>
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-bold">{form.id ? "Edit ad" : "Create ad"}</h2>
-          {form.id && <Button type="button" variant="ghost" size="sm" onClick={() => setForm(EMPTY)}>Cancel edit</Button>}
+          <h2 className="font-display text-lg font-bold">{form.id ? t("adv_edit_ad") : t("adv_create_ad")}</h2>
+          {form.id && <Button type="button" variant="ghost" size="sm" onClick={() => setForm(EMPTY)}>{t("adv_cancel_edit")}</Button>}
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <F label="Title"><Input value={form.title} onChange={set("title")} maxLength={80} /></F>
-          <F label="Subtitle"><Input value={form.subtitle} onChange={set("subtitle")} maxLength={140} /></F>
-          <F label="Button text"><Input value={form.cta_label} onChange={set("cta_label")} maxLength={24} /></F>
-          <F label="Ad type">
+          <F label={t("adv_title")}><Input value={form.title} onChange={set("title")} maxLength={80} /></F>
+          <F label={t("adv_subtitle")}><Input value={form.subtitle} onChange={set("subtitle")} maxLength={140} /></F>
+          <F label={t("adv_button_text")}><Input value={form.cta_label} onChange={set("cta_label")} maxLength={24} /></F>
+          <F label={t("adv_ad_type")}>
             <select className={sel} value={form.ad_type} onChange={set("ad_type")}>
               {AD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </F>
-          <F label="Placement">
+          <F label={t("adv_placement")}>
             <select className={sel} value={form.placement} onChange={set("placement")}>
               {L.placements.map((p) => <option key={p.code} value={p.code}>{p.code} — {p.label}</option>)}
             </select>
           </F>
-          <F label="Priority (higher shows first)"><Input type="number" value={form.priority} onChange={set("priority")} /></F>
-          <F label="Status">
+          <F label={t("adv_priority")}><Input type="number" value={form.priority} onChange={set("priority")} /></F>
+          <F label={t("adv_status")}>
             <select className={sel} value={form.status} onChange={set("status")}>
               {AD_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </F>
-          <F label="Advertiser">
+          <F label={t("adv_advertiser")}>
             <select className={sel} value={form.advertiser_id} onChange={set("advertiser_id")}>
               <option value="">— none —</option>
               {L.advertisers.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </F>
-          <F label="Campaign">
+          <F label={t("adv_campaign")}>
             <select className={sel} value={form.campaign_id} onChange={set("campaign_id")}>
               <option value="">— none —</option>
               {L.campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </F>
-          <F label="Links to">
+          <F label={t("adv_links_to")}>
             <select className={sel} value={form.destination_type} onChange={(e) => setForm({ ...form, destination_type: e.target.value, destination_id: "" })}>
-              <option value="shop">Shop</option>
-              <option value="product">Product</option>
-              <option value="category">Category / service</option>
-              <option value="offers">Special Moments / offers page</option>
-              <option value="external">External website</option>
-              <option value="none">No link</option>
+              <option value="shop">{t("adv_shop")}</option>
+              <option value="product">{t("adv_product")}</option>
+              <option value="category">{t("adv_category_service")}</option>
+              <option value="offers">{t("adv_special_offers_page")}</option>
+              <option value="external">{t("adv_external_website")}</option>
+              <option value="none">{t("adv_no_link")}</option>
             </select>
           </F>
           {destOptions.length > 0 && (
-            <F label="Destination">
+            <F label={t("adv_destination")}>
               <select className={sel} value={form.destination_id} onChange={set("destination_id")}>
                 <option value="">— choose —</option>
                 {destOptions.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -303,31 +306,31 @@ function AdsManager() {
             </F>
           )}
           {form.destination_type === "external" && (
-            <F label="Website URL"><Input value={form.destination_url} onChange={set("destination_url")} placeholder="https://…" /></F>
+            <F label={t("adv_website_url")}><Input value={form.destination_url} onChange={set("destination_url")} placeholder={t("adv_url_placeholder")} /></F>
           )}
-          <F label="Starts (optional)"><Input type="datetime-local" value={form.starts_at} onChange={set("starts_at")} /></F>
-          <F label="Ends (optional)"><Input type="datetime-local" value={form.ends_at} onChange={set("ends_at")} /></F>
-          <F label="Device">
+          <F label={t("adv_starts_optional")}><Input type="datetime-local" value={form.starts_at} onChange={set("starts_at")} /></F>
+          <F label={t("adv_ends_optional")}><Input type="datetime-local" value={form.ends_at} onChange={set("ends_at")} /></F>
+          <F label={t("adv_device")}>
             <select className={sel} value={form.target_device} onChange={set("target_device")}>
-              <option value="all">All devices</option>
-              <option value="mobile">Mobile only</option>
-              <option value="desktop">Desktop only</option>
+              <option value="all">{t("adv_all_devices")}</option>
+              <option value="mobile">{t("adv_mobile_only")}</option>
+              <option value="desktop">{t("adv_desktop_only")}</option>
             </select>
           </F>
-          <F label="Only on category page (optional)">
+          <F label={t("adv_only_category")}>
             <select className={sel} value={form.target_category_id} onChange={set("target_category_id")}>
-              <option value="">Any</option>
+              <option value="">{t("adv_any")}</option>
               {L.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </F>
-          <F label="Only on shop page (optional)">
+          <F label={t("adv_only_shop")}>
             <select className={sel} value={form.target_shop_id} onChange={set("target_shop_id")}>
-              <option value="">Any</option>
+              <option value="">{t("adv_any")}</option>
               {L.shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </F>
-          <F label="Location note (optional)"><Input value={form.target_location} onChange={set("target_location")} placeholder="Bishoftu" /></F>
-          <F label="Image">
+          <F label={t("adv_location_note")}><Input value={form.target_location} onChange={set("target_location")} placeholder={t("adv_location_placeholder")} /></F>
+          <F label={t("adv_image")}>
             <Input
               type="file"
               accept="image/*"
@@ -339,7 +342,7 @@ function AdsManager() {
                 try {
                   const path = await uploadImage(f, "banners");
                   setForm((v) => ({ ...v, image_url: path }));
-                  toast.success("Image uploaded");
+                  toast.success(t("adv_ok_image_uploaded"));
                 } catch (err) {
                   toast.error(supabaseErrorMessage(err));
                 } finally {
@@ -351,32 +354,32 @@ function AdsManager() {
         </div>
 
         <div className="mt-4">
-          <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Preview</p>
+          <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t("adv_preview")}</p>
           <div className="relative max-w-xl overflow-hidden rounded-2xl border border-border">
             <div className="relative aspect-[16/9] w-full">
               {form.image_url ? (
-                <StorageImage path={form.image_url} alt={form.title || "Ad"} className="absolute inset-0 h-full w-full" />
+                <StorageImage path={form.image_url} alt={form.title || t("adv_ad_alt")} className="absolute inset-0 h-full w-full" />
               ) : (
                 <div className="absolute inset-0 bg-muted" />
               )}
-              <span className="absolute left-2 top-2 rounded bg-background/90 px-2 py-0.5 text-[10px] font-bold uppercase">Sponsored</span>
+              <span className="absolute left-2 top-2 rounded bg-background/90 px-2 py-0.5 text-[10px] font-bold uppercase">{t("adv_sponsored")}</span>
             </div>
             <div className="p-3">
-              <p className="font-display font-bold">{form.title || "Ad title"}</p>
+              <p className="font-display font-bold">{form.title || t("adv_ad_title")}</p>
               {form.subtitle && <p className="text-sm text-muted-foreground">{form.subtitle}</p>}
             </div>
           </div>
         </div>
         <Button type="submit" className="mt-4 w-full sm:w-auto" disabled={uploading}>
-          {form.id ? "Save changes" : "Publish ad"}
+          {form.id ? t("adv_save_changes") : t("adv_publish_ad")}
         </Button>
       </form>
 
       <section className={card}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-bold">All ads</h2>
+          <h2 className="font-display text-lg font-bold">{t("adv_all_ads")}</h2>
           <select className={`${sel} max-w-xs`} value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">All placements</option>
+            <option value="all">{t("adv_all_placements")}</option>
             {L.placements.map((p) => <option key={p.code} value={p.code}>{p.code}</option>)}
           </select>
         </div>
@@ -390,35 +393,35 @@ function AdsManager() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{a.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {a.placement} · priority {a.priority} ·{" "}
+                    {a.placement} · {t("adv_priority_short")} {a.priority} ·{" "}
                     <span className={live ? "font-semibold text-primary" : ""}>
-                      {live ? "Live" : a.status === "active" ? "Scheduled/expired" : a.status}
+                      {live ? t("adv_live") : a.status === "active" ? t("adv_scheduled_expired") : a.status}
                     </span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {s.imp} impressions · {s.clk} clicks · CTR {ctr(s.imp, s.clk).toFixed(2)}%
+                    {t("adv_stats_line", { imp: s.imp, clk: s.clk, ctr: ctr(s.imp, s.clk).toFixed(2) })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Switch
-                    aria-label="Active"
+                    aria-label={t("adv_aria_active")}
                     checked={a.status === "active"}
                     onCheckedChange={(v) => run(supabase.from("ads").update({ status: v ? "active" : "paused" }).eq("id", a.id))}
                   />
-                  <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => { edit(a); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                  <Button size="icon" variant="ghost" aria-label={t("adv_aria_edit")} onClick={() => { edit(a); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => run(supabase.from("ads").update({ status: "archived" }).eq("id", a.id), "Archived")}>
-                    Archive
+                  <Button size="sm" variant="ghost" onClick={() => run(supabase.from("ads").update({ status: "archived" }).eq("id", a.id), t("adv_ok_archived"))}>
+                    {t("adv_archive")}
                   </Button>
-                  <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => { if (confirm(`Delete "${a.title}"?`)) void run(supabase.from("ads").delete().eq("id", a.id), "Deleted"); }}>
+                  <Button size="icon" variant="ghost" aria-label={t("adv_aria_delete")} onClick={() => { if (confirm(t("adv_confirm_delete_ad", { title: a.title }))) void run(supabase.from("ads").delete().eq("id", a.id), t("adv_ok_deleted")); }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </li>
             );
           })}
-          {shown.length === 0 && <p className="text-sm text-muted-foreground">No ads yet.</p>}
+          {shown.length === 0 && <p className="text-sm text-muted-foreground">{t("adv_no_ads")}</p>}
         </ul>
       </section>
     </div>
@@ -435,6 +438,7 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
 }
 
 function Advertisers() {
+  const { t } = useLanguage();
   const { advertisers, shops } = useLookups();
   const run = useRun();
   const [f, setF] = useState({ name: "", contact_name: "", phone: "", email: "", shop_id: "" });
@@ -445,21 +449,21 @@ function Advertisers() {
         onSubmit={async (e) => {
           e.preventDefault();
           if (!f.name.trim()) return;
-          if (await run(supabase.from("advertisers").insert({ ...f, shop_id: f.shop_id || null }), "Advertiser added"))
+          if (await run(supabase.from("advertisers").insert({ ...f, shop_id: f.shop_id || null }), t("adv_ok_advertiser_added")))
             setF({ name: "", contact_name: "", phone: "", email: "", shop_id: "" });
         }}
       >
-        <F label="Business name"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></F>
-        <F label="Contact person"><Input value={f.contact_name} onChange={(e) => setF({ ...f, contact_name: e.target.value })} /></F>
-        <F label="Phone"><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></F>
-        <F label="Email"><Input value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></F>
-        <F label="Linked shop (optional)">
+        <F label={t("adv_business_name")}><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></F>
+        <F label={t("adv_contact_person")}><Input value={f.contact_name} onChange={(e) => setF({ ...f, contact_name: e.target.value })} /></F>
+        <F label={t("adv_phone")}><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></F>
+        <F label={t("adv_email")}><Input value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></F>
+        <F label={t("adv_linked_shop")}>
           <select className={sel} value={f.shop_id} onChange={(e) => setF({ ...f, shop_id: e.target.value })}>
-            <option value="">None</option>
+            <option value="">{t("adv_none")}</option>
             {shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </F>
-        <div className="flex items-end"><Button type="submit" className="w-full">Add advertiser</Button></div>
+        <div className="flex items-end"><Button type="submit" className="w-full">{t("adv_add_advertiser")}</Button></div>
       </form>
       <ul className="space-y-2">
         {advertisers.map((a) => (
@@ -469,18 +473,19 @@ function Advertisers() {
               <p className="truncate text-xs text-muted-foreground">{[a.contact_name, a.phone, a.email].filter(Boolean).join(" · ")}</p>
             </div>
             <Switch checked={a.is_active} onCheckedChange={(v) => run(supabase.from("advertisers").update({ is_active: v }).eq("id", a.id))} />
-            <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => { if (confirm("Delete advertiser?")) void run(supabase.from("advertisers").delete().eq("id", a.id)); }}>
+            <Button size="icon" variant="ghost" aria-label={t("adv_aria_delete")} onClick={() => { if (confirm(t("adv_confirm_delete_advertiser"))) void run(supabase.from("advertisers").delete().eq("id", a.id)); }}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </li>
         ))}
-        {advertisers.length === 0 && <p className="text-sm text-muted-foreground">No advertisers yet.</p>}
+        {advertisers.length === 0 && <p className="text-sm text-muted-foreground">{t("adv_no_advertisers")}</p>}
       </ul>
     </div>
   );
 }
 
 function Campaigns() {
+  const { t } = useLanguage();
   const { campaigns, advertisers, packages } = useLookups();
   const run = useRun();
   const [f, setF] = useState({ name: "", advertiser_id: "", package_id: "", starts_at: "", ends_at: "" });
@@ -499,27 +504,27 @@ function Campaigns() {
               starts_at: fromLocal(f.starts_at),
               ends_at: fromLocal(f.ends_at),
             }),
-            "Campaign created",
+            t("adv_ok_campaign_created"),
           );
           if (ok) setF({ name: "", advertiser_id: "", package_id: "", starts_at: "", ends_at: "" });
         }}
       >
-        <F label="Campaign name"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></F>
+        <F label={t("adv_campaign_name")}><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></F>
         <F label="Advertiser">
           <select className={sel} value={f.advertiser_id} onChange={(e) => setF({ ...f, advertiser_id: e.target.value })}>
-            <option value="">None</option>
+            <option value="">{t("adv_none")}</option>
             {advertisers.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </F>
-        <F label="Package">
+        <F label={t("adv_package")}>
           <select className={sel} value={f.package_id} onChange={(e) => setF({ ...f, package_id: e.target.value })}>
-            <option value="">None</option>
+            <option value="">{t("adv_none")}</option>
             {packages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </F>
-        <F label="Starts"><Input type="datetime-local" value={f.starts_at} onChange={(e) => setF({ ...f, starts_at: e.target.value })} /></F>
-        <F label="Ends"><Input type="datetime-local" value={f.ends_at} onChange={(e) => setF({ ...f, ends_at: e.target.value })} /></F>
-        <div className="flex items-end"><Button type="submit" className="w-full">Create campaign</Button></div>
+        <F label={t("adv_starts")}><Input type="datetime-local" value={f.starts_at} onChange={(e) => setF({ ...f, starts_at: e.target.value })} /></F>
+        <F label={t("adv_ends")}><Input type="datetime-local" value={f.ends_at} onChange={(e) => setF({ ...f, ends_at: e.target.value })} /></F>
+        <div className="flex items-end"><Button type="submit" className="w-full">{t("adv_create_campaign")}</Button></div>
       </form>
       <ul className="space-y-2">
         {campaigns.map((c) => (
@@ -527,8 +532,8 @@ function Campaigns() {
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{c.name}</p>
               <p className="text-xs text-muted-foreground">
-                {advertisers.find((a) => a.id === c.advertiser_id)?.name ?? "No advertiser"} · {c.status}
-                {c.ends_at && ` · until ${new Date(c.ends_at).toLocaleDateString()}`}
+                {advertisers.find((a) => a.id === c.advertiser_id)?.name ?? t("adv_no_advertiser")} · {c.status}
+                {c.ends_at && t("adv_until", { date: new Date(c.ends_at).toLocaleDateString() })}
               </p>
             </div>
             <select className={`${sel} w-32`} value={c.status} onChange={(e) => run(supabase.from("ad_campaigns").update({ status: e.target.value }).eq("id", c.id))}>
@@ -538,13 +543,14 @@ function Campaigns() {
             </select>
           </li>
         ))}
-        {campaigns.length === 0 && <p className="text-sm text-muted-foreground">No campaigns yet.</p>}
+        {campaigns.length === 0 && <p className="text-sm text-muted-foreground">{t("adv_no_campaigns")}</p>}
       </ul>
     </div>
   );
 }
 
 function Packages() {
+  const { t } = useLanguage();
   const { packages, placements } = useLookups();
   const run = useRun();
   const [f, setF] = useState({ name: "", duration_days: "7", price: "0", placements: [] as string[] });
@@ -557,15 +563,15 @@ function Packages() {
           if (!f.name.trim()) return;
           const ok = await run(
             supabase.from("ad_packages").insert({ name: f.name.trim(), duration_days: Number(f.duration_days), price: Number(f.price), placements: f.placements }),
-            "Package added",
+            t("adv_ok_package_added"),
           );
           if (ok) setF({ name: "", duration_days: "7", price: "0", placements: [] });
         }}
       >
         <div className="grid gap-3 sm:grid-cols-3">
-          <F label="Name"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Homepage Featured" /></F>
-          <F label="Duration (days)"><Input type="number" min={1} value={f.duration_days} onChange={(e) => setF({ ...f, duration_days: e.target.value })} /></F>
-          <F label="Price (ETB)"><Input type="number" min={0} value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></F>
+          <F label={t("adv_name")}><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t("adv_package_name_placeholder")} /></F>
+          <F label={t("adv_duration")}><Input type="number" min={1} value={f.duration_days} onChange={(e) => setF({ ...f, duration_days: e.target.value })} /></F>
+          <F label={t("adv_price_etb")}><Input type="number" min={0} value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></F>
         </div>
         <div className="flex flex-wrap gap-2">
           {placements.map((p) => {
@@ -582,17 +588,17 @@ function Packages() {
             );
           })}
         </div>
-        <Button type="submit">Add package</Button>
+        <Button type="submit">{t("adv_add_package")}</Button>
       </form>
       <ul className="space-y-2">
         {packages.map((p) => (
           <li key={p.id} className={`${card} flex flex-wrap items-center gap-2 p-3`}>
             <div className="min-w-0 flex-1">
               <p className="font-semibold">{p.name}</p>
-              <p className="text-xs text-muted-foreground">{p.duration_days} days · {ETB(Number(p.price))} · {p.placements.join(", ") || "no placements"}</p>
+              <p className="text-xs text-muted-foreground">{t("adv_package_line", { days: p.duration_days, price: ETB(Number(p.price)), placements: p.placements.join(", ") || t("adv_no_placements") })}</p>
             </div>
             <Switch checked={p.is_active} onCheckedChange={(v) => run(supabase.from("ad_packages").update({ is_active: v }).eq("id", p.id))} />
-            <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => { if (confirm("Delete package?")) void run(supabase.from("ad_packages").delete().eq("id", p.id)); }}>
+            <Button size="icon" variant="ghost" aria-label={t("adv_aria_delete")} onClick={() => { if (confirm(t("adv_confirm_delete_package"))) void run(supabase.from("ad_packages").delete().eq("id", p.id)); }}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </li>
@@ -603,11 +609,12 @@ function Packages() {
 }
 
 function Placements() {
+  const { t } = useLanguage();
   const { placements } = useLookups();
   const run = useRun();
   return (
     <section className={card}>
-      <p className="text-sm text-muted-foreground">Switch a placement off to hide every ad in it at once.</p>
+      <p className="text-sm text-muted-foreground">{t("adv_placements_hint")}</p>
       <ul className="mt-3 space-y-2">
         {placements.map((p) => (
           <li key={p.code} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">

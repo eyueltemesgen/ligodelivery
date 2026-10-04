@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type CouponForm = {
   code: string;
@@ -36,6 +37,7 @@ function randomCode() {
 }
 
 export function MarketingHub() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: shops = [] } = useQuery({
     queryKey: ["mkt-shops"],
@@ -86,7 +88,7 @@ export function MarketingHub() {
   const createCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.code.trim()) {
-      toast.error("Enter a code");
+      toast.error(t("mkt_err_enter_code"));
       return;
     }
     await run(
@@ -99,7 +101,7 @@ export function MarketingHub() {
         usage_limit: form.usage_limit ? Number(form.usage_limit) : null,
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
       }),
-      "Promo code created",
+      t("mkt_ok_code_created"),
     );
     setForm(EMPTY);
   };
@@ -115,10 +117,10 @@ export function MarketingHub() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { icon: Megaphone, label: "Active banners", v: bannerCount },
-          { icon: Star, label: "Featured shops", v: featuredShops },
-          { icon: Tag, label: "Products on deal", v: deals },
-          { icon: Ticket, label: "Codes redeemed", v: redeemed },
+          { icon: Megaphone, label: t("mkt_active_banners"), v: bannerCount },
+          { icon: Star, label: t("mkt_featured_shops"), v: featuredShops },
+          { icon: Tag, label: t("mkt_products_on_deal"), v: deals },
+          { icon: Ticket, label: t("mkt_codes_redeemed"), v: redeemed },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
             <s.icon className="h-5 w-5 text-primary" />
@@ -130,22 +132,22 @@ export function MarketingHub() {
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-bold">Ad banners</h2>
+          <h2 className="font-display text-lg font-bold">{t("mkt_ad_banners")}</h2>
           <Button asChild size="sm">
             <Link to="/admin/ops" search={{ tab: "banners" }}>
-              Manage banners
+              {t("mkt_manage_banners")}
             </Link>
           </Button>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Create banners linked to any shop, choose where they show, and switch them on or off.
+          {t("mkt_banners_desc")}
         </p>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <h2 className="font-display text-lg font-bold">Featured shops</h2>
+        <h2 className="font-display text-lg font-bold">{t("mkt_featured_shops")}</h2>
         <p className="text-sm text-muted-foreground">
-          Featured shops get a badge and appear first on the home and shops pages.
+          {t("mkt_featured_desc")}
         </p>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">
           {shops.map((s) => (
@@ -167,10 +169,10 @@ export function MarketingHub() {
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-bold">Product deals</h2>
+          <h2 className="font-display text-lg font-bold">{t("mkt_product_deals")}</h2>
           <Input
             className="h-9 max-w-xs"
-            placeholder="Search products…"
+            placeholder={t("mkt_search_products")}
             value={productSearch}
             onChange={(e) => setProductSearch(e.target.value)}
           />
@@ -209,11 +211,11 @@ export function MarketingHub() {
                       if (v !== p.discount_percent)
                         run(
                           supabase.from("products").update({ discount_percent: v }).eq("id", p.id),
-                          "Deal updated",
+                          t("mkt_ok_deal_updated"),
                         );
                     }}
                   />
-                  <span className="text-xs text-muted-foreground">% off</span>
+                  <span className="text-xs text-muted-foreground">{t("mkt_percent_off")}</span>
                 </div>
                 <label className="flex items-center gap-1 text-xs">
                   <Switch
@@ -222,7 +224,7 @@ export function MarketingHub() {
                       run(supabase.from("products").update({ is_featured: v }).eq("id", p.id))
                     }
                   />
-                  Deal of the day
+                  {t("mkt_deal_of_day")}
                 </label>
                 <label className="flex items-center gap-1 text-xs">
                   <Switch
@@ -231,7 +233,7 @@ export function MarketingHub() {
                       run(supabase.from("products").update({ is_popular: v }).eq("id", p.id))
                     }
                   />
-                  Trending
+                  {t("mkt_trending")}
                 </label>
               </div>
             );
@@ -240,23 +242,23 @@ export function MarketingHub() {
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <h2 className="font-display text-lg font-bold">Promo codes</h2>
+        <h2 className="font-display text-lg font-bold">{t("mkt_promo_codes")}</h2>
         <form onSubmit={createCoupon} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1">
-            <Label>Code</Label>
+            <Label>{t("mkt_code")}</Label>
             <div className="flex gap-1">
               <Input
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                placeholder="YENE10"
+                placeholder={t("mkt_code_placeholder")}
               />
               <Button type="button" variant="outline" onClick={() => setForm({ ...form, code: randomCode() })}>
-                Auto
+                {t("mkt_auto")}
               </Button>
             </div>
           </div>
           <div className="space-y-1">
-            <Label>Type</Label>
+            <Label>{t("mkt_type")}</Label>
             <select
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               value={form.discount_type}
@@ -264,35 +266,35 @@ export function MarketingHub() {
                 setForm({ ...form, discount_type: e.target.value as CouponForm["discount_type"] })
               }
             >
-              <option value="percent">% off</option>
-              <option value="fixed">Fixed ETB off</option>
-              <option value="free_delivery">Free delivery</option>
+              <option value="percent">{t("mkt_percent_off")}</option>
+              <option value="fixed">{t("mkt_fixed_etb_off")}</option>
+              <option value="free_delivery">{t("mkt_free_delivery")}</option>
             </select>
           </div>
           {form.discount_type !== "free_delivery" && (
             <div className="space-y-1">
-              <Label>{form.discount_type === "percent" ? "Percent" : "Amount (ETB)"}</Label>
+              <Label>{form.discount_type === "percent" ? t("mkt_percent") : t("mkt_amount_etb")}</Label>
               <Input type="number" min={0} value={form.discount_value} onChange={(e) => setForm({ ...form, discount_value: e.target.value })} />
             </div>
           )}
           <div className="space-y-1">
-            <Label>Min order (ETB)</Label>
+            <Label>{t("mkt_min_order")}</Label>
             <Input type="number" min={0} value={form.min_order_amount} onChange={(e) => setForm({ ...form, min_order_amount: e.target.value })} />
           </div>
           <div className="space-y-1">
-            <Label>Max discount (optional)</Label>
+            <Label>{t("mkt_max_discount")}</Label>
             <Input type="number" min={0} value={form.max_discount} onChange={(e) => setForm({ ...form, max_discount: e.target.value })} />
           </div>
           <div className="space-y-1">
-            <Label>Usage limit (optional)</Label>
+            <Label>{t("mkt_usage_limit")}</Label>
             <Input type="number" min={1} value={form.usage_limit} onChange={(e) => setForm({ ...form, usage_limit: e.target.value })} />
           </div>
           <div className="space-y-1">
-            <Label>Expires (optional)</Label>
+            <Label>{t("mkt_expires")}</Label>
             <Input type="date" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} />
           </div>
           <div className="flex items-end">
-            <Button type="submit" className="w-full">Create code</Button>
+            <Button type="submit" className="w-full">{t("mkt_create_code")}</Button>
           </div>
         </form>
 
@@ -302,13 +304,13 @@ export function MarketingHub() {
               <span className="font-mono text-sm font-bold">{c.code}</span>
               <span className="text-xs text-muted-foreground">
                 {c.discount_type === "percent"
-                  ? `${c.discount_value}% off`
+                  ? t("mkt_percent_value_off", { value: c.discount_value })
                   : c.discount_type === "fixed"
-                    ? `${ETB(Number(c.discount_value))} off`
-                    : "Free delivery"}
-                {Number(c.min_order_amount) > 0 && ` · min ${ETB(Number(c.min_order_amount))}`}
-                {` · used ${c.used_count}${c.usage_limit ? `/${c.usage_limit}` : ""}`}
-                {c.expires_at && ` · until ${new Date(c.expires_at).toLocaleDateString()}`}
+                    ? t("mkt_amount_off", { amount: ETB(Number(c.discount_value)) })
+                    : t("mkt_free_delivery")}
+                {Number(c.min_order_amount) > 0 && t("mkt_min_suffix", { amount: ETB(Number(c.min_order_amount)) })}
+                {t("mkt_used_suffix", { count: c.used_count, limit: c.usage_limit ? `/${c.usage_limit}` : "" })}
+                {c.expires_at && t("mkt_until_suffix", { date: new Date(c.expires_at).toLocaleDateString() })}
               </span>
               <div className="ml-auto flex items-center gap-2">
                 <Switch
@@ -318,10 +320,10 @@ export function MarketingHub() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  aria-label="Delete code"
+                  aria-label={t("mkt_delete_code")}
                   onClick={() => {
-                    if (confirm(`Delete ${c.code}?`))
-                      run(supabase.from("coupons").delete().eq("id", c.id), "Code deleted");
+                    if (confirm(t("mkt_confirm_delete_code", { code: c.code })))
+                      run(supabase.from("coupons").delete().eq("id", c.id), t("mkt_ok_code_deleted"));
                   }}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -329,7 +331,7 @@ export function MarketingHub() {
               </div>
             </li>
           ))}
-          {coupons.length === 0 && <p className="text-sm text-muted-foreground">No promo codes yet.</p>}
+          {coupons.length === 0 && <p className="text-sm text-muted-foreground">{t("mkt_no_codes")}</p>}
         </ul>
       </section>
     </div>
