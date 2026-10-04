@@ -52,7 +52,7 @@ export function CartDrawer({
           <>
             <div className="flex-1 space-y-4 overflow-y-auto py-4">
               {items.map((i) => (
-                <div key={i.productId} className="flex gap-3">
+                <div key={i.lineId} className="flex gap-3">
                   <StorageImage
                     path={i.imagePath}
                     alt={i.name}
@@ -60,9 +60,16 @@ export function CartDrawer({
                   />
                   <div className="flex flex-1 flex-col">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold leading-tight">{i.name}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold leading-tight">{i.name}</p>
+                        {i.options.length > 0 && (
+                          <p className="truncate text-[11px] text-muted-foreground">
+                            {i.options.map((o) => o.name).join(" · ")}
+                          </p>
+                        )}
+                      </div>
                       <button
-                        onClick={() => remove(i.productId)}
+                        onClick={() => remove(i.lineId)}
                         aria-label={t("cart_remove", { name: i.name })}
                         className="text-muted-foreground transition-colors hover:text-destructive"
                       >
@@ -72,7 +79,7 @@ export function CartDrawer({
                     <div className="mt-auto flex items-center justify-between">
                       <div className="flex items-center gap-2 rounded-full border border-border px-1 py-0.5">
                         <button
-                          onClick={() => setQty(i.productId, i.quantity - 1)}
+                          onClick={() => setQty(i.lineId, i.quantity - 1)}
                           aria-label={t("cart_decrease")}
                           className="rounded-full p-1 hover:bg-secondary"
                         >
@@ -82,7 +89,7 @@ export function CartDrawer({
                           {i.quantity}
                         </span>
                         <button
-                          onClick={() => setQty(i.productId, i.quantity + 1)}
+                          onClick={() => setQty(i.lineId, i.quantity + 1)}
                           aria-label={t("cart_increase")}
                           className="rounded-full p-1 hover:bg-secondary"
                         >

@@ -1,51 +1,23 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Minus, Plus } from "lucide-react";
 import { toast } from "@/lib/toast";
-import type { Product } from "@/lib/queries";
+import type { Product, ProductOptionGroup } from "@/lib/queries";
+import { productOptionsQuery } from "@/lib/queries";
 import { ETB, discounted } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
-import { useCart } from "@/lib/cart";
+import { cartLineId, useCart, type CartOption } from "@/lib/cart";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
 /**
- * Standard customization groups. The product table has no addon columns, so
- * options are a curated per-item client preset — safe with any backend.
+ * Product customization dialog. Options come from the database
+ * (`product_option_groups` / `product_options`); products without option groups
+ * simply get a quantity picker. The selected option ids travel to checkout and
+ * are re-priced and validated server-side.
  */
-export type OptionGroup = {
-  key: string;
-  labelKey: TranslationKey;
-  choices: { nameKey: TranslationKey; priceDelta: number }[];
-  multi: boolean;
-};
-
-export const DEFAULT_OPTION_GROUPS: OptionGroup[] = [
-  {
-    key: "size",
-    labelKey: "pm_size",
-    multi: false,
-    choices: [
-      { nameKey: "pm_size_regular", priceDelta: 0 },
-      { nameKey: "pm_size_large", priceDelta: 40 },
-      { nameKey: "pm_size_family", priceDelta: 90 },
-    ],
-  },
-  {
-    key: "extras",
-    labelKey: "pm_extras",
-    multi: true,
-    choices: [
-      { nameKey: "pm_extra_cheese", priceDelta: 25 },
-      { nameKey: "pm_extra_sauce", priceDelta: 10 },
-      { nameKey: "pm_spicy", priceDelta: 0 },
-      { nameKey: "pm_extra_portion", priceDelta: 45 },
-    ],
-  },
-];
-
 export function ProductModal({
   product,
   shopName,
@@ -63,20 +35,34 @@ export function ProductModal({
   const [notes, setNotes] = useState("");
   const [picked, setPicked] = useState<Record<string, string[]>>({});
 
+  const { data: groups = [] } = useQuery(productOptionsQuery(product?.id ?? ""));
+
   const price = useMemo(
     () => (product ? discounted(Number(product.price), product.discount_percent) : 0),
     [product],
   );
 
-  const addonsTotal = useMemo(() => {
-    let sum = 0;
-    for (const g of DEFAULT_OPTION_GROUPS) {
-      for (const c of g.choices) if (picked[g.key]?.includes(c.nameKey)) sum += c.priceDelta;
+  const selectedOptions = useMemo<CartOption[]>(() => {
+    const out: CartOption[] = [];
+    for (const g of groups) {
+      for (const id of picked[g.id] ?? []) {
+        const opt = g.product_options.find((o) => o.id === id);
+        if (opt)
+          out.push({
+            id: opt.id,
+            group: g.name,
+            name: opt.name,
+            priceDelta: Number(opt.price_delta),
+          });
+      }
     }
-    return sum;
-  }, [picked]);
+    return out;
+  }, [groups, picked]);
 
+  const addonsTotal = selectedOptions.reduce((sum, o) => sum + o.priceDelta, 0);
   const unitPrice = price + addonsTotal;
+
+  const missingRequired = groups.some((g) => g.is_required && (picked[g.id]?.length ?? 0) === 0);
 
   const reset = () => {
     setQty(1);
@@ -84,35 +70,45 @@ export function ProductModal({
     setPicked({});
   };
 
-  const toggle = (group: OptionGroup, choice: string) => {
+  // Default single-choice groups to their first option so the price is concrete.
+  useEffect(() => {
+    if (!product) return;
     setPicked((prev) => {
-      const current = prev[group.key] ?? [];
-      if (group.multi) {
+      const next = { ...prev };
+      for (const g of groups) {
+        if (!g.is_multi && g.is_required && !next[g.id]?.length && g.product_options[0])
+          next[g.id] = [g.product_options[0].id];
+      }
+      return next;
+    });
+  }, [groups, product]);
+
+  const toggle = (group: ProductOptionGroup, optionId: string) => {
+    setPicked((prev) => {
+      const current = prev[group.id] ?? [];
+      if (group.is_multi) {
         return {
           ...prev,
-          [group.key]: current.includes(choice)
-            ? current.filter((c) => c !== choice)
-            : [...current, choice],
+          [group.id]: current.includes(optionId)
+            ? current.filter((c) => c !== optionId)
+            : [...current, optionId],
         };
       }
-      return { ...prev, [group.key]: [choice] };
+      return { ...prev, [group.id]: [optionId] };
     });
   };
 
   const addToCart = () => {
-    if (!product) return;
-    const selections = DEFAULT_OPTION_GROUPS.flatMap((g) =>
-      (picked[g.key] ?? []).map((c) => `${t(g.labelKey)}: ${t(c as TranslationKey)}`),
-    );
-    const noteText = [selections.join(" · "), notes.trim()].filter(Boolean).join(" — ");
+    if (!product || missingRequired) return;
     add(
       {
         productId: product.id,
         shopId: product.shop_id,
         shopName,
-        name: noteText ? `${product.name} (${noteText})` : product.name,
+        name: product.name,
         imagePath: product.image_url,
         unitPrice,
+        options: selectedOptions,
       },
       qty,
     );
@@ -153,32 +149,32 @@ export function ProductModal({
         </DialogHeader>
 
         <div className="space-y-5 py-2">
-          {DEFAULT_OPTION_GROUPS.map((g) => (
-            <div key={g.key}>
+          {groups.map((g) => (
+            <div key={g.id}>
               <p className="text-sm font-bold">
-                {t(g.labelKey)}
-                {g.multi && (
-                  <span className="ml-1 text-xs font-normal text-muted-foreground">
-                    {t("pm_optional")}
-                  </span>
-                )}
+                {g.name}
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  {g.is_required ? t("pm_required") : t("pm_optional")}
+                </span>
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {g.choices.map((c) => {
-                  const active = picked[g.key]?.includes(c.nameKey);
+                {g.product_options.map((o) => {
+                  const active = picked[g.id]?.includes(o.id);
                   return (
                     <button
-                      key={c.nameKey}
+                      key={o.id}
                       type="button"
-                      onClick={() => toggle(g, c.nameKey)}
+                      onClick={() => toggle(g, o.id)}
                       className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                         active
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-background hover:bg-secondary"
                       }`}
                     >
-                      {t(c.nameKey)}
-                      {c.priceDelta > 0 && <span className="ml-1">+{ETB(c.priceDelta)}</span>}
+                      {o.name}
+                      {Number(o.price_delta) > 0 && (
+                        <span className="ml-1">+{ETB(Number(o.price_delta))}</span>
+                      )}
                     </button>
                   );
                 })}
@@ -216,10 +212,16 @@ export function ProductModal({
               <Plus className="h-4 w-4" />
             </button>
           </div>
-          <Button className="flex-1" onClick={addToCart} disabled={!product.in_stock}>
-            {product.in_stock
-              ? t("pm_add_to_order", { total: ETB(unitPrice * qty) })
-              : t("pm_out_of_stock")}
+          <Button
+            className="flex-1"
+            onClick={addToCart}
+            disabled={!product.in_stock || missingRequired}
+          >
+            {!product.in_stock
+              ? t("pm_out_of_stock")
+              : missingRequired
+                ? t("pm_choose_required")
+                : t("pm_add_to_order", { total: ETB(unitPrice * qty) })}
           </Button>
         </div>
       </DialogContent>

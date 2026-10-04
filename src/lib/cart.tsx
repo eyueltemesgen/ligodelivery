@@ -1,6 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+export type CartOption = {
+  /** Option row id, used for server-side validation at checkout. */
+  id: string;
+  group: string;
+  name: string;
+  priceDelta: number;
+};
+
 export type CartItem = {
+  /** Stable line identity: product plus its selected options. */
+  lineId: string;
   productId: string;
   shopId: string;
   shopName: string;
@@ -8,13 +18,16 @@ export type CartItem = {
   imagePath: string | null;
   unitPrice: number;
   quantity: number;
+  options: CartOption[];
 };
+
+export type NewCartItem = Omit<CartItem, "quantity" | "lineId"> & { lineId?: string };
 
 type CartValue = {
   items: CartItem[];
-  add: (item: Omit<CartItem, "quantity">, qty?: number) => void;
-  setQty: (productId: string, qty: number) => void;
-  remove: (productId: string) => void;
+  add: (item: NewCartItem, qty?: number) => void;
+  setQty: (lineId: string, qty: number) => void;
+  remove: (lineId: string) => void;
   clear: () => void;
   count: number;
   subtotal: number;
@@ -25,13 +38,41 @@ type CartValue = {
 const CartContext = createContext<CartValue | null>(null);
 const KEY = "ligo.cart.v1";
 
+/** Deterministic line id from a product and the ids of its selected options. */
+export const cartLineId = (productId: string, optionIds: string[] = []) =>
+  optionIds.length ? `${productId}::${[...optionIds].sort().join(",")}` : productId;
+
+/** Reads older carts that predate options and fills the new fields safely. */
+function migrate(raw: unknown): CartItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((i): i is Record<string, unknown> => !!i && typeof i === "object")
+    .map((i) => {
+      const productId = String(i["productId"] ?? "");
+      const options = Array.isArray(i["options"]) ? (i["options"] as CartOption[]) : [];
+      const optionIds = options.map((o) => o.id).filter(Boolean);
+      return {
+        lineId: String(i["lineId"] ?? cartLineId(productId, optionIds)),
+        productId,
+        shopId: String(i["shopId"] ?? ""),
+        shopName: String(i["shopName"] ?? ""),
+        name: String(i["name"] ?? ""),
+        imagePath: (i["imagePath"] as string | null) ?? null,
+        unitPrice: Number(i["unitPrice"] ?? 0),
+        quantity: Math.max(1, Number(i["quantity"] ?? 1)),
+        options,
+      };
+    })
+    .filter((i) => i.productId);
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setItems(JSON.parse(raw) as CartItem[]);
+      if (raw) setItems(migrate(JSON.parse(raw)));
     } catch {
       /* ignore corrupt cart */
     }
@@ -55,21 +96,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
       shopName: items[0]?.shopName ?? null,
       add: (item, qty = 1) =>
         setItems((prev) => {
+          const lineId =
+            item.lineId ??
+            cartLineId(
+              item.productId,
+              item.options.map((o) => o.id),
+            );
+          // Single-shop cart: switching shop replaces the previous basket.
           const base = prev.length && prev[0]?.shopId !== item.shopId ? [] : prev;
-          const found = base.find((i) => i.productId === item.productId);
+          const found = base.find((i) => i.lineId === lineId);
           if (found)
             return base.map((i) =>
-              i.productId === item.productId ? { ...i, quantity: i.quantity + qty } : i,
+              i.lineId === lineId ? { ...i, quantity: i.quantity + qty } : i,
             );
-          return [...base, { ...item, quantity: qty }];
+          return [...base, { ...item, lineId, quantity: qty }];
         }),
-      setQty: (productId, qty) =>
+      setQty: (lineId, qty) =>
         setItems((prev) =>
           qty <= 0
-            ? prev.filter((i) => i.productId !== productId)
-            : prev.map((i) => (i.productId === productId ? { ...i, quantity: qty } : i)),
+            ? prev.filter((i) => i.lineId !== lineId)
+            : prev.map((i) => (i.lineId === lineId ? { ...i, quantity: qty } : i)),
         ),
-      remove: (productId) => setItems((prev) => prev.filter((i) => i.productId !== productId)),
+      remove: (lineId) => setItems((prev) => prev.filter((i) => i.lineId !== lineId)),
       clear: () => setItems([]),
     };
   }, [items]);

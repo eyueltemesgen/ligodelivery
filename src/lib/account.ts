@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isOrderOpen } from "@/lib/orders";
+import { isMissingColumn } from "@/lib/supa-error";
 
 /**
  * Customer account data access. Every query is scoped to the signed-in user by
@@ -27,6 +28,13 @@ export type OrderRow = {
   rider_id: string | null;
   lat: number | null;
   lng: number | null;
+  // Delivery fee engine snapshot (present once the migration is applied).
+  delivery_distance?: number | null;
+  delivery_rule?: string | null;
+  shop_lat?: number | null;
+  shop_lng?: number | null;
+  customer_lat?: number | null;
+  customer_lng?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -115,21 +123,41 @@ const softCount = async (
 /** Page size for order history; the list grows on demand. */
 export const ORDER_PAGE_SIZE = 25;
 
+/**
+ * Column list for order reads. The delivery-fee snapshot columns are additive;
+ * if the migration has not been applied yet PostgREST rejects the select, so
+ * callers fall back to the legacy columns instead of failing to load orders.
+ */
+const ORDER_COLUMNS_FULL =
+  "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,delivery_distance,delivery_rule,shop_lat,shop_lng,customer_lat,customer_lng,created_at,updated_at";
+const ORDER_COLUMNS_LEGACY =
+  "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at";
+
+async function selectOrderRows(
+  userId: string,
+  limit: number,
+): Promise<{ data: OrderRow[] | null; error: unknown }> {
+  const run = (cols: string) =>
+    supabase
+      .from("orders")
+      .select(cols)
+      .eq("customer_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+  const first = await run(ORDER_COLUMNS_FULL);
+  if (first.error && isMissingColumn(first.error)) {
+    return (await run(ORDER_COLUMNS_LEGACY)) as unknown as {
+      data: OrderRow[] | null;
+      error: unknown;
+    };
+  }
+  return first as unknown as { data: OrderRow[] | null; error: unknown };
+}
+
 export const ordersQuery = (userId: string | undefined, limit = ORDER_PAGE_SIZE) => ({
   queryKey: ["account-orders", userId, limit],
   enabled: !!userId,
-  queryFn: async () =>
-    unwrap<OrderRow[]>(
-      await supabase
-        .from("orders")
-        .select(
-          "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at",
-        )
-        .eq("customer_id", userId!)
-        .order("created_at", { ascending: false })
-        .limit(limit),
-      [],
-    ),
+  queryFn: async () => unwrap<OrderRow[]>(await selectOrderRows(userId!, limit), []),
 });
 
 /** Products for a set of orders, grouped by order id. */
@@ -289,16 +317,8 @@ export const accountSummaryQuery = (userId: string | undefined) => ({
   queryFn: async (): Promise<AccountSummary> => {
     const [orders, addressCount, wishlistCount, favoriteCount, unreadNotifications] =
       await Promise.all([
-        soft<OrderRow[]>(
-          supabase
-            .from("orders")
-            .select(
-              "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at",
-            )
-            .eq("customer_id", userId!)
-            .order("created_at", { ascending: false })
-            .limit(30),
-          [],
+        selectOrderRows(userId!, 30).then((r) =>
+          r.error ? ([] as OrderRow[]) : ((r.data ?? []) as OrderRow[]),
         ),
         softCount(
           supabase
