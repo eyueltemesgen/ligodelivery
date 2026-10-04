@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
-import { ORDER_STATUSES, STATUS_LABEL, statusTone, notify, type OrderStatus } from "@/lib/orders";
+import { ORDER_STATUSES, STATUS_LABEL_KEY, statusTone, notify, type OrderStatus } from "@/lib/orders";
+import { useLanguage } from "@/hooks/useLanguage";
 import { isMissingRpc, supabaseErrorMessage } from "@/lib/supa-error";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
 import { ShopHoursEditor } from "@/components/ligo/ShopHoursEditor";
@@ -65,6 +66,7 @@ export const Route = createFileRoute("/admin/ops")({
 
 // Access control lives in the /admin layout (AdminGate); this page assumes an admin session.
 function AdminPage() {
+  const { t } = useLanguage();
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
   return (
@@ -77,21 +79,21 @@ function AdminPage() {
       >
         <div className="-mx-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           <TabsList className="h-auto w-max min-w-full justify-start gap-1">
-            <TabsTrigger value="orders" className="min-h-9">Orders</TabsTrigger>
-            <TabsTrigger value="payments" className="min-h-9">Payments</TabsTrigger>
-            <TabsTrigger value="payouts" className="min-h-9">Payouts</TabsTrigger>
-            <TabsTrigger value="customers" className="min-h-9">Customers</TabsTrigger>
-            <TabsTrigger value="shops" className="min-h-9">Shops</TabsTrigger>
-            <TabsTrigger value="products" className="min-h-9">Products</TabsTrigger>
-            <TabsTrigger value="categories" className="min-h-9">Categories</TabsTrigger>
-            <TabsTrigger value="special-moments" className="min-h-9">Special Moments</TabsTrigger>
-            <TabsTrigger value="offers" className="min-h-9">Offers</TabsTrigger>
-            <TabsTrigger value="marketing" className="min-h-9">Marketing</TabsTrigger>
-            <TabsTrigger value="banners" className="min-h-9">Banners</TabsTrigger>
-            <TabsTrigger value="content" className="min-h-9">Content</TabsTrigger>
-            <TabsTrigger value="financials" className="min-h-9">Financials</TabsTrigger>
-            <TabsTrigger value="settings" className="min-h-9">Settings</TabsTrigger>
-            <TabsTrigger value="system" className="min-h-9">System</TabsTrigger>
+            <TabsTrigger value="orders" className="min-h-9">{t("aop_tab_orders")}</TabsTrigger>
+            <TabsTrigger value="payments" className="min-h-9">{t("aop_tab_payments")}</TabsTrigger>
+            <TabsTrigger value="payouts" className="min-h-9">{t("aop_tab_payouts")}</TabsTrigger>
+            <TabsTrigger value="customers" className="min-h-9">{t("aop_tab_customers")}</TabsTrigger>
+            <TabsTrigger value="shops" className="min-h-9">{t("aop_tab_shops")}</TabsTrigger>
+            <TabsTrigger value="products" className="min-h-9">{t("aop_tab_products")}</TabsTrigger>
+            <TabsTrigger value="categories" className="min-h-9">{t("aop_tab_categories")}</TabsTrigger>
+            <TabsTrigger value="special-moments" className="min-h-9">{t("aop_tab_special_moments")}</TabsTrigger>
+            <TabsTrigger value="offers" className="min-h-9">{t("aop_tab_offers")}</TabsTrigger>
+            <TabsTrigger value="marketing" className="min-h-9">{t("aop_tab_marketing")}</TabsTrigger>
+            <TabsTrigger value="banners" className="min-h-9">{t("aop_tab_banners")}</TabsTrigger>
+            <TabsTrigger value="content" className="min-h-9">{t("aop_tab_content")}</TabsTrigger>
+            <TabsTrigger value="financials" className="min-h-9">{t("aop_tab_financials")}</TabsTrigger>
+            <TabsTrigger value="settings" className="min-h-9">{t("aop_tab_settings")}</TabsTrigger>
+            <TabsTrigger value="system" className="min-h-9">{t("aop_tab_system")}</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="orders">
@@ -159,6 +161,7 @@ const DEFAULT_PLATFORM: PlatformSettings = {
 };
 
 function SystemAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<PlatformSettings | null>(null);
   const [saving, setSaving] = useState(false);
@@ -191,7 +194,7 @@ function SystemAdmin() {
     setDraft(null);
     void qc.invalidateQueries({ queryKey: ["admin-platform-settings"] });
     void qc.invalidateQueries({ queryKey: ["settings-public"] });
-    toast.success("Platform settings saved");
+    toast.success(t("aop_settings_saved"));
   };
 
   return (
@@ -199,9 +202,9 @@ function SystemAdmin() {
       onSubmit={save}
       className="mt-6 max-w-lg space-y-4 rounded-xl border border-border bg-card p-6 shadow-card"
     >
-      <h3 className="font-display text-lg font-bold">System control center</h3>
+      <h3 className="font-display text-lg font-bold">{t("aop_system_center")}</h3>
       <div className="space-y-1.5">
-        <Label htmlFor="commission">Platform commission (%)</Label>
+        <Label htmlFor="commission">{t("aop_commission_pct")}</Label>
         <Input
           id="commission"
           type="number"
@@ -213,7 +216,7 @@ function SystemAdmin() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="base-fee">Base delivery fee (ETB)</Label>
+        <Label htmlFor="base-fee">{t("aop_base_fee")}</Label>
         <Input
           id="base-fee"
           type="number"
@@ -223,11 +226,11 @@ function SystemAdmin() {
           onChange={(e) => setDraft({ ...value, base_delivery_fee: Number(e.target.value) || 0 })}
         />
         <p className="text-xs text-muted-foreground">
-          Used when a shop doesn't set its own delivery fee.
+          {t("aop_base_fee_hint")}
         </p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="surge">Surge multiplier</Label>
+        <Label htmlFor="surge">{t("aop_surge")}</Label>
         <Input
           id="surge"
           type="number"
@@ -238,11 +241,11 @@ function SystemAdmin() {
           onChange={(e) => setDraft({ ...value, surge_multiplier: Number(e.target.value) || 1 })}
         />
         <p className="text-xs text-muted-foreground">
-          Multiplies delivery fees at checkout during peak demand.
+          {t("aop_surge_hint")}
         </p>
       </div>
       <label className="flex items-center justify-between gap-4 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm font-medium">
-        Emergency dispatch pause
+        {t("aop_emergency_pause")}
         <Switch
           checked={value.dispatch_paused}
           onCheckedChange={(v) => setDraft({ ...value, dispatch_paused: v })}
@@ -250,12 +253,11 @@ function SystemAdmin() {
       </label>
       {value.dispatch_paused && (
         <p className="text-xs text-destructive">
-          Dispatch is paused: admins cannot dispatch orders and riders receive no new offers until
-          resumed.
+          {t("aop_pause_warning")}
         </p>
       )}
       <Button type="submit" disabled={saving}>
-        {saving ? "Saving…" : "Save platform settings"}
+        {saving ? t("aop_saving") : t("aop_save_platform")}
       </Button>
     </form>
   );
@@ -271,6 +273,7 @@ function Card({ label, value }: { label: string; value: string | number }) {
 }
 
 function CustomersAdmin() {
+  const { t } = useLanguage();
   const { data: customers = [] } = useQuery({
     queryKey: ["admin-customers"],
     queryFn: async () => {
@@ -302,11 +305,11 @@ function CustomersAdmin() {
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <th className="px-4 py-3">Customer</th>
-            <th className="px-4 py-3">Contact</th>
-            <th className="px-4 py-3">Joined</th>
-            <th className="px-4 py-3 text-right">Orders</th>
-            <th className="px-4 py-3 text-right">Lifetime spend</th>
+            <th className="px-4 py-3">{t("aop_customer")}</th>
+            <th className="px-4 py-3">{t("aop_contact")}</th>
+            <th className="px-4 py-3">{t("aop_joined")}</th>
+            <th className="px-4 py-3 text-right">{t("aop_tab_orders")}</th>
+            <th className="px-4 py-3 text-right">{t("aop_lifetime_spend")}</th>
           </tr>
         </thead>
         <tbody>
@@ -322,7 +325,7 @@ function CustomersAdmin() {
           {customers.length === 0 && (
             <tr>
               <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                No customers yet.
+                {t("aop_no_customers")}
               </td>
             </tr>
           )}
@@ -333,6 +336,7 @@ function CustomersAdmin() {
 }
 
 export function FinancialsPanel() {
+  const { t } = useLanguage();
   const { data } = useQuery({
     queryKey: ["admin-financials"],
     queryFn: async () => {
@@ -365,20 +369,20 @@ export function FinancialsPanel() {
     },
   });
 
-  if (!data) return <p className="mt-6 text-sm text-muted-foreground">Loading…</p>;
+  if (!data) return <p className="mt-6 text-sm text-muted-foreground">{t("aop_loading")}</p>;
 
   return (
     <div className="mt-6 space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card label="Platform gross revenue" value={ETB(data.gross)} />
-        <Card label="Platform commission" value={ETB(data.commission)} />
-        <Card label="Delivery fees" value={ETB(data.deliveryFees)} />
-        <Card label="Merchant payouts value" value={ETB(data.merchantPayouts)} />
-        <Card label="Rider cashouts paid" value={ETB(data.paidOut)} />
-        <Card label="Cashout requests pending" value={ETB(data.requested)} />
+        <Card label={t("aop_gross_revenue")} value={ETB(data.gross)} />
+        <Card label={t("aop_platform_commission")} value={ETB(data.commission)} />
+        <Card label={t("aop_delivery_fees")} value={ETB(data.deliveryFees)} />
+        <Card label={t("aop_merchant_payouts_value")} value={ETB(data.merchantPayouts)} />
+        <Card label={t("aop_rider_cashouts_paid")} value={ETB(data.paidOut)} />
+        <Card label={t("aop_cashout_pending")} value={ETB(data.requested)} />
       </div>
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <h3 className="font-display font-bold">Volume by payment gateway</h3>
+        <h3 className="font-display font-bold">{t("aop_volume_by_gateway")}</h3>
         <ul className="mt-3 space-y-1.5 text-sm">
           {data.byMethod.map(([method, total]) => (
             <li
@@ -396,6 +400,7 @@ export function FinancialsPanel() {
 }
 
 function Stats() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["admin-stats"],
@@ -447,14 +452,14 @@ function Stats() {
 
   return (
     <div className="mt-6 grid gap-4 sm:grid-cols-3 lg:grid-cols-7">
-      <Card label="Orders" value={data?.orders ?? 0} />
-      <Card label="Active" value={data?.active ?? 0} />
-      <Card label="Revenue" value={ETB(data?.revenue ?? 0)} />
-      <Card label="Shops" value={data?.shops ?? 0} />
-      <Card label="Products" value={data?.products ?? 0} />
-      <Card label="Pending receipts" value={data?.pendingProofs ?? 0} />
+      <Card label={t("aop_orders")} value={data?.orders ?? 0} />
+      <Card label={t("aop_active")} value={data?.active ?? 0} />
+      <Card label={t("aop_revenue")} value={ETB(data?.revenue ?? 0)} />
+      <Card label={t("aop_shops")} value={data?.shops ?? 0} />
+      <Card label={t("aop_products")} value={data?.products ?? 0} />
+      <Card label={t("aop_pending_receipts")} value={data?.pendingProofs ?? 0} />
       <div className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Fleet</p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("aop_fleet")}</p>
         <p className="mt-1 font-display text-2xl font-extrabold">
           {data?.ridersOnline ?? 0}
           <span className="text-sm font-semibold text-muted-foreground">
@@ -467,7 +472,7 @@ function Stats() {
               (data?.ridersOnline ?? 0) > 0 ? "bg-primary" : "bg-muted-foreground/40"
             }`}
           />
-          {data?.ridersOnline ?? 0} online · {data?.ridersOnTrip ?? 0} on trip
+          {t("aop_fleet_status", { online: data?.ridersOnline ?? 0, onTrip: data?.ridersOnTrip ?? 0 })}
         </p>
       </div>
     </div>
@@ -475,6 +480,7 @@ function Stats() {
 }
 
 function OrdersAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders"],
@@ -492,7 +498,7 @@ function OrdersAdmin() {
         : { data: [] };
       return (data ?? []).map((r) => ({
         ...r,
-        name: profiles?.find((p) => p.id === r.id)?.full_name || "Rider",
+        name: profiles?.find((p) => p.id === r.id)?.full_name || t("aop_rider"),
         phone: profiles?.find((p) => p.id === r.id)?.phone ?? "",
       }));
     },
@@ -527,7 +533,7 @@ function OrdersAdmin() {
     }
     await notify(customerId, `Order ${code}`, message, "order", id);
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
-    toast.success("Order updated");
+    toast.success(t("aop_order_updated"));
   };
 
   const approveDispatch = async (id: string, customerId: string, code: string) => {
@@ -538,13 +544,13 @@ function OrdersAdmin() {
     }
     await notify(
       customerId,
-      `Order ${code} confirmed`,
-      "Payment verified — a rider is on the way.",
+      t("aop_notify_order_confirmed", { code }),
+      t("aop_notify_payment_verified"),
       "order",
       id,
     );
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
-    toast.success("Order dispatched to all riders");
+    toast.success(t("aop_order_dispatched"));
   };
 
   return (
@@ -561,7 +567,7 @@ function OrdersAdmin() {
             <span
               className={`rounded-full px-2 py-1 text-xs font-semibold ${statusTone(o.status)}`}
             >
-              {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
+              {STATUS_LABEL_KEY[o.status as OrderStatus] ? t(STATUS_LABEL_KEY[o.status as OrderStatus]) : o.status}
             </span>
           </div>
           <p className="mt-2 text-sm">{o.delivery_address}</p>
@@ -574,7 +580,7 @@ function OrdersAdmin() {
                 size="sm"
                 onClick={() => void approveDispatch(o.id, o.customer_id, o.order_code)}
               >
-                Approve &amp; Dispatch
+                {t("aop_approve_dispatch")}
               </Button>
             )}
             <select
@@ -586,13 +592,13 @@ function OrdersAdmin() {
                   { status: e.target.value },
                   o.customer_id,
                   o.order_code,
-                  STATUS_LABEL[e.target.value as OrderStatus] ?? e.target.value,
+                  STATUS_LABEL_KEY[e.target.value as OrderStatus] ? t(STATUS_LABEL_KEY[e.target.value as OrderStatus]) : e.target.value,
                 )
               }
             >
               {ORDER_STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {STATUS_LABEL[s]}
+                  {t(STATUS_LABEL_KEY[s])}
                 </option>
               ))}
             </select>
@@ -608,17 +614,17 @@ function OrdersAdmin() {
                   },
                   o.customer_id,
                   o.order_code,
-                  "A rider has been assigned to your order.",
+                  t("aop_notify_rider_assigned"),
                 )
               }
             >
-              <option value="">Assign rider…</option>
+              <option value="">{t("aop_assign_rider")}</option>
               {riders
                 .filter((r) => r.is_approved)
                 .map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
-                    {r.is_online ? " (online)" : ""}
+                    {r.is_online ? t("aop_online_suffix") : ""}
                   </option>
                 ))}
             </select>
@@ -631,7 +637,7 @@ function OrdersAdmin() {
                   { payment_status: "paid" },
                   o.customer_id,
                   o.order_code,
-                  "Payment confirmed.",
+                  t("aop_notify_payment_confirmed"),
                 )
               }
             >
@@ -665,6 +671,7 @@ async function dispatchOrder(orderId: string) {
 }
 
 function PaymentsAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: proofs = [] } = useQuery({
     queryKey: ["admin-proofs"],
@@ -705,24 +712,24 @@ function PaymentsAdmin() {
     }
     await notify(
       userId,
-      "Payment " + status,
+      t("aop_notify_payment", { status: status === "approved" ? t("aop_approved") : t("aop_rejected") }),
       status === "approved"
-        ? "Your payment was verified and your order is on its way to a rider."
-        : "Your receipt was rejected. Please re-submit.",
+        ? t("aop_notify_payment_approved_body")
+        : t("aop_notify_payment_rejected_body"),
       "payment",
       orderId,
     );
     void qc.invalidateQueries({ queryKey: ["admin-proofs"] });
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
     toast.success(
-      status === "approved" ? "Payment approved — order dispatched to riders" : "Receipt rejected",
+      status === "approved" ? t("aop_payment_approved_dispatch") : t("aop_receipt_rejected"),
     );
   };
 
   return (
     <div className="mt-6 space-y-3">
       {proofs.length === 0 && (
-        <p className="text-sm text-muted-foreground">No receipts submitted.</p>
+        <p className="text-sm text-muted-foreground">{t("aop_no_receipts")}</p>
       )}
       {proofs.map((p) => (
         <div
@@ -731,7 +738,7 @@ function PaymentsAdmin() {
         >
           <StorageImage
             path={p.image_url}
-            alt="Receipt"
+            alt={t("aop_receipt")}
             bucket={PROOF_BUCKET}
             className="h-24 w-24 rounded-lg object-cover"
           />
@@ -739,7 +746,7 @@ function PaymentsAdmin() {
             <p className="font-semibold uppercase">
               {p.method} · {ETB(p.amount ?? 0)}
             </p>
-            <p className="text-sm text-muted-foreground">Ref: {p.reference || "—"}</p>
+            <p className="text-sm text-muted-foreground">{t("aop_ref")} {p.reference || "—"}</p>
             <p className="text-xs text-muted-foreground">
               {formatDate(p.created_at)} · {p.status}
             </p>
@@ -752,9 +759,7 @@ function PaymentsAdmin() {
               size="sm"
               variant="outline"
               onClick={() => void review(p.id, p.order_id, p.user_id, "rejected")}
-            >
-              Reject
-            </Button>
+            >{t("aop_reject")}</Button>
           </div>
         </div>
       ))}
@@ -767,6 +772,7 @@ function useImageUpload(folder: string) {
 }
 
 export function PayoutsAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: payouts = [] } = useQuery({
     queryKey: ["admin-payouts"],
@@ -790,11 +796,11 @@ export function PayoutsAdmin() {
         const riderProfile = profiles?.find((x) => x.id === p.rider_id);
         return {
           ...p,
-          riderName: riderProfile?.full_name || "Rider",
+          riderName: riderProfile?.full_name || t("aop_rider"),
           riderPhone: riderProfile?.phone ?? "",
           riderAvatar: riderProfile?.avatar_url ?? null,
           payoutDetails: riderRow
-            ? `${riderRow.payout_method === "telebirr" ? "Telebirr" : "Bank"}: ${riderRow.payout_account ?? "—"} (${riderRow.payout_account_name ?? "—"})`
+            ? `${riderRow.payout_method === "telebirr" ? t("ar_telebirr") : t("aop_bank")}: ${riderRow.payout_account ?? "—"} (${riderRow.payout_account_name ?? "—"})`
             : "",
         };
       });
@@ -838,20 +844,20 @@ export function PayoutsAdmin() {
     }
     await notify(
       riderId,
-      status === "paid" ? "Payout sent" : "Payout rejected",
+      status === "paid" ? t("aop_notify_payout_sent") : t("aop_notify_payout_rejected"),
       status === "paid"
-        ? `${ETB(amount)} has been paid out to you.`
-        : "Your payout request was rejected. Contact the የኔ Go team.",
+        ? t("aop_notify_payout_paid_body", { amount: ETB(amount) })
+        : t("aop_notify_payout_rejected_body"),
       "payout",
     );
     void qc.invalidateQueries({ queryKey: ["admin-payouts"] });
-    toast.success(`Payout ${status}`);
+    toast.success(status === "paid" ? t("aop_payout_paid") : t("aop_payout_rejected"));
   };
 
   return (
     <div className="mt-6 space-y-3">
       {payouts.length === 0 && (
-        <p className="text-sm text-muted-foreground">No payout requests yet.</p>
+        <p className="text-sm text-muted-foreground">{t("aop_no_payouts")}</p>
       )}
       {payouts.map((p) => (
         <div
@@ -883,9 +889,7 @@ export function PayoutsAdmin() {
                 size="sm"
                 variant="outline"
                 onClick={() => void process(p.id, p.rider_id, Number(p.amount), "rejected")}
-              >
-                Reject
-              </Button>
+              >{t("aop_reject")}</Button>
             </div>
           ) : (
             <span
@@ -901,6 +905,7 @@ export function PayoutsAdmin() {
 }
 
 function CategoriesAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const upload = useImageUpload("categories");
   const [name, setName] = useState("");
@@ -925,9 +930,9 @@ function CategoriesAdmin() {
       setName("");
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-categories"] });
-      toast.success("Category added");
+      toast.success(t("aop_category_added"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : t("aop_failed"));
     }
   };
 
@@ -942,14 +947,14 @@ function CategoriesAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New category</h3>
-        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <h3 className="font-display font-bold">{t("aop_new_category")}</h3>
+        <Input placeholder={t("aop_name")} value={name} onChange={(e) => setName(e.target.value)} required />
         <Input
           type="file"
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Add category</Button>
+        <Button type="submit">{t("aop_add_category")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((c) => (
@@ -973,6 +978,7 @@ function CategoriesAdmin() {
 }
 
 function ShopsAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const upload = useImageUpload("shops");
   const [form, setForm] = useState({
@@ -1022,7 +1028,7 @@ function ShopsAdmin() {
       });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-shops"] });
-      toast.success("Shop created");
+      toast.success(t("aop_shop_created"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -1042,25 +1048,25 @@ function ShopsAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New shop</h3>
+        <h3 className="font-display font-bold">{t("aop_new_shop")}</h3>
         <Input
-          placeholder="Shop name"
+          placeholder={t("aop_shop_name")}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Description"
+          placeholder={t("aop_description")}
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
         <Input
-          placeholder="Address"
+          placeholder={t("aop_address")}
           value={form.address}
           onChange={(e) => setForm({ ...form, address: e.target.value })}
         />
         <Input
-          placeholder="Phone"
+          placeholder={t("aop_phone")}
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
         />
@@ -1069,7 +1075,7 @@ function ShopsAdmin() {
           value={form.category_id}
           onChange={(e) => setForm({ ...form, category_id: e.target.value })}
         >
-          <option value="">Category…</option>
+          <option value="">{t("aop_category_placeholder")}</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -1079,13 +1085,13 @@ function ShopsAdmin() {
         <div className="grid grid-cols-2 gap-2">
           <Input
             type="number"
-            placeholder="Delivery fee"
+            placeholder={t("aop_delivery_fee")}
             value={form.delivery_fee}
             onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })}
           />
           <Input
             type="number"
-            placeholder="Minutes"
+            placeholder={t("aop_minutes")}
             value={form.delivery_time_min}
             onChange={(e) => setForm({ ...form, delivery_time_min: e.target.value })}
           />
@@ -1095,7 +1101,7 @@ function ShopsAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Create shop</Button>
+        <Button type="submit">{t("aop_create_shop")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((s) => (
@@ -1117,21 +1123,21 @@ function ShopsAdmin() {
               </div>
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <label className="flex items-center gap-2">
-                  Online
+                  {t("aop_online")}
                   <Switch
                     checked={s.is_online}
                     onCheckedChange={(v) => void toggle(s.id, { is_online: v })}
                   />
                 </label>
                 <label className="flex items-center gap-2">
-                  Featured
+                  {t("aop_featured")}
                   <Switch
                     checked={s.is_featured}
                     onCheckedChange={(v) => void toggle(s.id, { is_featured: v })}
                   />
                 </label>
                 <label className="flex items-center gap-2">
-                  Active
+                  {t("aop_active")}
                   <Switch
                     checked={s.is_active}
                     onCheckedChange={(v) => void toggle(s.id, { is_active: v })}
@@ -1142,16 +1148,16 @@ function ShopsAdmin() {
                   variant="outline"
                   onClick={() => {
                     void navigator.clipboard.writeText(`${window.location.origin}/shops/${s.id}`);
-                    toast.success("Shop link copied — paste it in a banner or ad");
+                    toast.success(t("aop_shop_link_copied"));
                   }}
                 >
-                  Copy promo link
+                  {t("aop_copy_promo_link")}
                 </Button>
               </div>
             </div>
             <details className="mt-3">
               <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
-                Opening hours
+                {t("aop_opening_hours")}
               </summary>
               <div className="mt-2">
                 <ShopHoursEditor
@@ -1169,6 +1175,7 @@ function ShopsAdmin() {
 }
 
 function ProductsAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const upload = useImageUpload("products");
   const [form, setForm] = useState({
@@ -1217,7 +1224,7 @@ function ProductsAdmin() {
       });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-products"] });
-      toast.success("Product added");
+      toast.success(t("aop_product_added"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -1237,14 +1244,14 @@ function ProductsAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New product</h3>
+        <h3 className="font-display font-bold">{t("aop_new_product")}</h3>
         <select
           className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
           value={form.shop_id}
           onChange={(e) => setForm({ ...form, shop_id: e.target.value })}
           required
         >
-          <option value="">Select shop…</option>
+          <option value="">{t("aop_select_shop")}</option>
           {shops.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -1252,13 +1259,13 @@ function ProductsAdmin() {
           ))}
         </select>
         <Input
-          placeholder="Product name"
+          placeholder={t("aop_product_name")}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Description"
+          placeholder={t("aop_description")}
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
@@ -1266,14 +1273,14 @@ function ProductsAdmin() {
           <Input
             type="number"
             step="0.01"
-            placeholder="Price ETB"
+            placeholder={t("aop_price_etb")}
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             required
           />
           <Input
             type="number"
-            placeholder="Discount %"
+            placeholder={t("aop_discount_pct")}
             value={form.discount_percent}
             onChange={(e) => setForm({ ...form, discount_percent: e.target.value })}
           />
@@ -1283,7 +1290,7 @@ function ProductsAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Add product</Button>
+        <Button type="submit">{t("aop_add_product")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((p) => (
@@ -1307,14 +1314,14 @@ function ProductsAdmin() {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <label className="flex items-center gap-2">
-                Popular
+                {t("aop_popular")}
                 <Switch
                   checked={p.is_popular}
                   onCheckedChange={(v) => void toggle(p.id, { is_popular: v })}
                 />
               </label>
               <label className="flex items-center gap-2">
-                In stock
+                {t("aop_in_stock")}
                 <Switch
                   checked={p.in_stock}
                   onCheckedChange={(v) => void toggle(p.id, { in_stock: v })}
@@ -1329,6 +1336,7 @@ function ProductsAdmin() {
 }
 
 function OffersAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const upload = useImageUpload("offers");
   const [form, setForm] = useState({
@@ -1360,7 +1368,7 @@ function OffersAdmin() {
       setForm({ title: "", description: "", discount_type: "percent", discount_value: "10" });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-offers"] });
-      toast.success("Offer created");
+      toast.success(t("aop_offer_created"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -1372,15 +1380,15 @@ function OffersAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New offer</h3>
+        <h3 className="font-display font-bold">{t("aop_new_offer")}</h3>
         <Input
-          placeholder="Title"
+          placeholder={t("aop_title")}
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Description"
+          placeholder={t("aop_description")}
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
@@ -1390,8 +1398,8 @@ function OffersAdmin() {
             value={form.discount_type}
             onChange={(e) => setForm({ ...form, discount_type: e.target.value })}
           >
-            <option value="percent">Percent</option>
-            <option value="amount">Amount</option>
+            <option value="percent">{t("aop_percent")}</option>
+            <option value="amount">{t("aop_amount")}</option>
           </select>
           <Input
             type="number"
@@ -1404,7 +1412,7 @@ function OffersAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Create offer</Button>
+        <Button type="submit">{t("aop_create_offer")}</Button>
       </form>
       <ul className="space-y-2">
         {rows.map((o) => (
@@ -1444,6 +1452,7 @@ const PAYMENT_KEYS = [
 ];
 
 function SettingsAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: settings = {} } = useQuery({
     queryKey: ["admin-settings"],
@@ -1464,7 +1473,7 @@ function SettingsAdmin() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-settings"] });
-    toast.success("Saved");
+    toast.success(t("aop_saved"));
   };
 
   return (
@@ -1490,6 +1499,7 @@ function PaymentSetting({
   value: Record<string, string>;
   onSave: (v: Record<string, string>) => void;
 }) {
+  const { t } = useLanguage();
   const [accountName, setAccountName] = useState(value["account_name"] ?? "");
   const [accountNumber, setAccountNumber] = useState(value["account_number"] ?? "");
 
@@ -1503,16 +1513,14 @@ function PaymentSetting({
     >
       <h3 className="font-display font-bold">{label}</h3>
       <div className="space-y-1.5">
-        <Label>Account name</Label>
+        <Label>{t("aop_account_name")}</Label>
         <Input value={accountName} onChange={(e) => setAccountName(e.target.value)} />
       </div>
       <div className="space-y-1.5">
-        <Label>Account number</Label>
+        <Label>{t("aop_account_number")}</Label>
         <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
       </div>
-      <Button type="submit" size="sm">
-        Save
-      </Button>
+      <Button type="submit" size="sm">{t("aop_save")}</Button>
     </form>
   );
 }
@@ -1538,6 +1546,7 @@ function RowEditor({
   price?: number;
   alsoSetCover?: boolean;
 }) {
+  const { t } = useLanguage();
   const [deleting, setDeleting] = useState(false);
   const qc = useQueryClient();
   const [value, setValue] = useState(name);
@@ -1560,16 +1569,16 @@ function RowEditor({
         .eq("id", id);
       if (error) throw error;
       void qc.invalidateQueries({ queryKey: [invalidateKey] });
-      toast.success("Saved");
+      toast.success(t("aop_saved"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save");
+      toast.error(err instanceof Error ? err.message : t("aop_failed_save"));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async () => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    if (!window.confirm(t("aop_delete_confirm", { name }))) return;
     setDeleting(true);
     try {
       const { error } = await supabase.from(table).delete().eq("id", id);
@@ -1579,13 +1588,13 @@ function RowEditor({
           .update({ is_active: false } as never)
           .eq("id", id);
         if (deactivateError) throw error;
-        toast.success("In use by existing orders — hidden from the app instead");
+        toast.success(t("aop_in_use_hidden"));
       } else {
-        toast.success("Deleted");
+        toast.success(t("aop_deleted"));
       }
       void qc.invalidateQueries({ queryKey: [invalidateKey] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete");
+      toast.error(err instanceof Error ? err.message : t("aop_failed_delete"));
     } finally {
       setDeleting(false);
     }
@@ -1618,14 +1627,13 @@ function RowEditor({
       <Button size="sm" variant="outline" disabled={saving} onClick={() => void save(null)}>
         Save
       </Button>
-      <Button size="sm" variant="destructive" disabled={deleting} onClick={() => void remove()}>
-        Delete
-      </Button>
+      <Button size="sm" variant="destructive" disabled={deleting} onClick={() => void remove()}>{t("aop_delete")}</Button>
     </div>
   );
 }
 
 function BannersAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [form, setForm] = useState({
     title: "",
@@ -1672,7 +1680,7 @@ function BannersAdmin() {
       });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-banners"] });
-      toast.success("Banner created");
+      toast.success(t("aop_banner_created"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -1697,7 +1705,7 @@ function BannersAdmin() {
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-banners"] });
-    toast.success("Banner deleted");
+    toast.success(t("aop_banner_deleted"));
   };
 
   return (
@@ -1706,20 +1714,20 @@ function BannersAdmin() {
         onSubmit={create}
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="font-display font-bold">New banner</h3>
+        <h3 className="font-display font-bold">{t("aop_new_banner")}</h3>
         <Input
-          placeholder="Title"
+          placeholder={t("aop_title")}
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           required
         />
         <Textarea
-          placeholder="Subtitle"
+          placeholder={t("aop_subtitle")}
           value={form.subtitle}
           onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
         />
         <Input
-          placeholder="Button label"
+          placeholder={t("aop_button_label")}
           value={form.cta_label}
           onChange={(e) => setForm({ ...form, cta_label: e.target.value })}
         />
@@ -1733,11 +1741,11 @@ function BannersAdmin() {
               ...form,
               link_url: `/shops/${s.id}`,
               title: form.title || s.name,
-              cta_label: form.cta_label || "Order now",
+              cta_label: form.cta_label || t("aop_order_now"),
             });
           }}
         >
-          <option value="">Promote a shop (auto-fill link)…</option>
+          <option value="">{t("aop_promote_shop")}</option>
           {bannerShops.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -1745,7 +1753,7 @@ function BannersAdmin() {
           ))}
         </select>
         <Input
-          placeholder="Link (/shops or https://…)"
+          placeholder={t("aop_link_placeholder")}
           value={form.link_url}
           onChange={(e) => setForm({ ...form, link_url: e.target.value })}
         />
@@ -1762,7 +1770,7 @@ function BannersAdmin() {
         </select>
         <Input
           type="number"
-          placeholder="Order"
+          placeholder={t("aop_order")}
           value={form.sort_order}
           onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
         />
@@ -1771,10 +1779,10 @@ function BannersAdmin() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="submit">Create banner</Button>
+        <Button type="submit">{t("aop_create_banner")}</Button>
       </form>
       <ul className="space-y-2">
-        {rows.length === 0 && <p className="text-sm text-muted-foreground">No banners yet.</p>}
+        {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("aop_no_banners")}</p>}
         {rows.map((b) => (
           <li
             key={b.id}
@@ -1818,9 +1826,7 @@ function BannersAdmin() {
                   onCheckedChange={(v) => void patch(b.id, { is_active: v })}
                 />
               </label>
-              <Button size="sm" variant="outline" onClick={() => void remove(b.id)}>
-                Delete
-              </Button>
+              <Button size="sm" variant="outline" onClick={() => void remove(b.id)}>{t("aop_delete")}</Button>
             </div>
           </li>
         ))}
@@ -1830,6 +1836,7 @@ function BannersAdmin() {
 }
 
 function ContentAdmin() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["admin-site-content"],
@@ -1865,7 +1872,7 @@ function ContentAdmin() {
     }
     void qc.invalidateQueries({ queryKey: ["admin-site-content"] });
     void qc.invalidateQueries({ queryKey: ["site-content"] });
-    toast.success("Site content saved");
+    toast.success(t("aop_site_content_saved"));
   };
 
   const uploadLogo = async (file?: File | null) => {
@@ -1883,9 +1890,9 @@ function ContentAdmin() {
       if (error) throw error;
       void qc.invalidateQueries({ queryKey: ["admin-site-content"] });
       void qc.invalidateQueries({ queryKey: ["site-content"] });
-      toast.success("Logo updated");
+      toast.success(t("aop_logo_updated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload logo");
+      toast.error(err instanceof Error ? err.message : t("aop_failed_logo"));
     }
   };
 
@@ -1894,11 +1901,11 @@ function ContentAdmin() {
       <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-card">
         <StorageImage
           path={value.logo_url || null}
-          alt="Platform logo"
+          alt={t("aop_platform_logo")}
           className="h-14 w-14 rounded-lg object-cover"
         />
         <div className="space-y-1.5">
-          <Label>Platform logo</Label>
+          <Label>{t("aop_platform_logo")}</Label>
           <Input
             type="file"
             accept="image/*"
@@ -1913,7 +1920,7 @@ function ContentAdmin() {
             variant="outline"
             onClick={() => setDraft({ ...value, logo_url: "" })}
           >
-            Remove logo
+            {t("aop_remove_logo")}
           </Button>
         )}
       </div>
@@ -1936,7 +1943,7 @@ function ContentAdmin() {
           </div>
         ))}
       </div>
-      <Button type="submit">Save all text</Button>
+      <Button type="submit">{t("aop_save_all_text")}</Button>
     </form>
   );
 }
