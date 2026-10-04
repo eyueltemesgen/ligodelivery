@@ -13,6 +13,7 @@ import { AccountHeader } from "@/components/account/AccountShell";
 import { ShopCard } from "@/components/ligo/Cards";
 import { AccountState, ErrorState, GridSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account/wishlist")({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/account/wishlist")({
 });
 
 function WishlistPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [tab, setTab] = useState<"products" | "shops">("products");
 
@@ -44,27 +46,27 @@ function WishlistPage() {
 
   return (
     <>
-      <AccountHeader title="Saved" description="Products and shops you've saved for later." />
+      <AccountHeader title={t("acct_saved_title")} description={t("acct_saved_desc")} />
 
       <div className="flex gap-2">
         {(
           [
-            { id: "products", label: `Products (${saved.length})`, icon: Heart },
-            { id: "shops", label: `Shops (${favorites.length})`, icon: Store },
+            { id: "products", labelKey: "acct_tab_products", count: saved.length, icon: Heart },
+            { id: "shops", labelKey: "acct_tab_shops", count: favorites.length, icon: Store },
           ] as const
-        ).map((t) => (
+        ).map((tabItem) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            onClick={() => setTab(tabItem.id)}
             className={cn(
               "flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-              tab === t.id
+              tab === tabItem.id
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-card text-muted-foreground hover:border-primary/40",
             )}
           >
-            <t.icon className="h-4 w-4" />
-            {t.label}
+            <tabItem.icon className="h-4 w-4" />
+            {t(tabItem.labelKey, { count: tabItem.count })}
           </button>
         ))}
       </div>
@@ -77,11 +79,11 @@ function WishlistPage() {
         ) : saved.length === 0 ? (
           <AccountState
             icon={Heart}
-            title="No saved products yet"
-            description="Tap the heart on any product to save it here for quick reordering."
+            title={t("acct_no_saved_products")}
+            description={t("acct_no_saved_products_desc")}
             action={
               <Button asChild>
-                <Link to="/shops">Browse products</Link>
+                <Link to="/shops">{t("acct_browse_products")}</Link>
               </Button>
             }
           />
@@ -99,11 +101,11 @@ function WishlistPage() {
       ) : favorites.length === 0 ? (
         <AccountState
           icon={Store}
-          title="No favorite shops yet"
-          description="Follow a shop to keep it one tap away whenever you're hungry."
+          title={t("acct_no_favorite_shops")}
+          description={t("acct_no_favorite_shops_desc")}
           action={
             <Button asChild>
-              <Link to="/shops">Discover shops</Link>
+              <Link to="/shops">{t("acct_discover_shops")}</Link>
             </Button>
           }
         />
@@ -119,6 +121,7 @@ function WishlistPage() {
 }
 
 function SavedProductCard({ row }: { row: WishlistRow }) {
+  const { t } = useLanguage();
   const { add } = useCart();
   const { toggleProduct } = useSaved();
   const product = row.products;
@@ -127,8 +130,8 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
   if (!product || !product.is_active) {
     return (
       <div className="overflow-hidden rounded-xl border border-border bg-card p-4 shadow-card">
-        <p className="text-sm font-semibold">{product?.name ?? "Product unavailable"}</p>
-        <p className="mt-1 text-xs text-muted-foreground">This product is no longer available.</p>
+        <p className="text-sm font-semibold">{product?.name ?? t("acct_product_unavailable")}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("acct_product_unavailable_desc")}</p>
         <Button
           variant="outline"
           size="sm"
@@ -136,7 +139,7 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
           onClick={() => void toggleProduct(row.product_id)}
         >
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-          Remove
+          {t("acct_remove")}
         </Button>
       </div>
     );
@@ -158,7 +161,7 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
           className="h-28 w-full object-cover"
         />
         <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-          {product.shops?.name ?? "Shop"}
+          {product.shops?.name ?? t("oc_shop_fallback")}
         </span>
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-3">
@@ -179,21 +182,21 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
               add({
                 productId: product.id,
                 shopId: product.shop_id,
-                shopName: product.shops?.name ?? "Shop",
+                shopName: product.shops?.name ?? t("oc_shop_fallback"),
                 name: product.name,
                 imagePath: product.image_url,
                 unitPrice: price,
               });
-              toast.success(`${product.name} added to cart`);
+              toast.success(t("acct_added_to_cart", { name: product.name }));
             }}
           >
             <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-            {product.in_stock ? "Add" : "Out"}
+            {product.in_stock ? t("common_add") : t("common_out")}
           </Button>
           <Button
             size="icon"
             variant="outline"
-            aria-label="Remove from saved"
+            aria-label={t("acct_remove_from_saved")}
             disabled={busy}
             onClick={() => {
               setBusy(true);
@@ -209,19 +212,20 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
 }
 
 function FavoriteShopCard({ row }: { row: FavoriteRow }) {
+  const { t } = useLanguage();
   const { toggleShop } = useSaved();
   const [busy, setBusy] = useState(false);
   if (!row.shops)
     return (
       <div className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <p className="text-sm font-semibold">Shop unavailable</p>
+        <p className="text-sm font-semibold">{t("acct_shop_unavailable")}</p>
         <Button
           variant="outline"
           size="sm"
           className="mt-3 w-full"
           onClick={() => void toggleShop(row.shop_id)}
         >
-          Remove
+          {t("acct_remove")}
         </Button>
       </div>
     );
@@ -252,7 +256,7 @@ function FavoriteShopCard({ row }: { row: FavoriteRow }) {
         }}
       >
         <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-        Remove from favorites
+        {t("acct_remove_from_favorites")}
       </Button>
     </div>
   );

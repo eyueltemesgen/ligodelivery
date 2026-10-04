@@ -4,17 +4,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, PackageCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { STATUS_LABEL, timelineIndex, type OrderStatus } from "@/lib/orders";
+import { STATUS_LABEL_KEY, timelineIndex, type OrderStatus } from "@/lib/orders";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 
-const ACTIVE_STEPS = [
-  { key: "pending_payment", label: "Placed" },
-  { key: "preparing", label: "Preparing" },
-  { key: "picked_up", label: "On the way" },
-  { key: "delivered", label: "Delivered" },
-] as const;
+const ACTIVE_STEPS: readonly { key: string; labelKey: TranslationKey }[] = [
+  { key: "pending_payment", labelKey: "banner_placed" },
+  { key: "preparing", labelKey: "banner_preparing" },
+  { key: "picked_up", labelKey: "banner_on_the_way" },
+  { key: "delivered", labelKey: "banner_delivered" },
+];
 
 /** Home-page banner tracking the customer's most recent in-flight order. */
 export function ActiveOrderBanner() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
 
@@ -76,10 +79,14 @@ export function ActiveOrderBanner() {
           </span>
           <div>
             <p className="text-sm font-bold text-accent-foreground">
-              Order {order.order_code} is{" "}
-              {STATUS_LABEL[order.status as OrderStatus] ?? order.status}
+              {t("banner_status", {
+                code: order.order_code,
+                status: t(
+                  STATUS_LABEL_KEY[order.status as OrderStatus] ?? "order_status_pending_payment",
+                ),
+              })}
             </p>
-            <p className="text-xs text-accent-foreground/80">Tap to track your delivery live</p>
+            <p className="text-xs text-accent-foreground/80">{t("banner_tap")}</p>
           </div>
         </div>
         <ChevronRight className="h-5 w-5 shrink-0 text-accent-foreground" />
@@ -93,7 +100,7 @@ export function ActiveOrderBanner() {
                 i <= idx ? "text-accent-foreground" : "text-accent-foreground/60"
               }`}
             >
-              {s.label}
+              {t(s.labelKey)}
             </span>
           </li>
         ))}

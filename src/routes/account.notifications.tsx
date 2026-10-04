@@ -11,6 +11,7 @@ import { AccountHeader } from "@/components/account/AccountShell";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/account/notifications")({
   head: () => ({
@@ -31,6 +32,7 @@ function iconFor(type: string) {
 }
 
 function NotificationsPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data = [], isLoading, isError, refetch } = useQuery(notificationsQuery(user?.id));
@@ -68,7 +70,7 @@ function NotificationsPage() {
       .eq("user_id", user.id)
       .eq("is_read", false);
     if (error) {
-      toast.error("Could not update notifications");
+      toast.error(t("acct_notif_update_failed"));
       return;
     }
     void qc.invalidateQueries({ queryKey: ["notifications"] });
@@ -85,13 +87,13 @@ function NotificationsPage() {
   return (
     <>
       <AccountHeader
-        title="Notifications"
-        description="Order, delivery and payment updates — all in one place."
+        title={t("acct_notif_title")}
+        description={t("acct_notif_desc")}
         action={
           unread.length > 0 ? (
             <Button variant="outline" size="sm" onClick={() => void markAllRead()}>
               <CheckCheck className="mr-1.5 h-4 w-4" />
-              Mark all read
+              {t("acct_mark_all_read")}
             </Button>
           ) : undefined
         }
@@ -104,11 +106,11 @@ function NotificationsPage() {
       ) : data.length === 0 ? (
         <AccountState
           icon={Bell}
-          title="No notifications yet"
-          description="You'll get updates here when your orders are confirmed, on the way or delivered."
+          title={t("acct_notif_empty")}
+          description={t("acct_notif_empty_desc")}
           action={
             <Button asChild variant="outline">
-              <Link to="/account/orders">View my orders</Link>
+              <Link to="/account/orders">{t("acct_view_orders")}</Link>
             </Button>
           }
         />
@@ -144,7 +146,7 @@ function NotificationsPage() {
                       {!n.is_read && (
                         <span
                           className="h-2 w-2 shrink-0 rounded-full bg-primary"
-                          aria-label="Unread"
+                          aria-label={t("acct_unread")}
                         />
                       )}
                     </div>
@@ -158,7 +160,7 @@ function NotificationsPage() {
                       className="shrink-0 text-xs font-semibold text-primary"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      View order
+                      {t("oc_view_order")}
                     </Link>
                   )}
                 </button>

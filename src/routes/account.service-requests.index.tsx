@@ -5,6 +5,7 @@ import { CalendarDays, MapPin, Sparkles, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   REQUEST_STATUS_LABEL,
+  REQUEST_STATUS_LABEL_KEY,
   serviceRequestsQuery,
   servicesByIdsQuery,
   addonsTotal,
@@ -16,6 +17,7 @@ import { AccountHeader } from "@/components/account/AccountShell";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/account/service-requests/")({
   head: () => ({
@@ -48,6 +50,7 @@ export function ServiceRequestCard({
   request: ServiceRequest;
   serviceName?: string | undefined;
 }) {
+  const { t } = useLanguage();
   const price = request.quote_amount;
   return (
     <Link
@@ -58,7 +61,7 @@ export function ServiceRequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-display text-sm font-bold">
-            {serviceName ?? "Special Moments service"}
+            {serviceName ?? t("sr_service_fallback")}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {request.request_code} · {formatDate(request.created_at)}
@@ -70,7 +73,7 @@ export function ServiceRequestCard({
             STATUS_TONE[request.status],
           )}
         >
-          {REQUEST_STATUS_LABEL[request.status]}
+          {REQUEST_STATUS_LABEL_KEY[request.status] ? t(REQUEST_STATUS_LABEL_KEY[request.status]) : REQUEST_STATUS_LABEL[request.status]}
         </span>
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -91,19 +94,19 @@ export function ServiceRequestCard({
         {request.guest_count != null && (
           <span className="flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {request.guest_count} guests
+            {t("sr_guests", { count: request.guest_count })}
           </span>
         )}
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {request.request_type === "quote" ? "Quote request" : "Booking"}
+          {request.request_type === "quote" ? t("sr_quote_request") : t("sr_booking")}
         </span>
         <span className="font-display text-sm font-bold text-primary">
           {price != null
             ? ETB(price + addonsTotal(request.addons))
             : request.status === "quote_requested"
-              ? "Awaiting quote"
+              ? t("sr_awaiting_quote")
               : "—"}
         </span>
       </div>
@@ -111,14 +114,18 @@ export function ServiceRequestCard({
   );
 }
 
-const FILTERS: { id: "all" | "open" | "scheduled" | "completed"; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "open", label: "Open" },
-  { id: "scheduled", label: "Scheduled" },
-  { id: "completed", label: "Completed" },
+const FILTERS: {
+  id: "all" | "open" | "scheduled" | "completed";
+  labelKey: "sr_filter_all" | "sr_filter_open" | "sr_filter_scheduled" | "sr_filter_completed";
+}[] = [
+  { id: "all", labelKey: "sr_filter_all" },
+  { id: "open", labelKey: "sr_filter_open" },
+  { id: "scheduled", labelKey: "sr_filter_scheduled" },
+  { id: "completed", labelKey: "sr_filter_completed" },
 ];
 
 function ServiceRequestsPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { data = [], isLoading, isError, refetch } = useQuery(serviceRequestsQuery(user?.id));
   const serviceIds = useMemo(
@@ -138,10 +145,7 @@ function ServiceRequestsPage() {
 
   return (
     <>
-      <AccountHeader
-        title="Special Moments"
-        description="Your gift, surprise, catering and decoration requests, quotes and scheduled services."
-      />
+      <AccountHeader title={t("sr_index_title")} description={t("sr_index_desc")} />
 
       <div className="-mx-4 overflow-x-auto px-4">
         <div className="flex w-max gap-2 pb-1">
@@ -157,7 +161,7 @@ function ServiceRequestsPage() {
                   : "border-border bg-card text-muted-foreground hover:border-primary/40",
               )}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
@@ -170,20 +174,18 @@ function ServiceRequestsPage() {
       ) : filtered.length === 0 ? (
         <AccountState
           icon={Sparkles}
-          title={data.length === 0 ? "No Special Moments yet" : "Nothing in this filter"}
+          title={data.length === 0 ? t("sr_empty_title") : t("sr_filter_empty_title")}
           description={
-            data.length === 0
-              ? "Book a gift, surprise, catering or decoration service and it will appear here with its status."
-              : "Try another filter to see more of your requests."
+            data.length === 0 ? t("sr_empty_desc") : t("sr_filter_empty_desc")
           }
           action={
             data.length === 0 ? (
               <Button asChild>
-                <Link to="/special-moments">Explore Special Moments</Link>
+                <Link to="/special-moments">{t("sr_explore")}</Link>
               </Button>
             ) : (
               <Button variant="outline" onClick={() => setFilter("all")}>
-                Show all
+                {t("sr_show_all")}
               </Button>
             )
           }

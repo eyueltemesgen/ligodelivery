@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isMissingTable, supabaseErrorMessage } from "@/lib/supa-error";
+import type { TranslationKey } from "@/lib/i18n";
 import type { Json } from "@/integrations/supabase/types";
 
 /**
@@ -107,6 +108,17 @@ export const REQUEST_STATUS_LABEL: Record<ServiceRequestStatus, string> = {
   confirmed: "Confirmed",
   completed: "Completed",
   cancelled: "Cancelled",
+};
+
+/** i18n keys for request status labels, keyed by status. */
+export const REQUEST_STATUS_LABEL_KEY: Record<ServiceRequestStatus, TranslationKey> = {
+  submitted: "sr_status_submitted",
+  quote_requested: "sr_status_quote_requested",
+  quoted: "sr_status_quoted",
+  accepted: "sr_status_accepted",
+  confirmed: "sr_status_confirmed",
+  completed: "sr_status_completed",
+  cancelled: "sr_status_cancelled",
 };
 
 /* ------------------------------------------------------------------ */

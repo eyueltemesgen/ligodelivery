@@ -15,27 +15,30 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { accountSummaryQuery } from "@/lib/account";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
   to: string;
-  label: string;
+  labelKey: TranslationKey;
   icon: React.ComponentType<{ className?: string }>;
   badgeKey?: "orders" | "wishlist" | "notifications";
 };
 
 const NAV: NavItem[] = [
-  { to: "/account", label: "Overview", icon: LayoutDashboard },
-  { to: "/account/orders", label: "My orders", icon: Package, badgeKey: "orders" },
-  { to: "/account/service-requests", label: "Special Moments", icon: Sparkles },
-  { to: "/account/wishlist", label: "Saved products", icon: Heart, badgeKey: "wishlist" },
-  { to: "/account/addresses", label: "Addresses", icon: MapPin },
-  { to: "/account/profile", label: "Profile", icon: User },
-  { to: "/account/notifications", label: "Notifications", icon: Bell, badgeKey: "notifications" },
-  { to: "/account/help", label: "Help & support", icon: HelpCircle },
+  { to: "/account", labelKey: "acct_nav_overview", icon: LayoutDashboard },
+  { to: "/account/orders", labelKey: "acct_orders_title", icon: Package, badgeKey: "orders" },
+  { to: "/account/service-requests", labelKey: "acct_nav_special_moments", icon: Sparkles },
+  { to: "/account/wishlist", labelKey: "acct_stat_saved", icon: Heart, badgeKey: "wishlist" },
+  { to: "/account/addresses", labelKey: "acct_stat_addresses", icon: MapPin },
+  { to: "/account/profile", labelKey: "acct_profile", icon: User },
+  { to: "/account/notifications", labelKey: "acct_notif_title", icon: Bell, badgeKey: "notifications" },
+  { to: "/account/help", labelKey: "acct_help_support", icon: HelpCircle },
 ];
 
 export function AccountShell({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const { user, profile, signOut } = useAuth();
   const { data: summary } = useQuery(accountSummaryQuery(user?.id));
 
@@ -59,7 +62,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
               />
               <div className="min-w-0">
                 <p className="truncate font-display text-sm font-bold">
-                  {profile?.full_name || "Your account"}
+                  {profile?.full_name || t("acct_your_account")}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {profile?.phone || user?.email}
@@ -82,7 +85,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                       activeProps={{ className: "bg-primary-soft text-accent-foreground" }}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 truncate">{item.label}</span>
+                      <span className="flex-1 truncate">{t(item.labelKey)}</span>
                       {badge > 0 && (
                         <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
                           {badge}
@@ -99,7 +102,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
                 >
                   <LogOut className="h-4 w-4 shrink-0" />
-                  Sign out
+                  {t("acct_sign_out")}
                 </button>
               </li>
             </ul>
@@ -108,7 +111,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
           {/* Mobile horizontal nav */}
           <nav
             className="-mx-4 mt-4 overflow-x-auto px-4 pb-1 lg:hidden"
-            aria-label="Account sections"
+            aria-label={t("acct_account_sections")}
           >
             <ul className="flex gap-2">
               {NAV.map((item) => {
@@ -124,7 +127,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                       }}
                     >
                       <item.icon className="h-4 w-4" />
-                      {item.label}
+                      {t(item.labelKey)}
                       {badge > 0 && (
                         <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                           {badge}

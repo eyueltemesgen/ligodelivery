@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Loader2, RefreshCw, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
 /** Neutral centred state used for empty, error and confirmation panels. */
@@ -55,25 +56,26 @@ export function EmptyState(props: {
 }
 
 export function ErrorState({
-  title = "Something went wrong",
-  description = "We couldn't load this section. Check your connection and try again.",
+  title,
+  description,
   onRetry,
 }: {
   title?: string;
   description?: string;
   onRetry?: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <AccountState
       icon={AlertTriangle}
       tone="error"
-      title={title}
-      description={description}
+      title={title ?? t("acct_error_title")}
+      description={description ?? t("acct_error_desc")}
       action={
         onRetry ? (
           <Button variant="outline" onClick={onRetry}>
             <RefreshCw className="mr-2 h-4 w-4" />
-            Try again
+            {t("acct_retry")}
           </Button>
         ) : undefined
       }
@@ -102,8 +104,9 @@ export function SectionHeading({
 }
 
 export function ListSkeleton({ rows = 3 }: { rows?: number }) {
+  const { t } = useLanguage();
   return (
-    <div className="space-y-3" aria-busy="true" aria-label="Loading">
+    <div className="space-y-3" aria-busy="true" aria-label={t("acct_loading")}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="rounded-xl border border-border bg-card p-4 shadow-card">
           <div className="flex items-center gap-3">
@@ -121,11 +124,12 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 }
 
 export function GridSkeleton({ count = 6 }: { count?: number }) {
+  const { t } = useLanguage();
   return (
     <div
       className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
       aria-busy="true"
-      aria-label="Loading"
+      aria-label={t("acct_loading")}
     >
       {Array.from({ length: count }, (_, i) => (
         <div
@@ -168,14 +172,15 @@ export function InlineSpinner({ label }: { label?: string }) {
 
 /** Consistent "sign in first" gate for account routes. */
 export function SignInRequired({ title }: { title: string }) {
+  const { t } = useLanguage();
   return (
     <AccountState
       icon={AlertTriangle}
       title={title}
-      description="Sign in to your የኔ Go account to continue."
+      description={t("acct_sign_in_required")}
       action={
         <Button asChild>
-          <Link to="/login">Sign in</Link>
+          <Link to="/login">{t("auth_sign_in")}</Link>
         </Button>
       }
     />

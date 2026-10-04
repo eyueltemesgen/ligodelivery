@@ -1,19 +1,21 @@
 import { Check, CircleDot, XCircle } from "lucide-react";
-import { STATUS_LABEL, TIMELINE, timelineIndex, type OrderStatus } from "@/lib/orders";
+import { STATUS_LABEL_KEY, TIMELINE, timelineIndex, type OrderStatus } from "@/lib/orders";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /** Short, mobile-friendly labels for the vertical progress timeline. */
-const STEP_LABEL: Partial<Record<OrderStatus, string>> = {
-  pending_payment: "Order placed",
-  confirmed: "Order confirmed",
-  preparing: "Preparing",
-  ready_for_pickup: "Ready for delivery",
-  dispatched: "Assigned for delivery",
-  accepted: "Rider assigned",
-  arrived_at_merchant: "Rider at shop",
-  picked_up: "Picked up",
-  on_the_way: "Out for delivery",
-  delivered: "Delivered",
+const STEP_LABEL_KEY: Partial<Record<OrderStatus, TranslationKey>> = {
+  pending_payment: "timeline_placed",
+  confirmed: "timeline_confirmed",
+  preparing: "timeline_preparing",
+  ready_for_pickup: "timeline_ready",
+  dispatched: "timeline_dispatched",
+  accepted: "timeline_rider_assigned",
+  arrived_at_merchant: "timeline_at_shop",
+  picked_up: "timeline_picked_up",
+  on_the_way: "timeline_out_for_delivery",
+  delivered: "timeline_delivered",
 };
 
 /**
@@ -21,6 +23,7 @@ const STEP_LABEL: Partial<Record<OrderStatus, string>> = {
  * highlighted, and everything after it stays muted — easy to scan on a phone.
  */
 export function OrderTimeline({ status }: { status: string }) {
+  const { t } = useLanguage();
   const cancelled = status === "cancelled";
   const currentIndex = timelineIndex(status);
 
@@ -32,10 +35,8 @@ export function OrderTimeline({ status }: { status: string }) {
             <XCircle className="h-4 w-4" />
           </span>
           <div className="pb-1">
-            <p className="text-sm font-semibold text-destructive">Order cancelled</p>
-            <p className="text-xs text-muted-foreground">
-              This order was cancelled and is no longer being fulfilled.
-            </p>
+            <p className="text-sm font-semibold text-destructive">{t("timeline_cancelled_title")}</p>
+            <p className="text-xs text-muted-foreground">{t("timeline_cancelled_desc")}</p>
           </div>
         </li>
       </ol>
@@ -87,9 +88,11 @@ export function OrderTimeline({ status }: { status: string }) {
                       : "text-muted-foreground",
                 )}
               >
-                {STEP_LABEL[step] ?? STATUS_LABEL[step]}
+                {t(
+                  STEP_LABEL_KEY[step] ?? STATUS_LABEL_KEY[step as OrderStatus] ?? "order_status_pending_payment",
+                )}
               </p>
-              {current && <p className="mt-0.5 text-xs text-primary">Current status</p>}
+              {current && <p className="mt-0.5 text-xs text-primary">{t("timeline_current")}</p>}
             </div>
           </li>
         );

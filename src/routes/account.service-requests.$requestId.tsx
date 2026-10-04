@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import {
   REQUEST_STATUS_LABEL,
+  REQUEST_STATUS_LABEL_KEY,
   acceptServiceQuote,
   addonsTotal,
   placeServiceOrder,
@@ -30,6 +31,7 @@ import { AccountState, CardSkeleton, ErrorState } from "@/components/account/Sta
 import { Button } from "@/components/ui/button";
 import { StorageImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/account/service-requests/$requestId")({
   head: () => ({
@@ -42,13 +44,13 @@ export const Route = createFileRoute("/account/service-requests/$requestId")({
 });
 
 const PAYMENT_METHODS = [
-  { id: "cash", label: "Cash on delivery" },
-  { id: "mobile_money", label: "Mobile Money" },
-  { id: "telebirr", label: "Telebirr" },
-  { id: "cbe", label: "CBE Birr" },
-  { id: "chapa", label: "Chapa" },
-  { id: "boa", label: "Bank of Abyssinia" },
-];
+  { id: "cash", labelKey: "pay_cash" },
+  { id: "mobile_money", labelKey: "pay_mobile_money" },
+  { id: "telebirr", labelKey: "pay_telebirr" },
+  { id: "cbe", labelKey: "pay_cbe" },
+  { id: "chapa", labelKey: "pay_chapa" },
+  { id: "boa", labelKey: "pay_boa" },
+] as const;
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   if (value == null || value === "") return null;
@@ -61,6 +63,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function RequestDetailPage() {
+  const { t } = useLanguage();
   const { requestId } = Route.useParams();
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -86,11 +89,11 @@ function RequestDetailPage() {
     return (
       <AccountState
         icon={Send}
-        title="Request not found"
-        description="This request may have been removed or belongs to another account."
+        title={t("sr_not_found")}
+        description={t("sr_not_found_desc")}
         action={
           <Button asChild>
-            <Link to="/account/service-requests">Back to my requests</Link>
+            <Link to="/account/service-requests">{t("sr_back_requests")}</Link>
           </Button>
         }
       />
@@ -114,7 +117,7 @@ function RequestDetailPage() {
     setBusy(true);
     try {
       await acceptServiceQuote(request.id);
-      toast.success("Quote accepted — you can now complete payment.");
+      toast.success(t("sr_quote_accepted"));
       await qc.invalidateQueries({ queryKey: ["service-request", requestId] });
       await qc.invalidateQueries({ queryKey: ["service-requests"] });
     } catch (err) {
@@ -133,7 +136,7 @@ function RequestDetailPage() {
         address: request.location ?? undefined,
         instructions: request.special_instructions ?? undefined,
       });
-      toast.success("Order placed — awaiting payment verification");
+      toast.success(t("sr_order_placed"));
       await qc.invalidateQueries({ queryKey: ["service-request", requestId] });
       window.location.assign(`/orders/${orderId}`);
     } catch (err) {
@@ -150,13 +153,13 @@ function RequestDetailPage() {
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
-        My requests
+        {t("sr_my_requests")}
       </Link>
 
       <AccountHeader
-        title={service?.name ?? "Special Moments request"}
+        title={service?.name ?? t("sr_request_fallback")}
         description={`${request.request_code} · ${
-          isQuoteType ? "Quote request" : "Booking"
+          isQuoteType ? t("sr_quote_request") : t("sr_booking")
         } · ${formatDate(request.created_at)}`}
         action={<StatusPill status={request.status} />}
       />
@@ -180,7 +183,7 @@ function RequestDetailPage() {
                 )}
                 <Button asChild size="sm" variant="outline" className="mt-2">
                   <Link to="/special-moments/service/$serviceId" params={{ serviceId: service.id }}>
-                    View service
+                    {t("sr_view_service")}
                   </Link>
                 </Button>
               </div>
@@ -188,12 +191,12 @@ function RequestDetailPage() {
           )}
 
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">Request details</h2>
+            <h2 className="font-display text-lg font-bold">{t("sr_request_details")}</h2>
             <div className="mt-2">
-              <Row label="Occasion" value={request.occasion} />
-              <Row label="Type" value={request.surprise_type ?? request.event_type} />
+              <Row label={t("sr_occasion")} value={request.occasion} />
+              <Row label={t("sr_type")} value={request.surprise_type ?? request.event_type} />
               <Row
-                label="Date"
+                label={t("sr_date")}
                 value={
                   request.event_date ? (
                     <span className="inline-flex items-center gap-1">
@@ -204,7 +207,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Time"
+                label={t("sr_time")}
                 value={
                   request.event_time ? (
                     <span className="inline-flex items-center gap-1">
@@ -215,7 +218,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Location"
+                label={t("sr_location")}
                 value={
                   request.location ? (
                     <span className="inline-flex items-center gap-1">
@@ -226,7 +229,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Guests"
+                label={t("sr_guests_label")}
                 value={
                   request.guest_count != null ? (
                     <span className="inline-flex items-center gap-1">
@@ -237,15 +240,15 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Recipient"
+                label={t("sr_recipient")}
                 value={
                   request.recipient_name
-                    ? `${request.recipient_name}${request.is_anonymous ? " (anonymous sender)" : ""}`
+                    ? `${request.recipient_name}${request.is_anonymous ? t("sr_anonymous_sender") : ""}`
                     : null
                 }
               />
               <Row
-                label="Theme / colours"
+                label={t("sr_theme")}
                 value={
                   request.theme ? (
                     <span className="inline-flex items-center gap-1">
@@ -256,7 +259,7 @@ function RequestDetailPage() {
                 }
               />
               <Row
-                label="Food preferences"
+                label={t("sr_food_prefs")}
                 value={
                   request.food_preferences ? (
                     <span className="inline-flex items-center gap-1">
@@ -266,26 +269,26 @@ function RequestDetailPage() {
                   ) : null
                 }
               />
-              <Row label="Budget" value={request.budget != null ? ETB(request.budget) : null} />
+              <Row label={t("sr_budget")} value={request.budget != null ? ETB(request.budget) : null} />
             </div>
             {request.message && (
               <div className="mt-3 rounded-lg bg-surface p-3 text-sm">
                 <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <MessageSquareHeart className="h-3.5 w-3.5" />
-                  Message
+                  {t("sr_message")}
                 </p>
                 <p className="mt-1 whitespace-pre-line">{request.message}</p>
               </div>
             )}
             {request.special_instructions && (
               <p className="mt-3 text-sm text-muted-foreground">
-                Instructions: {request.special_instructions}
+                {t("sr_instructions")} {request.special_instructions}
               </p>
             )}
             {request.admin_notes && (
               <div className="mt-3 rounded-lg border border-primary/30 bg-primary-soft/50 p-3 text-sm">
                 <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground">
-                  Note from our team
+                  {t("sr_team_note")}
                 </p>
                 <p className="mt-1">{request.admin_notes}</p>
               </div>
@@ -295,24 +298,26 @@ function RequestDetailPage() {
 
         <aside className="space-y-4 lg:sticky lg:top-20 lg:h-fit">
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">Summary</h2>
+            <h2 className="font-display text-lg font-bold">{t("sr_summary")}</h2>
             <div className="mt-2">
               <Row
-                label={request.quote_amount != null ? "Accepted quote" : "Service price"}
-                value={payableBase != null ? ETB(payableBase) : isQuoteType ? "Pending quote" : "—"}
+                label={request.quote_amount != null ? t("sr_accepted_quote") : t("sr_service_price")}
+                value={
+                  payableBase != null ? ETB(payableBase) : isQuoteType ? t("sr_pending_quote") : "—"
+                }
               />
-              {addons > 0 && <Row label="Add-ons" value={ETB(addons)} />}
-              <Row label="Estimated total" value={total != null ? ETB(total) : "—"} />
+              {addons > 0 && <Row label={t("sr_addons")} value={ETB(addons)} />}
+              <Row label={t("sr_estimated_total")} value={total != null ? ETB(total) : "—"} />
             </div>
 
             {request.order_id ? (
               <div className="mt-4 space-y-2">
                 <p className="rounded-lg bg-primary-soft px-3 py-2 text-sm font-medium text-accent-foreground">
-                  Paid order created for this request.
+                  {t("sr_paid_order")}
                 </p>
                 <Button asChild className="w-full">
                   <Link to="/orders/$orderId" params={{ orderId: request.order_id }}>
-                    View order
+                    {t("sr_view_order")}
                   </Link>
                 </Button>
               </div>
@@ -323,12 +328,12 @@ function RequestDetailPage() {
                 disabled={busy}
                 onClick={() => void accept()}
               >
-                {busy ? "Accepting…" : `Accept quote — ${ETB(request.quote_amount ?? 0)}`}
+                {busy ? t("sr_accepting") : t("sr_accept_quote", { amount: ETB(request.quote_amount ?? 0) })}
               </Button>
             ) : canPay ? (
               <div className="mt-4 space-y-3">
                 <div>
-                  <p className="mb-2 text-sm font-semibold">Payment method</p>
+                  <p className="mb-2 text-sm font-semibold">{t("sr_payment_method")}</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {PAYMENT_METHODS.map((m) => (
                       <button
@@ -340,30 +345,33 @@ function RequestDetailPage() {
                           method === m.id ? "border-primary bg-primary-soft" : "border-border",
                         )}
                       >
-                        {m.label}
+                        {t(m.labelKey)}
                       </button>
                     ))}
                   </div>
                 </div>
                 <Button className="w-full" size="lg" disabled={busy} onClick={() => void pay()}>
-                  {busy ? "Placing order…" : "Continue to payment"}
+                  {busy ? t("sr_placing_order") : t("sr_continue_payment")}
                 </Button>
               </div>
             ) : request.status === "quote_requested" ? (
               <p className="mt-4 rounded-lg bg-warning/15 px-3 py-2 text-sm text-warning-foreground">
-                Your quote request is with our team. You will be notified when a quote is ready.
+                {t("sr_quote_with_team")}
               </p>
             ) : (
               <p className="mt-4 rounded-lg bg-surface px-3 py-2 text-sm text-muted-foreground">
-                No payment is due right now.
+                {t("sr_no_payment_due")}
               </p>
             )}
           </section>
 
           <section className="rounded-xl border border-border bg-card p-5 text-sm shadow-card">
-            <h2 className="font-display text-base font-bold">Status history</h2>
+            <h2 className="font-display text-base font-bold">{t("sr_status_history")}</h2>
             <p className="mt-2 text-muted-foreground">
-              {REQUEST_STATUS_LABEL[request.status]} · updated {formatDate(request.updated_at)}
+              {REQUEST_STATUS_LABEL_KEY[request.status]
+                ? t(REQUEST_STATUS_LABEL_KEY[request.status])
+                : REQUEST_STATUS_LABEL[request.status]}{" "}
+              · {t("sr_updated", { date: formatDate(request.updated_at) })}
             </p>
           </section>
         </aside>
@@ -373,9 +381,10 @@ function RequestDetailPage() {
 }
 
 function StatusPill({ status }: { status: ServiceRequestStatus }) {
+  const { t } = useLanguage();
   return (
     <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-accent-foreground">
-      {REQUEST_STATUS_LABEL[status]}
+      {t(REQUEST_STATUS_LABEL_KEY[status])}
     </span>
   );
 }

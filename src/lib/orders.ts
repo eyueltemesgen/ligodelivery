@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { TranslationKey } from "@/lib/i18n";
 
 export const ORDER_STATUSES = [
   "pending_payment",
@@ -35,6 +36,24 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Pending Payment",
   payment_verification: "Pending Payment",
   rider_assigned: "Rider Accepted",
+};
+
+/** Localized equivalents of STATUS_LABEL, resolved through the i18n dictionary. */
+export const STATUS_LABEL_KEY: Record<OrderStatus, TranslationKey> = {
+  pending_payment: "order_status_pending_payment",
+  confirmed: "order_status_confirmed",
+  preparing: "order_status_preparing",
+  ready_for_pickup: "order_status_ready_for_pickup",
+  dispatched: "order_status_dispatched",
+  accepted: "order_status_accepted",
+  arrived_at_merchant: "order_status_arrived_at_merchant",
+  picked_up: "order_status_picked_up",
+  on_the_way: "order_status_on_the_way",
+  delivered: "order_status_delivered",
+  cancelled: "order_status_cancelled",
+  pending: "order_status_pending_payment",
+  payment_verification: "order_status_pending_payment",
+  rider_assigned: "order_status_accepted",
 };
 
 export const TIMELINE: OrderStatus[] = [
@@ -90,14 +109,14 @@ export const isOrderOpen = (status: string) => OPEN_STATUSES.has(status);
 
 /** Customer-facing order tabs. Backend statuses are folded into these groups. */
 export const ORDER_TABS = [
-  { id: "all", label: "All" },
-  { id: "pending", label: "Pending" },
-  { id: "confirmed", label: "Confirmed" },
-  { id: "preparing", label: "Preparing" },
-  { id: "out_for_delivery", label: "Out for delivery" },
-  { id: "delivered", label: "Delivered" },
-  { id: "cancelled", label: "Cancelled" },
-] as const;
+  { id: "all", label: "All", labelKey: "order_tab_all" },
+  { id: "pending", label: "Pending", labelKey: "order_tab_pending" },
+  { id: "confirmed", label: "Confirmed", labelKey: "order_tab_confirmed" },
+  { id: "preparing", label: "Preparing", labelKey: "order_tab_preparing" },
+  { id: "out_for_delivery", label: "Out for delivery", labelKey: "order_tab_out_for_delivery" },
+  { id: "delivered", label: "Delivered", labelKey: "order_tab_delivered" },
+  { id: "cancelled", label: "Cancelled", labelKey: "order_tab_cancelled" },
+] as const satisfies readonly { id: string; label: string; labelKey: TranslationKey }[];
 
 export type OrderTab = (typeof ORDER_TABS)[number]["id"];
 
