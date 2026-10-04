@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  BarChart3,
   Bell,
   Bike,
   ChevronLeft,
@@ -70,7 +71,7 @@ const NAV_GROUPS: { key: TranslationKey; items: NavItem[] }[] = [
     items: [
       { to: "/admin/ops?tab=payments", key: "shell_payments", icon: ShieldCheck },
       { to: "/admin/financials", key: "shell_financials", icon: Wallet },
-      { to: "/admin/ops?tab=financials", key: "shell_reports", icon: Percent },
+      { to: "/admin/reports", key: "shell_reports", icon: BarChart3 },
     ],
   },
   {
