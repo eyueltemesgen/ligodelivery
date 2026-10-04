@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Bike, Clock, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { uploadImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/rider/join")({
 
 function RiderJoin() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [vehicle, setVehicle] = useState("motorbike");
   const [nationalId, setNationalId] = useState("");
   const [notes, setNotes] = useState("");
@@ -67,9 +69,9 @@ function RiderJoin() {
         { onConflict: "id" },
       );
       if (error) throw error;
-      toast.success("Application submitted — an admin will review it shortly.");
+      toast.success(t("rj_submitted"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not submit application");
+      toast.error(err instanceof Error ? err.message : t("rj_err"));
     } finally {
       setBusy(false);
     }
@@ -78,20 +80,18 @@ function RiderJoin() {
   return (
     <div className="container-ligo py-10">
       <div className="rounded-2xl bg-primary-soft p-8">
-        <h1 className="font-display text-3xl font-extrabold">Become a የኔ Go rider</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Deliver across Bishoftu, keep your own hours and get paid for every completed order.
-        </p>
+        <h1 className="font-display text-3xl font-extrabold">{t("rj_title")}</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{t("rj_sub")}</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            { icon: Wallet, t: "Weekly payouts", d: "Reliable earnings per delivery" },
-            { icon: Clock, t: "Flexible hours", d: "Go online whenever you want" },
-            { icon: Bike, t: "Any vehicle", d: "Motorbike, bicycle or on foot" },
+            { icon: Wallet, tk: "rj_b1_t" as const, dk: "rj_b1_d" as const },
+            { icon: Clock, tk: "rj_b2_t" as const, dk: "rj_b2_d" as const },
+            { icon: Bike, tk: "rj_b3_t" as const, dk: "rj_b3_d" as const },
           ].map((b) => (
-            <div key={b.t} className="rounded-xl bg-card p-4 shadow-card">
+            <div key={b.tk} className="rounded-xl bg-card p-4 shadow-card">
               <b.icon className="h-5 w-5 text-primary" />
-              <p className="mt-2 font-semibold">{b.t}</p>
-              <p className="text-sm text-muted-foreground">{b.d}</p>
+              <p className="mt-2 font-semibold">{t(b.tk)}</p>
+              <p className="text-sm text-muted-foreground">{t(b.dk)}</p>
             </div>
           ))}
         </div>
@@ -100,10 +100,10 @@ function RiderJoin() {
       <div className="mt-8 max-w-lg">
         {!user ? (
           <div className="rounded-xl border border-border bg-card p-6 text-center shadow-card">
-            <p className="font-semibold">Create a rider account to apply</p>
+            <p className="font-semibold">{t("rj_create")}</p>
             <Button asChild className="mt-4">
               <Link to="/register" search={{ role: "rider" }}>
-                Register as rider
+                {t("rj_register")}
               </Link>
             </Button>
           </div>
@@ -112,24 +112,24 @@ function RiderJoin() {
             onSubmit={apply}
             className="space-y-4 rounded-xl border border-border bg-card p-6 shadow-card"
           >
-            <h2 className="font-display text-lg font-bold">Rider application</h2>
+            <h2 className="font-display text-lg font-bold">{t("rj_application")}</h2>
             <div className="space-y-1.5">
-              <Label htmlFor="v">Vehicle type</Label>
+              <Label htmlFor="v">{t("reg_vehicle_type")}</Label>
               <select
                 id="v"
                 className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={vehicle}
                 onChange={(e) => setVehicle(e.target.value)}
               >
-                <option value="bicycle">Bicycle</option>
-                <option value="motorbike">Motorbike</option>
-                <option value="scooter">Scooter</option>
-                <option value="car">Car</option>
-                <option value="foot">On foot</option>
+                <option value="bicycle">{t("reg_vehicle_bicycle")}</option>
+                <option value="motorbike">{t("reg_vehicle_motorbike")}</option>
+                <option value="scooter">{t("reg_vehicle_scooter")}</option>
+                <option value="car">{t("reg_vehicle_car")}</option>
+                <option value="foot">{t("rj_onfoot")}</option>
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="nid">National ID number</Label>
+              <Label htmlFor="nid">{t("reg_national_id")}</Label>
               <Input
                 id="nid"
                 value={nationalId}
@@ -138,7 +138,7 @@ function RiderJoin() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="iddoc">National ID photo</Label>
+              <Label htmlFor="iddoc">{t("reg_id_photo")}</Label>
               <Input
                 id="iddoc"
                 type="file"
@@ -147,7 +147,7 @@ function RiderJoin() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="licdoc">Driving license photo (optional)</Label>
+              <Label htmlFor="licdoc">{t("reg_license_photo")}</Label>
               <Input
                 id="licdoc"
                 type="file"
@@ -156,20 +156,20 @@ function RiderJoin() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pm">Payout method</Label>
+              <Label htmlFor="pm">{t("reg_payout_method")}</Label>
               <select
                 id="pm"
                 className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={payoutMethod}
                 onChange={(e) => setPayoutMethod(e.target.value)}
               >
-                <option value="telebirr">Telebirr</option>
-                <option value="bank_account">Bank account</option>
+                <option value="telebirr">{t("pay_telebirr")}</option>
+                <option value="bank_account">{t("reg_payout_bank")}</option>
               </select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pa">
-                {payoutMethod === "telebirr" ? "Telebirr phone number" : "Bank account number"}
+                {payoutMethod === "telebirr" ? t("reg_telebirr_phone") : t("reg_bank_account")}
               </Label>
               <Input
                 id="pa"
@@ -179,7 +179,7 @@ function RiderJoin() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pn">Account holder name</Label>
+              <Label htmlFor="pn">{t("reg_account_holder")}</Label>
               <Input
                 id="pn"
                 value={payoutName}
@@ -188,11 +188,11 @@ function RiderJoin() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="nt">Anything else?</Label>
+              <Label htmlFor="nt">{t("rj_else")}</Label>
               <Textarea id="nt" value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
             <Button type="submit" disabled={busy}>
-              {busy ? "Submitting…" : "Submit application"}
+              {busy ? t("srd_submitting") : t("rj_submit")}
             </Button>
           </form>
         )}
