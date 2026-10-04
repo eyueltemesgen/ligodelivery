@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
 import {
@@ -1848,6 +1848,8 @@ function BannersAdmin() {
               <StorageImage
                 path={b.image_url}
                 alt={b.title}
+                width={200}
+                height={120}
                 className="h-12 w-20 rounded-md object-cover"
               />
               <div className="min-w-0">
@@ -1963,6 +1965,8 @@ function ContentAdmin() {
         <StorageImage
           path={value.logo_url || null}
           alt={t("aop_platform_logo")}
+          width={160}
+          height={160}
           className="h-14 w-14 rounded-lg object-cover"
         />
         <div className="space-y-1.5">

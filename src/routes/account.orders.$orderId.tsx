@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import {
   ArrowLeft,
   Banknote,
@@ -260,6 +260,8 @@ function OrderDetails() {
                   <StorageImage
                     path={it.image_url}
                     alt={it.product_name}
+                    width={160}
+                    height={160}
                     className="h-14 w-14 shrink-0 rounded-lg object-cover"
                   />
                   <div className="min-w-0 flex-1">

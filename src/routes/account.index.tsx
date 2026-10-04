@@ -17,7 +17,7 @@ import { accountSummaryQuery, recentProductsQuery } from "@/lib/account";
 import { useCart } from "@/lib/cart";
 import { ETB, formatDate } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { StatusBadge } from "@/components/account/OrderCard";
 import { AccountState, CardSkeleton, ErrorState, ListSkeleton } from "@/components/account/States";
@@ -224,6 +224,8 @@ function AccountOverview() {
                 <StorageImage
                   path={p.image_url}
                   alt={p.product_name}
+                  width={480}
+                  height={144}
                   className="h-24 w-full object-cover"
                 />
                 <div className="space-y-2 p-3">

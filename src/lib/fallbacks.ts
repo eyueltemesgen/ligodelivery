@@ -32,7 +32,10 @@ export const FALLBACK_SHOPS: Shop[] = [
     rating: 4.8,
     is_featured: true,
     is_online: true,
+    is_active: true,
     owner_id: null,
+    lat: null,
+    lng: null,
   },
   {
     id: "shop-2",
@@ -50,7 +53,10 @@ export const FALLBACK_SHOPS: Shop[] = [
     rating: 4.6,
     is_featured: true,
     is_online: true,
+    is_active: true,
     owner_id: null,
+    lat: null,
+    lng: null,
   },
   {
     id: "shop-3",
@@ -68,7 +74,10 @@ export const FALLBACK_SHOPS: Shop[] = [
     rating: 4.9,
     is_featured: false,
     is_online: true,
+    is_active: true,
     owner_id: null,
+    lat: null,
+    lng: null,
   },
 ];
 

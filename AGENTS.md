@@ -49,7 +49,7 @@
 - On the shop detail page (`src/routes/shops.$shopId.tsx`) the card uses `container-ligo relative z-10 -mt-10` for exactly this reason. Keep the `relative z-10` when touching that overlap.
 
 ## Language switcher (English / አማርኛ / Afaan Oromoo)
-- Copy lives in `src/lib/i18n.ts` (`translations.en` / `.am` / `.or`, `LANGUAGES`, `LANGUAGE_LABELS`, `HTML_LANG`, `TranslationKey`). Add new UI strings there, not inline.
+- Copy lives in `src/lib/locales/{en,am,or}.ts`, re-exported by `src/lib/i18n.ts` (`translations.en`, `LANGUAGES`, `LANGUAGE_LABELS`, `HTML_LANG`, `TranslationKey`). Add new UI strings there, not inline. English is imported eagerly; Amharic/Oromo are code-split behind `import()` and fetched on demand by `useLanguage` — keep it that way so the initial bundle stays small.
 - Provider/hook: `src/hooks/useLanguage.tsx` — mirrors `useTheme`; persists to `localStorage` key `ligo-lang` and sets `<html lang>`. Defaults to English unless the browser language starts with `am`, `om`/`or`.
 - Button: `src/components/LanguageToggle.tsx`, rendered in the header next to `ThemeToggle`; options are generated from `LANGUAGES`.
 - Internal language code for Oromo is `or` (avoids clashing with the `or` operator) but `<html lang>` uses the correct BCP-47 `om` via `HTML_LANG`.
@@ -57,3 +57,9 @@
 - UI copy is fully localized: JSX text, `aria-label`/`title`/`alt`/`placeholder`, toasts, and route `head` metadata all go through `t("key")` or `translations.en.<key>`. Keep the three blocks in `src/lib/i18n.ts` in exact key parity; `TranslationKey` is `keyof typeof translations.en`.
 - Reusable localization helpers: `mediaErrorKey(err)` (`src/lib/media.tsx`), `closedReason(shop, hours)` (`src/lib/hours.ts`), `paymentLabelKey`/`paymentStatusLabel` (`src/components/account/OrderCard.tsx`), `supabaseErrorText(t, err)` (`src/lib/supa-error.ts`, translate non-API errors). Prefer these over inline literals.
 - Static config maps (ad types/statuses, banner placements, service categories, merchant statuses) expose i18n keys rather than English labels.
+
+## Performance conventions
+- Images: render through `StorageImage` (`src/lib/media.tsx`) with a `width` prop so the signed URL hits Supabase's image renderer. Signed URLs are cached per (bucket, path, width) and untransformed images are batch-signed; do not add per-image `createSignedUrl` calls elsewhere. `createSignedUrls` cannot carry transforms, so sized images sign individually by design.
+- Toasts: import `toast` from `src/lib/toast`, never from `sonner` directly. `src/lib/toast.tsx` lazy-loads sonner and its `<Toaster>` host on the first toast, keeping ~14 kB gzip out of every route. `ToastHost` is mounted once in `src/routes/__root.tsx`.
+- Public catalogue queries in `src/lib/queries.ts` carry explicit `staleTime` and a `limit` (`SHOP_PAGE_SIZE`, `PRODUCT_PAGE_SIZE`). Keep new list queries bounded; add `staleTime` for anything public.
+- Indexes for hot read paths live in `supabase/migrations/20261004190000_performance_indexes.sql` (additive/idempotent, apply via Lovable/Supabase).

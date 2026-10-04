@@ -44,7 +44,13 @@ function OffersPage() {
               key={o.id}
               className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
             >
-              <StorageImage path={o.image_url} alt={o.title} className="h-32 w-full object-cover" />
+              <StorageImage
+                path={o.image_url}
+                alt={o.title}
+                width={720}
+                height={192}
+                className="h-32 w-full object-cover"
+              />
               <div className="space-y-1 p-4">
                 <div className="inline-flex rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
                   {o.discount_type === "percent"

@@ -68,6 +68,8 @@ function CartPage() {
               <StorageImage
                 path={i.imagePath}
                 alt={i.name}
+                width={160}
+                height={160}
                 className="h-16 w-16 rounded-lg object-cover"
               />
               <div className="min-w-0 flex-1">

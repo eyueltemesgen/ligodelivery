@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Lock, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Role } from "@/hooks/useAuth";

@@ -2,7 +2,7 @@ import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Heart, ShoppingCart, Store, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { favoritesQuery, wishlistQuery, type FavoriteRow, type WishlistRow } from "@/lib/account";
@@ -159,6 +159,8 @@ function SavedProductCard({ row }: { row: WishlistRow }) {
         <StorageImage
           path={product.image_url}
           alt={product.name}
+          width={480}
+          height={168}
           className="h-28 w-full object-cover"
         />
         <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
@@ -243,7 +245,10 @@ function FavoriteShopCard({ row }: { row: FavoriteRow }) {
           closes_at: "23:59",
           rating: 0,
           is_featured: false,
+          is_active: true,
           owner_id: null,
+          lat: null,
+          lng: null,
         }}
       />
       <Button

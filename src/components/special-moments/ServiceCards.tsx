@@ -33,6 +33,8 @@ export function ServiceCategoryCard({
         path={category.image_url}
         alt={category.name}
         fallback={<Icon className="h-8 w-8 text-primary/70" />}
+        width={720}
+        height={240}
         className="h-36 w-full object-cover sm:h-40"
       />
       <div className="p-4">
@@ -81,6 +83,8 @@ export function ServiceCard({ service }: { service: Service }) {
       <StorageImage
         path={service.image_url}
         alt={service.name}
+        width={720}
+        height={240}
         className="h-40 w-full object-cover"
         fallback={<Wallet className="h-7 w-7 text-muted-foreground" />}
       />

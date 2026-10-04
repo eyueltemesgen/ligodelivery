@@ -92,6 +92,7 @@ export const CONTENT_FIELDS: {
 
 export const siteContentQuery = {
   queryKey: ["site-content"],
+  staleTime: 5 * 60_000,
   queryFn: async (): Promise<SiteContent> => {
     const { data } = await supabase
       .from("settings")
@@ -125,6 +126,7 @@ function normalizeContent(raw: Partial<SiteContent>): SiteContent {
 
 export const bannersQuery = (placement?: string) => ({
   queryKey: ["banners", placement ?? "all"],
+  staleTime: 5 * 60_000,
   queryFn: async (): Promise<Banner[]> => {
     let q = supabase.from("banners").select("*").eq("is_active", true).order("sort_order");
     if (placement) q = q.eq("placement", placement);

@@ -115,6 +115,8 @@ function Home() {
               path={heroBanner.image_url}
               alt={heroBanner.title || "የኔ Go hero banner"}
               priority
+              width={1080}
+              height={540}
               className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
             />
           ) : (
@@ -150,6 +152,8 @@ function Home() {
                 <StorageImage
                   path={c.image_url}
                   alt={c.name}
+                  width={320}
+                  height={160}
                   className="h-20 w-full object-cover"
                 />
                 <p className="p-2 text-xs font-semibold">{c.name}</p>
@@ -240,6 +244,8 @@ function Home() {
                 <StorageImage
                   path={o.image_url}
                   alt={o.title}
+                  width={720}
+                  height={168}
                   className="h-28 w-full object-cover"
                 />
                 <div className="p-4">

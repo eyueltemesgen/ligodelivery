@@ -96,6 +96,8 @@ function ServiceDetailPage() {
             path={service.image_url}
             alt={service.name}
             priority
+            width={1080}
+            height={450}
             className="h-64 w-full rounded-2xl object-cover shadow-card sm:h-80"
             fallback={<meta.icon className="h-10 w-10 text-muted-foreground" />}
           />
@@ -106,6 +108,8 @@ function ServiceDetailPage() {
                   key={`${g}-${i}`}
                   path={g}
                   alt={`${service.name} image ${i + 2}`}
+                  width={360}
+                  height={108}
                   className="h-24 w-full rounded-xl object-cover"
                 />
               ))}

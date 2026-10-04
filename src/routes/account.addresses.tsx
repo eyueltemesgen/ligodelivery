@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Check, MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { addressesQuery, type AddressRow } from "@/lib/account";

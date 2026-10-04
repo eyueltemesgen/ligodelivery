@@ -112,8 +112,11 @@ const softCount = async (
   }
 };
 
-export const ordersQuery = (userId: string | undefined) => ({
-  queryKey: ["account-orders", userId],
+/** Page size for order history; the list grows on demand. */
+export const ORDER_PAGE_SIZE = 25;
+
+export const ordersQuery = (userId: string | undefined, limit = ORDER_PAGE_SIZE) => ({
+  queryKey: ["account-orders", userId, limit],
   enabled: !!userId,
   queryFn: async () =>
     unwrap<OrderRow[]>(
@@ -123,7 +126,8 @@ export const ordersQuery = (userId: string | undefined) => ({
           "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at",
         )
         .eq("customer_id", userId!)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(limit),
       [],
     ),
 });

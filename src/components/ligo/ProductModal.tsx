@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import type { Product } from "@/lib/queries";
 import { ETB, discounted } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
@@ -136,6 +136,8 @@ export function ProductModal({
           <StorageImage
             path={product.image_url}
             alt={product.name}
+            width={900}
+            height={390}
             className="h-full w-full object-cover"
             priority
           />

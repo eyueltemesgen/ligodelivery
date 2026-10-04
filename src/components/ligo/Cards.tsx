@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { useSaved } from "@/lib/saved";
 import { useLanguage } from "@/hooks/useLanguage";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 /** Delivery window shown as a range, e.g. "15–25 min", with safe fallbacks. */
 const deliveryWindow = (mins: number | null | undefined) => {
@@ -30,6 +30,8 @@ export function ShopCard({ shop }: { shop: Shop }) {
         <StorageImage
           path={shop.cover_url ?? shop.image_url}
           alt={shop.name}
+          width={720}
+          height={405}
           className="h-full w-full object-cover transition-transform group-hover:scale-105"
         />
         <span
@@ -111,6 +113,8 @@ export function ProductCard({
         <StorageImage
           path={product.image_url}
           alt={product.name}
+          width={480}
+          height={192}
           className="h-32 w-full object-cover"
         />
         <button

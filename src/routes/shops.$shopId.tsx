@@ -105,6 +105,8 @@ function ShopDetail() {
           alt={shop.name}
           className="h-56 w-full object-cover"
           priority
+          width={1600}
+          height={332}
         />
       </div>
       {/* The cover is a positioned layer (relative z-0). The card is pulled up

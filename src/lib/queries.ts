@@ -24,7 +24,10 @@ export type Shop = {
   rating: number;
   is_featured: boolean;
   is_online: boolean;
+  is_active: boolean;
   owner_id: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 export type Product = {
   id: string;
@@ -57,8 +60,21 @@ const unwrap = <T>(res: { data: T | null; error: unknown }) => {
   return (res.data ?? []) as T;
 };
 
+/** Columns the storefront actually renders, so responses stay small. */
+const SHOP_COLUMNS =
+  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_featured,is_online,is_active,owner_id,lat,lng";
+const PRODUCT_COLUMNS =
+  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular";
+const OFFER_COLUMNS =
+  "id,title,description,image_url,discount_type,discount_value,shop_id,product_id,starts_at,ends_at";
+
+/** Upper bound on catalogue rows fetched in one request; the UI pages beyond this. */
+export const SHOP_PAGE_SIZE = 60;
+export const PRODUCT_PAGE_SIZE = 120;
+
 export const categoriesQuery = {
   queryKey: ["categories"],
+  staleTime: 5 * 60_000,
   queryFn: async () =>
     unwrap<Category[]>(
       await supabase
@@ -69,14 +85,22 @@ export const categoriesQuery = {
     ),
 };
 
-export const shopsQuery = (categoryId?: string | null) => ({
-  queryKey: ["shops", categoryId ?? "all"],
+/**
+ * Catalogue shops. Bounded by `SHOP_PAGE_SIZE` so a large marketplace never
+ * streams its whole table to a phone; callers can raise `limit` for admin-like
+ * views.
+ */
+export const shopsQuery = (categoryId?: string | null, limit = SHOP_PAGE_SIZE) => ({
+  queryKey: ["shops", categoryId ?? "all", limit],
+  staleTime: 3 * 60_000,
   queryFn: async () => {
     let q = supabase
       .from("shops")
-      .select("*")
+      .select(SHOP_COLUMNS)
       .eq("is_active", true)
-      .order("is_featured", { ascending: false });
+      .order("is_featured", { ascending: false })
+      .order("rating", { ascending: false })
+      .limit(limit);
     if (categoryId) q = q.eq("category_id", categoryId);
     return unwrap<Shop[]>(await q);
   },
@@ -84,10 +108,15 @@ export const shopsQuery = (categoryId?: string | null) => ({
 
 export const shopQuery = (id: string) => ({
   queryKey: ["shop", id],
+  staleTime: 3 * 60_000,
   queryFn: async () => {
-    const { data, error } = await supabase.from("shops").select("*").eq("id", id).maybeSingle();
+    const { data, error } = await supabase
+      .from("shops")
+      .select(SHOP_COLUMNS)
+      .eq("id", id)
+      .maybeSingle();
     if (error) throw error;
-    return data as Shop | null;
+    return data as unknown as Shop | null;
   },
 });
 
@@ -98,6 +127,7 @@ export const shopQuery = (id: string) => ({
  */
 export const shopHoursQuery = (shopId: string) => ({
   queryKey: ["shop-hours", shopId],
+  staleTime: 5 * 60_000,
   queryFn: async (): Promise<ShopHoursRow[]> => {
     try {
       const { data, error } = await supabase
@@ -114,26 +144,30 @@ export const shopHoursQuery = (shopId: string) => ({
   },
 });
 
-export const shopProductsQuery = (shopId: string) => ({
-  queryKey: ["products", shopId],
+export const shopProductsQuery = (shopId: string, limit = PRODUCT_PAGE_SIZE) => ({
+  queryKey: ["products", shopId, limit],
+  staleTime: 3 * 60_000,
   queryFn: async () =>
     unwrap<Product[]>(
       await supabase
         .from("products")
-        .select("*")
+        .select(PRODUCT_COLUMNS)
         .eq("shop_id", shopId)
         .eq("is_active", true)
-        .order("name"),
+        .order("is_popular", { ascending: false })
+        .order("name")
+        .limit(limit),
     ),
 });
 
 export const featuredProductsQuery = {
   queryKey: ["products", "featured"],
+  staleTime: 5 * 60_000,
   queryFn: async () =>
     unwrap<Product[]>(
       await supabase
         .from("products")
-        .select("*")
+        .select(PRODUCT_COLUMNS)
         .eq("is_active", true)
         .eq("is_popular", true)
         .limit(8),
@@ -142,25 +176,43 @@ export const featuredProductsQuery = {
 
 export const offersQuery = {
   queryKey: ["offers"],
+  staleTime: 5 * 60_000,
   queryFn: async () =>
-    unwrap<Offer[]>(await supabase.from("offers").select("*").eq("is_active", true)),
+    unwrap<Offer[]>(
+      await supabase.from("offers").select(OFFER_COLUMNS).eq("is_active", true).limit(24),
+    ),
 };
 
 export const searchQuery = (term: string) => ({
   queryKey: ["search", term],
+  staleTime: 2 * 60_000,
   queryFn: async () => {
     if (!term.trim()) return { shops: [] as Shop[], products: [] as Product[] };
     const like = `%${term.trim()}%`;
     const [s, p] = await Promise.all([
-      supabase.from("shops").select("*").eq("is_active", true).ilike("name", like).limit(12),
-      supabase.from("products").select("*").eq("is_active", true).ilike("name", like).limit(24),
+      supabase
+        .from("shops")
+        .select(SHOP_COLUMNS)
+        .eq("is_active", true)
+        .ilike("name", like)
+        .limit(12),
+      supabase
+        .from("products")
+        .select(PRODUCT_COLUMNS)
+        .eq("is_active", true)
+        .ilike("name", like)
+        .limit(24),
     ]);
-    return { shops: (s.data ?? []) as Shop[], products: (p.data ?? []) as Product[] };
+    return {
+      shops: (s.data ?? []) as unknown as Shop[],
+      products: (p.data ?? []) as Product[],
+    };
   },
 });
 
 export const publicSettingsQuery = {
   queryKey: ["settings", "public"],
+  staleTime: 5 * 60_000,
   queryFn: async () => {
     const { data } = await supabase.from("settings").select("key,value");
     const map: Record<string, unknown> = {};

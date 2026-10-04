@@ -20,7 +20,7 @@ import { CartProvider } from "@/lib/cart";
 import { SavedProvider } from "@/lib/saved";
 import { SiteHeader, MobileTabBar } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Toaster } from "@/components/ui/sonner";
+import { ToastHost } from "@/lib/toast";
 
 function NotFoundComponent() {
   const { t } = useLanguage();
@@ -158,7 +158,7 @@ function RootComponent() {
                   <SiteFooter />
                   <MobileTabBar />
                 </div>
-                <Toaster position="top-center" richColors />
+                <ToastHost position="top-center" richColors />
               </SavedProvider>
             </CartProvider>
           </LanguageProvider>

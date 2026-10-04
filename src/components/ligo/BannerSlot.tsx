@@ -16,6 +16,8 @@ export function BannerSlot({ placement, className }: { placement: string; classN
                 <StorageImage
                   path={b.image_url}
                   alt={b.title}
+                  width={1080}
+                  height={225}
                   className="h-40 w-full object-cover"
                 />
               )}

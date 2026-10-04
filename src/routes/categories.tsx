@@ -45,7 +45,13 @@ function CategoriesPage() {
               search={{ category: c.id }}
               className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
             >
-              <StorageImage path={c.image_url} alt={c.name} className="h-28 w-full object-cover" />
+              <StorageImage
+                path={c.image_url}
+                alt={c.name}
+                width={480}
+                height={168}
+                className="h-28 w-full object-cover"
+              />
               <div className="p-3 text-sm font-semibold">{c.name}</div>
             </Link>
           ))}

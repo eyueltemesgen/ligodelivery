@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Lock } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";

@@ -1,7 +1,7 @@
 import { translations } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Camera, KeyRound, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";

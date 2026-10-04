@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Package, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ordersQuery } from "@/lib/account";
+import { ORDER_PAGE_SIZE, ordersQuery } from "@/lib/account";
 import { ORDER_TABS, matchesOrderTab, tabCounts, type OrderTab } from "@/lib/orders";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { OrderCard } from "@/components/account/OrderCard";
@@ -30,10 +30,12 @@ function OrdersPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [tab, setTab] = useState<OrderTab>("all");
-  const { data = [], isLoading, isError, refetch } = useQuery(ordersQuery(user?.id));
+  const [limit, setLimit] = useState(ORDER_PAGE_SIZE);
+  const { data = [], isLoading, isError, refetch } = useQuery(ordersQuery(user?.id, limit));
 
   const counts = useMemo(() => tabCounts(data.map((o) => o.status)), [data]);
   const filtered = useMemo(() => data.filter((o) => matchesOrderTab(o.status, tab)), [data, tab]);
+  const maybeMore = data.length >= limit;
 
   return (
     <>
@@ -107,6 +109,15 @@ function OrdersPage() {
           {filtered.map((o) => (
             <OrderCard key={o.id} order={o} />
           ))}
+          {maybeMore && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setLimit((n) => n + ORDER_PAGE_SIZE)}
+            >
+              {t("acct_load_more_orders")}
+            </Button>
+          )}
         </div>
       )}
     </>

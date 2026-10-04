@@ -84,13 +84,19 @@ function AdminDashboard() {
         supabase
           .from("orders")
           .select("id,status,total,delivery_fee,created_at,rider_id")
-          .gte("created_at", prevStart.toISOString()),
+          .gte("created_at", prevStart.toISOString())
+          // Dashboard buckets only need the most recent window; a hard cap keeps
+          // a busy marketplace from streaming its whole order table to a phone.
+          .order("created_at", { ascending: false })
+          .limit(4000),
         supabase.from("riders").select("id,is_online,is_approved"),
         supabase.from("shops").select("id,is_active,is_online"),
         supabase
           .from("profiles")
           .select("id,created_at")
-          .gte("created_at", prevStart.toISOString()),
+          .gte("created_at", prevStart.toISOString())
+          .order("created_at", { ascending: false })
+          .limit(4000),
         supabase.from("settings").select("value").eq("key", "platform").maybeSingle(),
       ]);
 

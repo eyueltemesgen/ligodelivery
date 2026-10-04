@@ -2,7 +2,7 @@ import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import {
   ArrowLeft,
   CalendarDays,
@@ -172,6 +172,8 @@ function RequestDetailPage() {
               <StorageImage
                 path={service.image_url}
                 alt={service.name}
+                width={160}
+                height={160}
                 className="h-20 w-20 shrink-0 rounded-lg object-cover"
               />
               <div className="min-w-0">

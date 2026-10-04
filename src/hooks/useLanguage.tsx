@@ -7,7 +7,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { HTML_LANG, LANGUAGES, translations, type Language, type TranslationKey } from "@/lib/i18n";
+import {
+  HTML_LANG,
+  LANGUAGES,
+  loadDictionary,
+  type Dictionary,
+  type Language,
+  type TranslationKey,
+} from "@/lib/i18n";
+import { en } from "@/lib/locales/en";
 
 const STORAGE_KEY = "ligo-lang";
 
@@ -37,29 +45,37 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // server cannot read localStorage). Apply the stored/preferred language in an
   // effect to avoid a hydration mismatch.
   const [language, setLanguage] = useState<Language>("en");
-  const [ready, setReady] = useState(false);
+  const [dict, setDict] = useState<Dictionary>(en as Dictionary);
 
   useEffect(() => {
     const initial = getInitialLanguage();
     if (initial !== "en") setLanguage(initial);
-    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    let active = true;
+    void loadDictionary(language).then((next) => {
+      if (active) setDict(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [language]);
+
+  useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = HTML_LANG[language];
-  }, [language, ready]);
+  }, [language]);
 
   const t = useCallback(
     (key: TranslationKey, vars?: Record<string, string | number>) => {
-      const text = translations[language][key];
+      const text = dict[key] ?? en[key] ?? key;
       if (!vars) return text;
       return text.replace(/\{(\w+)\}/g, (match, name: string) =>
         name in vars ? String(vars[name]) : match,
       );
     },
-    [language],
+    [dict],
   );
 
   const toggleLanguage = useCallback(

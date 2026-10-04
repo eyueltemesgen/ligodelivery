@@ -2,7 +2,7 @@ import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Bell, BellRing, CheckCheck, CreditCard, Package, ShieldCheck, Truck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { notificationsQuery, type NotificationRow } from "@/lib/account";

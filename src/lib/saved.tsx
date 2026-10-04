@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { isMissingTable } from "@/lib/supa-error";
 import { useAuth } from "@/hooks/useAuth";
