@@ -1206,6 +1206,39 @@ export type Database = {
         }
         Relationships: []
       }
+      report_history: {
+        Row: {
+          created_at: string
+          end_date: string
+          export_type: string
+          generated_by: string | null
+          id: string
+          range_label: string
+          report_type: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          export_type?: string
+          generated_by?: string | null
+          id?: string
+          range_label: string
+          report_type?: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          export_type?: string
+          generated_by?: string | null
+          id?: string
+          range_label?: string
+          report_type?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       rider_earnings: {
         Row: {
           amount: number
@@ -1971,6 +2004,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_approved_merchant: { Args: { _uid: string }; Returns: boolean }
       merchant_commission_percent: { Args: { _uid: string }; Returns: number }
+      owns_entity: { Args: { _entity_id: string; _entity_type: string }; Returns: boolean }
       owns_shop: { Args: { _shop: string }; Returns: boolean }
       place_order: {
         Args: {

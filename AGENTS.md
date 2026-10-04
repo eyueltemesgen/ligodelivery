@@ -37,6 +37,13 @@
 - Flow reuses the existing order + payment pipeline: fixed-price bookings pay the service price, quote requests go `quote_requested → quoted → accepted → paid`. Service orders carry `order_type='service'` and a linked `service_request_id`, so `place_order` (products) is untouched.
 - Security: `service_requests` is INSERT-only for customers via RLS; status/quote/order changes go through the SECURITY DEFINER RPCs. `service_categories`/`services`/`service_addons` are publicly readable when active and writable by admins or the linked shop owner (`owns_shop`).
 
+## Admin Reports & Exports
+- Route: `src/routes/admin.reports.tsx` (`/admin/reports`, guarded by the `/admin` layout plus an explicit `AdminGate`); the Finance group in `src/components/admin/AdminShell.tsx` links to it under the `shell_reports` key. UI: `src/components/admin/ReportsAdmin.tsx`.
+- Single source of truth: `src/lib/reports.server.ts` `generateReport()` aggregates real tables into one `ReportPayload`; the dashboard, Excel and PDF all render from it so on-screen and exported figures match. `src/lib/reports.ts` is client-safe (types, `resolvePeriod`, `buildBuckets`, labels). `src/lib/reports.functions.ts` exposes admin-verified server functions. `report-excel.ts` (ExcelJS) and `report-pdf.ts` (jsPDF + autotable) are server-only, dynamically imported.
+- Timezone Africa/Addis_Ababa (+03:00) via `resolvePeriod`; granularity adapts (today→hour, week/month/custom→day, year→month). Delivered orders only count as sales; `netRevenue = delivered sales - refunds`.
+- Report history is optional: `supabase/migrations/20261003170000_report_history.sql` (admin-only RLS). Reads degrade gracefully and recording is best-effort, so the dashboard works before the migration is applied.
+- Added deps: `exceljs`, `jspdf`, `jspdf-autotable`. `recharts` (already present) renders the on-screen charts.
+
 ## Layout gotcha: overlapping content must stack above media
 - `StorageImage` renders a `relative` wrapper (positioned), so any sibling block that is *pulled up* over it with a negative margin must itself be positioned. Otherwise CSS paint order draws the positioned image above the non-positioned block, hiding the block's top (e.g. a shop name in a card overlapping the cover).
 - On the shop detail page (`src/routes/shops.$shopId.tsx`) the card uses `container-ligo relative z-10 -mt-10` for exactly this reason. Keep the `relative z-10` when touching that overlap.

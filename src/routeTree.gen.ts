@@ -34,6 +34,7 @@ import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as MerchantJoinRouteImport } from './routes/merchant.join'
 import { Route as MerchantLoginRouteImport } from './routes/merchant.login'
@@ -178,6 +179,11 @@ const AdminOpsRoute = AdminOpsRouteImport.update({
   path: '/ops',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRidersRoute = AdminRidersRouteImport.update({
   id: '/riders',
   path: '/riders',
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
@@ -340,6 +347,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
@@ -433,6 +442,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/map'
     | '/admin/ops'
+    | '/admin/reports'
     | '/admin/riders'
     | '/merchant/join'
     | '/merchant/login'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/map'
     | '/admin/ops'
+    | '/admin/reports'
     | '/admin/riders'
     | '/merchant/join'
     | '/merchant/login'
@@ -521,6 +532,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/map'
     | '/admin/ops'
+    | '/admin/reports'
     | '/admin/riders'
     | '/merchant/join'
     | '/merchant/login'
@@ -748,6 +760,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOpsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/riders': {
       id: '/admin/riders'
       path: '/riders'
@@ -911,6 +930,7 @@ interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMapRoute: typeof AdminMapRoute
   AdminOpsRoute: typeof AdminOpsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
   AdminRidersRoute: typeof AdminRidersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -920,6 +940,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AdminMapRoute: AdminMapRoute,
   AdminOpsRoute: AdminOpsRoute,
+  AdminReportsRoute: AdminReportsRoute,
   AdminRidersRoute: AdminRidersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
