@@ -3,12 +3,20 @@
  * Only user-facing interface strings live here; shop/product names and
  * other DB content stay as the merchant entered them.
  */
-export const LANGUAGES = ["en", "am"] as const;
+export const LANGUAGES = ["en", "am", "or"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
 export const LANGUAGE_LABELS: Record<Language, string> = {
   en: "English",
   am: "አማርኛ",
+  or: "Afaan Oromoo",
+};
+
+/** BCP-47 codes for the <html lang> attribute (Oromo is `om`). */
+export const HTML_LANG: Record<Language, string> = {
+  en: "en",
+  am: "am",
+  or: "om",
 };
 
 const en = {
@@ -127,5 +135,63 @@ const am: typeof en = {
   home_quick_filter: "ፈጣን የምድብ ማጣሪያ",
 };
 
-export const translations: Record<Language, typeof en> = { en, am };
+const or: typeof en = {
+  // Header
+  nav_categories: "Ramaddiiwwan",
+  nav_shops: "Dukkaanota",
+  nav_special_moments: "Yeroo Addaa",
+  nav_offers: "Gorgortamoota",
+  nav_track_order: "Ajaja hordofi",
+  search_placeholder: "Burgeer, aannan, qoricha… barbaadi",
+  search_label: "የኔ Go barbaadi",
+  menu: "Baafata",
+  become_rider: "Rider ta'i",
+  language: "Afaan",
+  switch_language: "Afaan jijjiiri",
+
+  // Account menu
+  account: "Herrega",
+  my_account: "Herrega koo",
+  my_orders: "Ajajoota koo",
+  saved_products: "Oomishaalee olkaa'aman",
+  addresses: "Teessoo",
+  notifications: "Beeksisa",
+  rider_portal: "Portaala rider",
+  merchant_portal: "Portaala daldalaa",
+  admin_dashboard: "Daashboordii bulchaa",
+  sign_out: "Ba'i",
+  login: "Seeni",
+  sign_up: "Galmaa'i",
+
+  // Mobile tab bar
+  tab_home: "Mana",
+  tab_shops: "Dukkaanota",
+  tab_cart: "Gaarii",
+  tab_orders: "Ajajoota",
+  tab_account: "Herrega",
+
+  // Footer
+  footer_explore: "Sakatta'i",
+  footer_work: "Nu waliin hojjedhu",
+  footer_contact: "Nu qunnamaa",
+  footer_help: "Gargaarsa",
+  footer_rights: "Mirgi seeraan eegame.",
+  footer_developed_by: "Kan hojjetame",
+
+  // Home
+  home_see_all: "Hunda ilaali",
+  home_all: "Hunda",
+  home_view_all_in: "Hunda ilaali",
+  home_category: "ramaddii",
+  home_feature_avg: "Giddu-galeessa daqiiqaa 30",
+  home_feature_riders: "Rideroota naannoo",
+  home_feature_payments: "Kaffaltii mirkanaa'e",
+  home_no_shops: "Ramaddii kana keessatti amma dukkaanni hin jiru — kan biraa yaali.",
+  home_moments_title: "Yeroo tokkoon tokkoon isaa hiika kennaa.",
+  home_moments_subtitle: "Kennaa, ajaa'iba, keeteringii fi bareechinaa — bakka tokkootti.",
+  home_explore_moments: "Yeroo Addaa sakatta'i",
+  home_quick_filter: "Calaltuu ramaddii saffisaa",
+};
+
+export const translations: Record<Language, typeof en> = { en, am, or };
 export type TranslationKey = keyof typeof en;

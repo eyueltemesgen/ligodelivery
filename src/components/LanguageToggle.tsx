@@ -1,6 +1,6 @@
 import { Globe } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { LANGUAGE_LABELS } from "@/lib/i18n";
+import { LANGUAGES, LANGUAGE_LABELS } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,12 +24,12 @@ export function LanguageToggle() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setLanguage("en")}>
-          English{language === "en" ? " ✓" : ""}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setLanguage("am")}>
-          አማርኛ{language === "am" ? " ✓" : ""}
-        </DropdownMenuItem>
+        {LANGUAGES.map((lang) => (
+          <DropdownMenuItem key={lang} onClick={() => setLanguage(lang)}>
+            {LANGUAGE_LABELS[lang]}
+            {language === lang ? " ✓" : ""}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

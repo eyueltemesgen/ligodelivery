@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { translations, type Language, type TranslationKey } from "@/lib/i18n";
+import { HTML_LANG, LANGUAGES, translations, type Language, type TranslationKey } from "@/lib/i18n";
 
 const STORAGE_KEY = "ligo-lang";
 
@@ -16,9 +16,12 @@ const LanguageContext = createContext<LanguageValue | null>(null);
 function getInitialLanguage(): Language {
   if (typeof window === "undefined") return "en";
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "en" || stored === "am") return stored;
-  // Default to English; only switch when the visitor clearly prefers Amharic.
-  return window.navigator.language?.toLowerCase().startsWith("am") ? "am" : "en";
+  if (stored && (LANGUAGES as readonly string[]).includes(stored)) return stored as Language;
+  // Default to English; only switch when the visitor clearly prefers another supported language.
+  const preferred = window.navigator.language?.toLowerCase() ?? "";
+  if (preferred.startsWith("am")) return "am";
+  if (preferred.startsWith("om") || preferred.startsWith("or")) return "or";
+  return "en";
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -26,13 +29,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, language);
-    document.documentElement.lang = language;
+    document.documentElement.lang = HTML_LANG[language];
   }, [language]);
 
   const value: LanguageValue = {
     language,
     setLanguage,
-    toggleLanguage: () => setLanguage((l) => (l === "en" ? "am" : "en")),
+    toggleLanguage: () =>
+      setLanguage((l) => LANGUAGES[(LANGUAGES.indexOf(l) + 1) % LANGUAGES.length] ?? "en"),
     t: (key) => translations[language][key],
   };
 
