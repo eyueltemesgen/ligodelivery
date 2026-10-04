@@ -1,3 +1,4 @@
+import type { TranslationKey } from "@/lib/i18n";
 export type ShopHoursRow = {
   id?: string;
   shop_id?: string;
@@ -49,13 +50,13 @@ export function isShopOpenNow(
   return withinWindow(shop.opens_at, shop.closes_at, now);
 }
 
-/** Human-readable reason a shop is closed, for checkout/lock messaging. */
-export function closedReason(
+/** i18n key for the reason a shop is closed, for checkout/lock messaging. */
+export function closedReasonKey(
   shop: { is_online?: boolean | null; opens_at?: string | null; closes_at?: string | null },
   hours?: ShopHoursRow[] | null,
-) {
-  if (shop.is_online === false) return "This shop is temporarily offline.";
+): "shop_offline" | "shop_closed_today" | "shop_outside_hours" {
+  if (shop.is_online === false) return "shop_offline";
   const today = hours?.find((h) => h.day_of_week === new Date().getDay());
-  if (today?.is_closed) return "This shop is closed today.";
-  return "This shop is currently outside its opening hours.";
+  if (today?.is_closed) return "shop_closed_today";
+  return "shop_outside_hours";
 }

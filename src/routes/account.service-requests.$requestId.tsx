@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -25,7 +26,7 @@ import {
   type ServiceRequestStatus,
 } from "@/lib/special-moments";
 import { ETB, formatDate } from "@/lib/format";
-import { supabaseErrorMessage } from "@/lib/supa-error";
+import { supabaseErrorText } from "@/lib/supa-error";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { AccountState, CardSkeleton, ErrorState } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
@@ -36,8 +37,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/account/service-requests/$requestId")({
   head: () => ({
     meta: [
-      { title: "Request details — Special Moments · የኔ Go" },
-      { name: "description", content: "Review your Special Moments request, quote and booking." },
+      { title: translations.en.asrd_meta_title },
+      { name: "description", content: translations.en.asrd_meta_desc },
     ],
   }),
   component: RequestDetailPage,
@@ -121,7 +122,7 @@ function RequestDetailPage() {
       await qc.invalidateQueries({ queryKey: ["service-request", requestId] });
       await qc.invalidateQueries({ queryKey: ["service-requests"] });
     } catch (err) {
-      toast.error(supabaseErrorMessage(err));
+      toast.error(supabaseErrorText(t, err));
     } finally {
       setBusy(false);
     }
@@ -140,7 +141,7 @@ function RequestDetailPage() {
       await qc.invalidateQueries({ queryKey: ["service-request", requestId] });
       window.location.assign(`/orders/${orderId}`);
     } catch (err) {
-      toast.error(supabaseErrorMessage(err));
+      toast.error(supabaseErrorText(t, err));
     } finally {
       setBusy(false);
     }
@@ -269,7 +270,10 @@ function RequestDetailPage() {
                   ) : null
                 }
               />
-              <Row label={t("sr_budget")} value={request.budget != null ? ETB(request.budget) : null} />
+              <Row
+                label={t("sr_budget")}
+                value={request.budget != null ? ETB(request.budget) : null}
+              />
             </div>
             {request.message && (
               <div className="mt-3 rounded-lg bg-surface p-3 text-sm">
@@ -301,7 +305,9 @@ function RequestDetailPage() {
             <h2 className="font-display text-lg font-bold">{t("sr_summary")}</h2>
             <div className="mt-2">
               <Row
-                label={request.quote_amount != null ? t("sr_accepted_quote") : t("sr_service_price")}
+                label={
+                  request.quote_amount != null ? t("sr_accepted_quote") : t("sr_service_price")
+                }
                 value={
                   payableBase != null ? ETB(payableBase) : isQuoteType ? t("sr_pending_quote") : "—"
                 }
@@ -328,7 +334,9 @@ function RequestDetailPage() {
                 disabled={busy}
                 onClick={() => void accept()}
               >
-                {busy ? t("sr_accepting") : t("sr_accept_quote", { amount: ETB(request.quote_amount ?? 0) })}
+                {busy
+                  ? t("sr_accepting")
+                  : t("sr_accept_quote", { amount: ETB(request.quote_amount ?? 0) })}
               </Button>
             ) : canPay ? (
               <div className="mt-4 space-y-3">

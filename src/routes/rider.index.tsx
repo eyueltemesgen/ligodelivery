@@ -23,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
+import { translations, type TranslationKey } from "@/lib/i18n";
 import { RiderGate } from "@/components/auth/guards";
 import { ETB, formatDate } from "@/lib/format";
 import { uploadImage } from "@/lib/media";
@@ -55,13 +55,13 @@ import {
 export const Route = createFileRoute("/rider/")({
   head: () => ({
     meta: [
-      { title: "Rider — የኔ Go" },
+      { title: translations.en.rider_meta_title },
       {
         name: "description",
-        content: "የኔ Go rider operations: dispatch, deliveries and earnings.",
+        content: translations.en.rider_meta_desc,
       },
-      { property: "og:title", content: "Rider — የኔ Go" },
-      { property: "og:description", content: "የኔ Go rider operations." },
+      { property: "og:title", content: translations.en.rider_meta_og_title },
+      { property: "og:description", content: translations.en.rider_meta_og_desc },
     ],
   }),
   component: RiderPortalPage,
@@ -493,8 +493,8 @@ function RiderPortal() {
     }
     await notify(
       order.customer_id,
-      `Order ${order.order_code} updated`,
-      STATUS_LABEL[status],
+      t("rd_notify_order_updated", { code: order.order_code }),
+      t(STATUS_LABEL_KEY[status]),
       "order",
       order.id,
     );

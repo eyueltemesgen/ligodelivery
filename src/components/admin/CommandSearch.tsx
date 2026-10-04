@@ -10,9 +10,20 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
+
+type Group = "Orders" | "Riders" | "Customers" | "Shops";
+
+const GROUP_KEY: Record<Group, TranslationKey> = {
+  Orders: "shell_orders",
+  Riders: "shell_riders",
+  Customers: "shell_customers",
+  Shops: "cs_shops",
+};
 
 type Result = {
-  group: "Orders" | "Riders" | "Customers" | "Shops";
+  group: Group;
   label: string;
   detail: string;
   to: string;
@@ -26,6 +37,7 @@ export function AdminCommandSearch({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const navigate = useNavigate();
@@ -72,21 +84,21 @@ export function AdminCommandSearch({
           out.push({
             group: "Orders",
             label: o.order_code,
-            detail: `${o.customer_name ?? "Customer"} · ${o.status} · ${o.total} ETB`,
+            detail: `${o.customer_name ?? t("cs_customer")} · ${o.status} · ${o.total} ETB`,
             to: `/orders/${o.id}`,
           });
         for (const p of profileRows) {
           if (riderIdSet.has(p.id))
             out.push({
               group: "Riders",
-              label: p.full_name || "Rider",
+              label: p.full_name || t("cs_rider"),
               detail: p.phone ?? p.email ?? "",
               to: "/admin/riders",
             });
           else
             out.push({
               group: "Customers",
-              label: p.full_name || "Customer",
+              label: p.full_name || t("cs_customer"),
               detail: p.phone ?? p.email ?? "",
               to: "/admin/ops",
             });
@@ -111,21 +123,15 @@ export function AdminCommandSearch({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput
-        placeholder="Search orders, riders, customers, shops…"
-        value={query}
-        onValueChange={setQuery}
-      />
+      <CommandInput placeholder={t("cs_placeholder")} value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>
-          {query.length < 2 ? "Type at least 2 characters…" : "No results found."}
-        </CommandEmpty>
+        <CommandEmpty>{query.length < 2 ? t("cs_type_more") : t("cs_no_results")}</CommandEmpty>
         {(["Orders", "Riders", "Customers", "Shops"] as const).map((group) => {
           const items = results.filter((r) => r.group === group);
           if (items.length === 0) return null;
           const Icon = GROUP_ICONS[group];
           return (
-            <CommandGroup key={group} heading={group}>
+            <CommandGroup key={group} heading={t(GROUP_KEY[group])}>
               {items.map((r, i) => (
                 <CommandItem
                   key={`${group}-${i}`}

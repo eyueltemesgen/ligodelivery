@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { PricingType } from "@/lib/special-moments";
+import type { TranslationKey } from "@/lib/i18n";
 
 /**
  * Presentation metadata for the five Special Moments categories. The database
@@ -16,47 +17,48 @@ import type { PricingType } from "@/lib/special-moments";
  */
 export type ServiceCategoryMeta = {
   icon: LucideIcon;
-  noun: string;
-  blurb: string;
+  nounKey: TranslationKey;
+  blurbKey: TranslationKey;
 };
 
 const META: Record<string, ServiceCategoryMeta> = {
   surprises: {
     icon: PartyPopper,
-    noun: "Surprises",
-    blurb: "Birthday, anniversary, proposal and celebration surprises, arranged end to end.",
+    nounKey: "smcat_surprises",
+    blurbKey: "smcat_surprises_blurb",
   },
   gifts: {
     icon: Gift,
-    noun: "Gifts",
-    blurb: "Gift boxes, flowers, cakes, chocolates, perfume and personalised gifts.",
+    nounKey: "smcat_gifts",
+    blurbKey: "smcat_gifts_blurb",
   },
   "holiday-gifts": {
     icon: CalendarHeart,
-    noun: "Holiday Gifts",
-    blurb: "Seasonal and holiday gift campaigns, managed and scheduled by our team.",
+    nounKey: "smcat_holiday_gifts",
+    blurbKey: "smcat_holiday_gifts_blurb",
   },
   catering: {
     icon: UtensilsCrossed,
-    noun: "Catering",
-    blurb: "Food for birthdays, family gatherings, offices, weddings and parties.",
+    nounKey: "smcat_catering",
+    blurbKey: "smcat_catering_blurb",
   },
   decoration: {
     icon: Flower2,
-    noun: "Decoration",
-    blurb: "Balloons, flowers, tables and full venue styling for your event.",
+    nounKey: "smcat_decoration",
+    blurbKey: "smcat_decoration_blurb",
   },
 };
 
 const FALLBACK_META: ServiceCategoryMeta = {
   icon: Cake,
-  noun: "Special Moments",
-  blurb: "Gifts, surprises, catering and decoration for life's important occasions.",
+  nounKey: "smcat_special_moments",
+  blurbKey: "smcat_special_moments_blurb",
 };
 
 export const categoryMeta = (slug: string): ServiceCategoryMeta => META[slug] ?? FALLBACK_META;
 
 export const pricingLabel = (
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
   type: PricingType,
   price: number | null,
   startingPrice: number | null,
@@ -65,6 +67,6 @@ export const pricingLabel = (
   const fmt = (n: number) =>
     `${n.toLocaleString("en-ET", { minimumFractionDigits: n % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })} ${currency}`;
   if (type === "fixed" && price != null) return fmt(price);
-  if (startingPrice != null) return `From ${fmt(startingPrice)}`;
-  return "Request a quote";
+  if (startingPrice != null) return t("sc_from_price", { price: fmt(startingPrice) });
+  return t("sc_request_quote");
 };

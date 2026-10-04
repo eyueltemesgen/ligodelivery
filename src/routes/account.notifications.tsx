@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,8 +17,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/account/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — የኔ Go" },
-      { name: "description", content: "Order, delivery and payment updates from የኔ Go." },
+      { title: translations.en.notif_meta_title },
+      { name: "description", content: translations.en.notif_meta_desc },
     ],
   }),
   component: NotificationsPage,

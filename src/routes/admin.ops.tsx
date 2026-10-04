@@ -4,9 +4,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
-import { ORDER_STATUSES, STATUS_LABEL_KEY, statusTone, notify, type OrderStatus } from "@/lib/orders";
+import {
+  ORDER_STATUSES,
+  STATUS_LABEL_KEY,
+  statusTone,
+  notify,
+  type OrderStatus,
+} from "@/lib/orders";
 import { useLanguage } from "@/hooks/useLanguage";
-import { isMissingRpc, supabaseErrorMessage } from "@/lib/supa-error";
+import { translations, type TranslationKey } from "@/lib/i18n";
+import { isMissingRpc, supabaseErrorText } from "@/lib/supa-error";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
 import { ShopHoursEditor } from "@/components/ligo/ShopHoursEditor";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
@@ -52,13 +59,13 @@ export const Route = createFileRoute("/admin/ops")({
   },
   head: () => ({
     meta: [
-      { title: "Operations — የኔ Go Admin" },
+      { title: translations.en.aop_meta_title },
       {
         name: "description",
-        content: "Manage የኔ Go orders, payments, riders, shops, products and offers.",
+        content: translations.en.aop_meta_desc,
       },
-      { property: "og:title", content: "Operations — የኔ Go Admin" },
-      { property: "og:description", content: "Operations console for የኔ Go." },
+      { property: "og:title", content: translations.en.aop_meta_title },
+      { property: "og:description", content: translations.en.aop_meta_og_desc },
     ],
   }),
   component: AdminPage,
@@ -79,21 +86,51 @@ function AdminPage() {
       >
         <div className="-mx-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           <TabsList className="h-auto w-max min-w-full justify-start gap-1">
-            <TabsTrigger value="orders" className="min-h-9">{t("aop_tab_orders")}</TabsTrigger>
-            <TabsTrigger value="payments" className="min-h-9">{t("aop_tab_payments")}</TabsTrigger>
-            <TabsTrigger value="payouts" className="min-h-9">{t("aop_tab_payouts")}</TabsTrigger>
-            <TabsTrigger value="customers" className="min-h-9">{t("aop_tab_customers")}</TabsTrigger>
-            <TabsTrigger value="shops" className="min-h-9">{t("aop_tab_shops")}</TabsTrigger>
-            <TabsTrigger value="products" className="min-h-9">{t("aop_tab_products")}</TabsTrigger>
-            <TabsTrigger value="categories" className="min-h-9">{t("aop_tab_categories")}</TabsTrigger>
-            <TabsTrigger value="special-moments" className="min-h-9">{t("aop_tab_special_moments")}</TabsTrigger>
-            <TabsTrigger value="offers" className="min-h-9">{t("aop_tab_offers")}</TabsTrigger>
-            <TabsTrigger value="marketing" className="min-h-9">{t("aop_tab_marketing")}</TabsTrigger>
-            <TabsTrigger value="banners" className="min-h-9">{t("aop_tab_banners")}</TabsTrigger>
-            <TabsTrigger value="content" className="min-h-9">{t("aop_tab_content")}</TabsTrigger>
-            <TabsTrigger value="financials" className="min-h-9">{t("aop_tab_financials")}</TabsTrigger>
-            <TabsTrigger value="settings" className="min-h-9">{t("aop_tab_settings")}</TabsTrigger>
-            <TabsTrigger value="system" className="min-h-9">{t("aop_tab_system")}</TabsTrigger>
+            <TabsTrigger value="orders" className="min-h-9">
+              {t("aop_tab_orders")}
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="min-h-9">
+              {t("aop_tab_payments")}
+            </TabsTrigger>
+            <TabsTrigger value="payouts" className="min-h-9">
+              {t("aop_tab_payouts")}
+            </TabsTrigger>
+            <TabsTrigger value="customers" className="min-h-9">
+              {t("aop_tab_customers")}
+            </TabsTrigger>
+            <TabsTrigger value="shops" className="min-h-9">
+              {t("aop_tab_shops")}
+            </TabsTrigger>
+            <TabsTrigger value="products" className="min-h-9">
+              {t("aop_tab_products")}
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="min-h-9">
+              {t("aop_tab_categories")}
+            </TabsTrigger>
+            <TabsTrigger value="special-moments" className="min-h-9">
+              {t("aop_tab_special_moments")}
+            </TabsTrigger>
+            <TabsTrigger value="offers" className="min-h-9">
+              {t("aop_tab_offers")}
+            </TabsTrigger>
+            <TabsTrigger value="marketing" className="min-h-9">
+              {t("aop_tab_marketing")}
+            </TabsTrigger>
+            <TabsTrigger value="banners" className="min-h-9">
+              {t("aop_tab_banners")}
+            </TabsTrigger>
+            <TabsTrigger value="content" className="min-h-9">
+              {t("aop_tab_content")}
+            </TabsTrigger>
+            <TabsTrigger value="financials" className="min-h-9">
+              {t("aop_tab_financials")}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="min-h-9">
+              {t("aop_tab_settings")}
+            </TabsTrigger>
+            <TabsTrigger value="system" className="min-h-9">
+              {t("aop_tab_system")}
+            </TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="orders">
@@ -225,9 +262,7 @@ function SystemAdmin() {
           value={value.base_delivery_fee}
           onChange={(e) => setDraft({ ...value, base_delivery_fee: Number(e.target.value) || 0 })}
         />
-        <p className="text-xs text-muted-foreground">
-          {t("aop_base_fee_hint")}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("aop_base_fee_hint")}</p>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="surge">{t("aop_surge")}</Label>
@@ -240,9 +275,7 @@ function SystemAdmin() {
           value={value.surge_multiplier}
           onChange={(e) => setDraft({ ...value, surge_multiplier: Number(e.target.value) || 1 })}
         />
-        <p className="text-xs text-muted-foreground">
-          {t("aop_surge_hint")}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("aop_surge_hint")}</p>
       </div>
       <label className="flex items-center justify-between gap-4 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm font-medium">
         {t("aop_emergency_pause")}
@@ -252,9 +285,7 @@ function SystemAdmin() {
         />
       </label>
       {value.dispatch_paused && (
-        <p className="text-xs text-destructive">
-          {t("aop_pause_warning")}
-        </p>
+        <p className="text-xs text-destructive">{t("aop_pause_warning")}</p>
       )}
       <Button type="submit" disabled={saving}>
         {saving ? t("aop_saving") : t("aop_save_platform")}
@@ -472,7 +503,10 @@ function Stats() {
               (data?.ridersOnline ?? 0) > 0 ? "bg-primary" : "bg-muted-foreground/40"
             }`}
           />
-          {t("aop_fleet_status", { online: data?.ridersOnline ?? 0, onTrip: data?.ridersOnTrip ?? 0 })}
+          {t("aop_fleet_status", {
+            online: data?.ridersOnline ?? 0,
+            onTrip: data?.ridersOnTrip ?? 0,
+          })}
         </p>
       </div>
     </div>
@@ -531,7 +565,7 @@ function OrdersAdmin() {
       toast.error(error.message);
       return;
     }
-    await notify(customerId, `Order ${code}`, message, "order", id);
+    await notify(customerId, t("aop_notify_order_title", { code }), message, "order", id);
     void qc.invalidateQueries({ queryKey: ["admin-orders"] });
     toast.success(t("aop_order_updated"));
   };
@@ -539,7 +573,7 @@ function OrdersAdmin() {
   const approveDispatch = async (id: string, customerId: string, code: string) => {
     const { error } = await dispatchOrder(id);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     await notify(
@@ -567,7 +601,9 @@ function OrdersAdmin() {
             <span
               className={`rounded-full px-2 py-1 text-xs font-semibold ${statusTone(o.status)}`}
             >
-              {STATUS_LABEL_KEY[o.status as OrderStatus] ? t(STATUS_LABEL_KEY[o.status as OrderStatus]) : o.status}
+              {STATUS_LABEL_KEY[o.status as OrderStatus]
+                ? t(STATUS_LABEL_KEY[o.status as OrderStatus])
+                : o.status}
             </span>
           </div>
           <p className="mt-2 text-sm">{o.delivery_address}</p>
@@ -592,7 +628,9 @@ function OrdersAdmin() {
                   { status: e.target.value },
                   o.customer_id,
                   o.order_code,
-                  STATUS_LABEL_KEY[e.target.value as OrderStatus] ? t(STATUS_LABEL_KEY[e.target.value as OrderStatus]) : e.target.value,
+                  STATUS_LABEL_KEY[e.target.value as OrderStatus]
+                    ? t(STATUS_LABEL_KEY[e.target.value as OrderStatus])
+                    : e.target.value,
                 )
               }
             >
@@ -701,7 +739,7 @@ function PaymentsAdmin() {
     if (status === "approved") {
       const { error: dispatchError } = await dispatchOrder(orderId);
       if (dispatchError) {
-        toast.error(supabaseErrorMessage(dispatchError));
+        toast.error(supabaseErrorText(t, dispatchError));
         return;
       }
     }
@@ -712,7 +750,9 @@ function PaymentsAdmin() {
     }
     await notify(
       userId,
-      t("aop_notify_payment", { status: status === "approved" ? t("aop_approved") : t("aop_rejected") }),
+      t("aop_notify_payment", {
+        status: status === "approved" ? t("aop_approved") : t("aop_rejected"),
+      }),
       status === "approved"
         ? t("aop_notify_payment_approved_body")
         : t("aop_notify_payment_rejected_body"),
@@ -746,7 +786,9 @@ function PaymentsAdmin() {
             <p className="font-semibold uppercase">
               {p.method} · {ETB(p.amount ?? 0)}
             </p>
-            <p className="text-sm text-muted-foreground">{t("aop_ref")} {p.reference || "—"}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("aop_ref")} {p.reference || "—"}
+            </p>
             <p className="text-xs text-muted-foreground">
               {formatDate(p.created_at)} · {p.status}
             </p>
@@ -759,7 +801,9 @@ function PaymentsAdmin() {
               size="sm"
               variant="outline"
               onClick={() => void review(p.id, p.order_id, p.user_id, "rejected")}
-            >{t("aop_reject")}</Button>
+            >
+              {t("aop_reject")}
+            </Button>
           </div>
         </div>
       ))}
@@ -889,7 +933,9 @@ export function PayoutsAdmin() {
                 size="sm"
                 variant="outline"
                 onClick={() => void process(p.id, p.rider_id, Number(p.amount), "rejected")}
-              >{t("aop_reject")}</Button>
+              >
+                {t("aop_reject")}
+              </Button>
             </div>
           ) : (
             <span
@@ -948,7 +994,12 @@ function CategoriesAdmin() {
         className="h-fit space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
       >
         <h3 className="font-display font-bold">{t("aop_new_category")}</h3>
-        <Input placeholder={t("aop_name")} value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input
+          placeholder={t("aop_name")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
         <Input
           type="file"
           accept="image/*"
@@ -1445,10 +1496,10 @@ function OffersAdmin() {
   );
 }
 
-const PAYMENT_KEYS = [
-  { key: "payment_telebirr", label: "Telebirr" },
-  { key: "payment_cbe", label: "CBE" },
-  { key: "payment_boa", label: "Bank of Abyssinia" },
+const PAYMENT_KEYS: { key: string; labelKey: TranslationKey }[] = [
+  { key: "payment_telebirr", labelKey: "pay_telebirr" },
+  { key: "payment_cbe", labelKey: "pay_cbe" },
+  { key: "payment_boa", labelKey: "pay_boa" },
 ];
 
 function SettingsAdmin() {
@@ -1481,7 +1532,7 @@ function SettingsAdmin() {
       {PAYMENT_KEYS.map((p) => (
         <PaymentSetting
           key={p.key}
-          label={p.label}
+          label={t(p.labelKey)}
           value={(settings[p.key] ?? {}) as Record<string, string>}
           onSave={(v) => void save(p.key, v)}
         />
@@ -1520,7 +1571,9 @@ function PaymentSetting({
         <Label>{t("aop_account_number")}</Label>
         <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
       </div>
-      <Button type="submit" size="sm">{t("aop_save")}</Button>
+      <Button type="submit" size="sm">
+        {t("aop_save")}
+      </Button>
     </form>
   );
 }
@@ -1627,7 +1680,9 @@ function RowEditor({
       <Button size="sm" variant="outline" disabled={saving} onClick={() => void save(null)}>
         Save
       </Button>
-      <Button size="sm" variant="destructive" disabled={deleting} onClick={() => void remove()}>{t("aop_delete")}</Button>
+      <Button size="sm" variant="destructive" disabled={deleting} onClick={() => void remove()}>
+        {t("aop_delete")}
+      </Button>
     </div>
   );
 }
@@ -1652,8 +1707,7 @@ function BannersAdmin() {
   });
   const { data: bannerShops = [] } = useQuery({
     queryKey: ["admin-banner-shops"],
-    queryFn: async () =>
-      (await supabase.from("shops").select("id,name").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("shops").select("id,name").order("name")).data ?? [],
   });
 
   const create = async (e: React.FormEvent) => {
@@ -1764,7 +1818,7 @@ function BannersAdmin() {
         >
           {BANNER_PLACEMENTS.map((p) => (
             <option key={p.value} value={p.value}>
-              {p.label}
+              {t(p.labelKey)}
             </option>
           ))}
         </select>
@@ -1782,7 +1836,9 @@ function BannersAdmin() {
         <Button type="submit">{t("aop_create_banner")}</Button>
       </form>
       <ul className="space-y-2">
-        {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("aop_no_banners")}</p>}
+        {rows.length === 0 && (
+          <p className="text-sm text-muted-foreground">{t("aop_no_banners")}</p>
+        )}
         {rows.map((b) => (
           <li
             key={b.id}
@@ -1797,7 +1853,10 @@ function BannersAdmin() {
               <div className="min-w-0">
                 <p className="truncate font-medium">{b.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {BANNER_PLACEMENTS.find((p) => p.value === b.placement)?.label ?? b.placement}
+                  {(() => {
+                    const p = BANNER_PLACEMENTS.find((x) => x.value === b.placement);
+                    return p ? t(p.labelKey) : b.placement;
+                  })()}
                 </p>
               </div>
             </div>
@@ -1809,7 +1868,7 @@ function BannersAdmin() {
               >
                 {BANNER_PLACEMENTS.map((p) => (
                   <option key={p.value} value={p.value}>
-                    {p.label}
+                    {t(p.labelKey)}
                   </option>
                 ))}
               </select>
@@ -1826,7 +1885,9 @@ function BannersAdmin() {
                   onCheckedChange={(v) => void patch(b.id, { is_active: v })}
                 />
               </label>
-              <Button size="sm" variant="outline" onClick={() => void remove(b.id)}>{t("aop_delete")}</Button>
+              <Button size="sm" variant="outline" onClick={() => void remove(b.id)}>
+                {t("aop_delete")}
+              </Button>
             </div>
           </li>
         ))}
@@ -1927,7 +1988,7 @@ function ContentAdmin() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {CONTENT_FIELDS.map((f) => (
           <div key={f.key} className="space-y-1.5">
-            <Label>{f.label}</Label>
+            <Label>{t(f.labelKey)}</Label>
             {f.long ? (
               <Textarea
                 value={value[f.key] ?? ""}

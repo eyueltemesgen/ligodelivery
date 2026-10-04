@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 // Backward-compatible shim: order tracking now lives inside the account
@@ -5,10 +6,10 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/orders/$orderId")({
   head: () => ({
     meta: [
-      { title: "Order tracking — የኔ Go" },
+      { title: translations.en.ot_meta_title },
       {
         name: "description",
-        content: "Live tracking, delivery timeline and payment status for your የኔ Go order.",
+        content: translations.en.ot_meta_desc,
       },
     ],
   }),

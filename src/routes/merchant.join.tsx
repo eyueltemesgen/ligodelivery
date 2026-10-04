@@ -6,9 +6,9 @@ import { BadgeCheck, Building2, Check, Crosshair, ImageIcon, Store, Wallet } fro
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
+import { translations, type TranslationKey } from "@/lib/i18n";
 import { categoriesQuery } from "@/lib/queries";
-import { uploadImage } from "@/lib/media";
+import { mediaErrorKey, uploadImage } from "@/lib/media";
 import { merchantProfileQuery, MERCHANT_STATUS_LABEL } from "@/lib/merchant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,16 +19,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 export const Route = createFileRoute("/merchant/join")({
   head: () => ({
     meta: [
-      { title: "Become a merchant on የኔ Go — sell in Bishoftu" },
+      { title: translations.en.mj_meta_title },
       {
         name: "description",
-        content:
-          "Register your restaurant or shop on የኔ Go, reach Bishoftu customers and manage orders from your own merchant dashboard.",
+        content: translations.en.mj_meta_desc,
       },
-      { property: "og:title", content: "Become a merchant on የኔ Go" },
+      { property: "og:title", content: translations.en.mj_meta_og_title },
       {
         property: "og:description",
-        content: "List your shop on የኔ Go and start receiving delivery orders in Bishoftu.",
+        content: translations.en.mj_meta_og_desc,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -197,7 +196,8 @@ function MerchantJoin() {
       toast.success(t("mj_submitted"));
       void navigate({ to: "/merchant" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("mj_err_submit"));
+      const mediaKey = mediaErrorKey(err);
+      toast.error(mediaKey ? t(mediaKey) : err instanceof Error ? err.message : t("mj_err_submit"));
     } finally {
       setBusy(false);
     }

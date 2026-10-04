@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -22,11 +23,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/account/service-requests/")({
   head: () => ({
     meta: [
-      { title: "Special Moments — My account · የኔ Go" },
+      { title: translations.en.asri_meta_title },
       {
         name: "description",
-        content:
-          "Track your gift, surprise, catering and decoration requests, quotes and scheduled services.",
+        content: translations.en.asri_meta_desc,
       },
     ],
   }),
@@ -73,7 +73,9 @@ export function ServiceRequestCard({
             STATUS_TONE[request.status],
           )}
         >
-          {REQUEST_STATUS_LABEL_KEY[request.status] ? t(REQUEST_STATUS_LABEL_KEY[request.status]) : REQUEST_STATUS_LABEL[request.status]}
+          {REQUEST_STATUS_LABEL_KEY[request.status]
+            ? t(REQUEST_STATUS_LABEL_KEY[request.status])
+            : REQUEST_STATUS_LABEL[request.status]}
         </span>
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -175,9 +177,7 @@ function ServiceRequestsPage() {
         <AccountState
           icon={Sparkles}
           title={data.length === 0 ? t("sr_empty_title") : t("sr_filter_empty_title")}
-          description={
-            data.length === 0 ? t("sr_empty_desc") : t("sr_filter_empty_desc")
-          }
+          description={data.length === 0 ? t("sr_empty_desc") : t("sr_filter_empty_desc")}
           action={
             data.length === 0 ? (
               <Button asChild>

@@ -29,6 +29,8 @@ import { AdminCommandSearch } from "@/components/admin/CommandSearch";
 import { NotificationsCenter } from "@/components/admin/NotificationsCenter";
 import { AdminUserMenu } from "@/components/admin/AdminUserMenu";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 import {
   Sheet,
   SheetContent,
@@ -37,48 +39,53 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
+type NavItem = {
+  to: string;
+  key: TranslationKey;
+  icon: React.ComponentType<{ className?: string }>;
+};
 
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+const NAV_GROUPS: { key: TranslationKey; items: NavItem[] }[] = [
   {
-    label: "Operations",
+    key: "shell_group_operations",
     items: [
-      { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/admin/ops?tab=orders", label: "Orders", icon: ClipboardList },
-      { to: "/admin/map", label: "Live Delivery Map", icon: MapIcon },
+      { to: "/admin", key: "shell_dashboard", icon: LayoutDashboard },
+      { to: "/admin/ops?tab=orders", key: "shell_orders", icon: ClipboardList },
+      { to: "/admin/map", key: "shell_live_map", icon: MapIcon },
     ],
   },
   {
-    label: "Network",
+    key: "shell_group_network",
     items: [
-      { to: "/admin/riders", label: "Riders", icon: Bike },
-      { to: "/admin/ops?tab=shops", label: "Merchants", icon: Store },
-      { to: "/admin/ops?tab=customers", label: "Customers", icon: Users },
-      { to: "/admin/ops?tab=products", label: "Products", icon: Package },
-      { to: "/admin/ops?tab=categories", label: "Categories", icon: Tags },
-      { to: "/admin/ops?tab=special-moments", label: "Special Moments", icon: Sparkles },
+      { to: "/admin/riders", key: "shell_riders", icon: Bike },
+      { to: "/admin/ops?tab=shops", key: "shell_merchants", icon: Store },
+      { to: "/admin/ops?tab=customers", key: "shell_customers", icon: Users },
+      { to: "/admin/ops?tab=products", key: "shell_products", icon: Package },
+      { to: "/admin/ops?tab=categories", key: "shell_categories", icon: Tags },
+      { to: "/admin/ops?tab=special-moments", key: "shell_special_moments", icon: Sparkles },
     ],
   },
   {
-    label: "Finance",
+    key: "shell_group_finance",
     items: [
-      { to: "/admin/ops?tab=payments", label: "Payments", icon: ShieldCheck },
-      { to: "/admin/financials", label: "Financials & Earnings", icon: Wallet },
-      { to: "/admin/ops?tab=financials", label: "Reports", icon: Percent },
+      { to: "/admin/ops?tab=payments", key: "shell_payments", icon: ShieldCheck },
+      { to: "/admin/financials", key: "shell_financials", icon: Wallet },
+      { to: "/admin/ops?tab=financials", key: "shell_reports", icon: Percent },
     ],
   },
   {
-    label: "Platform",
+    key: "shell_group_platform",
     items: [
-      { to: "/admin/ops?tab=offers", label: "Offers & Coupons", icon: Percent },
-      { to: "/notifications", label: "Notifications", icon: Bell },
-      { to: "/admin/ops?tab=settings", label: "Settings", icon: Settings },
-      { to: "/admin/ops?tab=system", label: "System Users", icon: Wrench },
+      { to: "/admin/ops?tab=offers", key: "shell_offers", icon: Percent },
+      { to: "/notifications", key: "shell_notifications", icon: Bell },
+      { to: "/admin/ops?tab=settings", key: "shell_settings", icon: Settings },
+      { to: "/admin/ops?tab=system", key: "shell_system_users", icon: Wrench },
     ],
   },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -129,7 +136,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             type="button"
             variant="ghost"
             size="icon"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("shell_expand") : t("shell_collapse")}
             onClick={() => setCollapsed((v) => !v)}
             className="h-8 w-8 text-muted-foreground"
           >
@@ -138,10 +145,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="flex-1 space-y-4 overflow-y-auto p-2">
           {NAV_GROUPS.map((group) => (
-            <div key={group.label}>
+            <div key={group.key}>
               {!collapsed && (
                 <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.label}
+                  {t(group.key)}
                 </p>
               )}
               <ul className="space-y-0.5">
@@ -166,11 +173,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                             ? "bg-primary-soft text-accent-foreground"
                             : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                         }`}
-                        title={item.label}
+                        title={t(item.key)}
                       >
                         <item.icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="truncate">{item.label}</span>}
-                        {!collapsed && item.label === "Orders" && pendingCount > 0 && (
+                        {!collapsed && <span className="truncate">{t(item.key)}</span>}
+                        {!collapsed && item.key === "shell_orders" && pendingCount > 0 && (
                           <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
                             {pendingCount}
                           </span>
@@ -193,9 +200,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </SheetHeader>
           <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
             {NAV_GROUPS.map((group) => (
-              <div key={group.label}>
+              <div key={group.key}>
                 <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.label}
+                  {t(group.key)}
                 </p>
                 <ul className="space-y-1">
                   {group.items.map((item) => {
@@ -220,8 +227,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                           }`}
                         >
                           <item.icon className="h-5 w-5 shrink-0" />
-                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                          {item.label === "Orders" && pendingCount > 0 && (
+                          <span className="min-w-0 flex-1 truncate">{t(item.key)}</span>
+                          {item.key === "shell_orders" && pendingCount > 0 && (
                             <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
                               {pendingCount}
                             </span>
@@ -244,15 +251,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               type="button"
               variant="ghost"
               size="icon"
-              aria-label="Open admin menu"
+              aria-label={t("shell_open_menu")}
               onClick={() => setMobileNavOpen(true)}
             >
               <Menu className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
-              <p className="truncate font-display text-base font-extrabold text-primary">የኔ Go Admin</p>
+              <p className="truncate font-display text-base font-extrabold text-primary">
+                የኔ Go Admin
+              </p>
               <p className="truncate text-[11px] text-muted-foreground">
-                {dispatchPaused ? "Dispatch paused" : "All systems operational"}
+                {dispatchPaused ? t("shell_dispatch_paused_lc") : t("shell_all_operational_lc")}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -268,34 +277,34 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className="h-10 w-full justify-start px-3 text-muted-foreground"
             >
               <Search className="h-4 w-4" />
-              <span className="truncate">Search orders, riders, shops…</span>
+              <span className="truncate">{t("shell_search_placeholder")}</span>
             </Button>
           </div>
           <div className="hidden items-center gap-3 md:flex">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setSearchOpen(true)}
-            className="h-9 w-full max-w-sm justify-start bg-surface px-3 text-muted-foreground hover:border-primary/50"
-          >
-            <Search className="h-4 w-4" />
-            Search orders, riders, shops…
-            <kbd className="ml-auto rounded border border-border bg-background px-1.5 text-[10px] font-semibold">
-              ⌘K
-            </kbd>
-          </Button>
-          <span
-            className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-              dispatchPaused
-                ? "bg-destructive/10 text-destructive"
-                : "bg-primary-soft text-accent-foreground"
-            }`}
-          >
-            <Gauge className="h-3.5 w-3.5" />
-            {dispatchPaused ? "Dispatch Paused" : "All Systems Operational"}
-          </span>
-          <NotificationsCenter />
-          <AdminUserMenu />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSearchOpen(true)}
+              className="h-9 w-full max-w-sm justify-start bg-surface px-3 text-muted-foreground hover:border-primary/50"
+            >
+              <Search className="h-4 w-4" />
+              {t("shell_search_placeholder")}
+              <kbd className="ml-auto rounded border border-border bg-background px-1.5 text-[10px] font-semibold">
+                ⌘K
+              </kbd>
+            </Button>
+            <span
+              className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                dispatchPaused
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-primary-soft text-accent-foreground"
+              }`}
+            >
+              <Gauge className="h-3.5 w-3.5" />
+              {dispatchPaused ? t("shell_dispatch_paused") : t("shell_all_operational")}
+            </span>
+            <NotificationsCenter />
+            <AdminUserMenu />
           </div>
         </header>
         <AdminCommandSearch open={searchOpen} onOpenChange={setSearchOpen} />

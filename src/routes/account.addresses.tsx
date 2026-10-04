@@ -6,7 +6,7 @@ import { Check, MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { addressesQuery, type AddressRow } from "@/lib/account";
 import { supabase } from "@/integrations/supabase/client";
-import { supabaseErrorMessage, isMissingColumn } from "@/lib/supa-error";
+import { isMissingColumn, supabaseErrorText } from "@/lib/supa-error";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
@@ -33,27 +33,28 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
+import { translations, type TranslationKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account/addresses")({
   head: () => ({
     meta: [
-      { title: "Delivery addresses — የኔ Go" },
-      { name: "description", content: "Manage your saved delivery addresses in Bishoftu." },
+      { title: translations.en.addr_meta_title },
+      { name: "description", content: translations.en.addr_meta_desc },
     ],
   }),
   component: AddressesPage,
 });
 
-const AREAS = [
-  "Kebele 01",
-  "Kebele 02",
-  "Kebele 03",
-  "Kebele 04",
-  "Kebele 05",
-  "Bishoftu Guda",
-  "Cheleleki",
-  "Hora",
-  "Other",
+const AREAS: { value: string; key: TranslationKey }[] = [
+  { value: "Kebele 01", key: "addr_area_kebele01" },
+  { value: "Kebele 02", key: "addr_area_kebele02" },
+  { value: "Kebele 03", key: "addr_area_kebele03" },
+  { value: "Kebele 04", key: "addr_area_kebele04" },
+  { value: "Kebele 05", key: "addr_area_kebele05" },
+  { value: "Bishoftu Guda", key: "addr_area_guda" },
+  { value: "Cheleleki", key: "addr_area_cheleleki" },
+  { value: "Hora", key: "addr_area_hora" },
+  { value: "Other", key: "addr_area_other" },
 ];
 
 type FormState = {
@@ -130,7 +131,7 @@ function AddressesPage() {
       const { error: clearError } = form.id ? await clear.neq("id", form.id) : await clear;
       if (clearError) {
         setBusy(false);
-        toast.error(supabaseErrorMessage(clearError));
+        toast.error(supabaseErrorText(t, clearError));
         return;
       }
     }
@@ -154,7 +155,7 @@ function AddressesPage() {
     if (error && isMissingColumn(error)) ({ error } = await write(base));
     setBusy(false);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     setForm(null);
@@ -177,7 +178,7 @@ function AddressesPage() {
       : await supabase.from("addresses").update({ is_default: true }).eq("id", a.id);
     setSettingDefault(null);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     invalidate();
@@ -191,7 +192,7 @@ function AddressesPage() {
     setBusy(false);
     setDeleteTarget(null);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     invalidate();
@@ -326,8 +327,8 @@ function AddressesPage() {
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                   >
                     {AREAS.map((a) => (
-                      <option key={a} value={a}>
-                        {a}
+                      <option key={a.value} value={a.value}>
+                        {t(a.key)}
                       </option>
                     ))}
                   </select>

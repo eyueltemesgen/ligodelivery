@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 // Backward-compatible shim: notifications now live in the account center at
@@ -5,7 +6,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — የኔ Go" },
+      { title: translations.en.notif_meta_title },
       {
         name: "description",
         content: "Order updates, delivery alerts and payment confirmations from የኔ Go.",

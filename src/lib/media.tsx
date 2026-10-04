@@ -1,3 +1,4 @@
+import type { TranslationKey } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -98,13 +99,23 @@ export function StorageImage({
   );
 }
 
+const MEDIA_ERROR_KEYS: Record<string, TranslationKey> = {
+  media_err_type: "media_err_type",
+  media_err_size: "media_err_size",
+};
+
+/** i18n key for a validation error thrown by uploadImage, or null for other errors. */
+export function mediaErrorKey(err: unknown): TranslationKey | null {
+  if (!(err instanceof Error)) return null;
+  return MEDIA_ERROR_KEYS[err.message] ?? null;
+}
+
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_BYTES = 5 * 1024 * 1024;
 
 export async function uploadImage(file: File, folder: string, bucket = MEDIA_BUCKET) {
-  if (!ALLOWED.includes(file.type))
-    throw new Error("Only JPG, PNG, WEBP or GIF images are allowed.");
-  if (file.size > MAX_BYTES) throw new Error("Image must be smaller than 5 MB.");
+  if (!ALLOWED.includes(file.type)) throw new Error("media_err_type");
+  if (file.size > MAX_BYTES) throw new Error("media_err_size");
   const ext =
     file.name
       .split(".")

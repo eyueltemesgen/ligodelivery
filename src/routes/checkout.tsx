@@ -7,8 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { ETB } from "@/lib/format";
-import { supabaseErrorMessage } from "@/lib/supa-error";
-import { closedReason, isShopOpenNow } from "@/lib/hours";
+import { supabaseErrorText } from "@/lib/supa-error";
+import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
 import { addressesQuery } from "@/lib/account";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,7 +109,7 @@ function CheckoutPage() {
     });
     setCheckingPromo(false);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     const r = data as { valid: boolean; message: string; code?: string; discount?: number };
@@ -153,7 +153,7 @@ function CheckoutPage() {
             {t("checkout_closed_title", { shop: shopName ?? "" })}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {t("checkout_closed_note", { reason: closedReason(shop ?? {}, hours) })}
+            {t("checkout_closed_note", { reason: t(closedReasonKey(shop ?? {}, hours)) })}
           </p>
           <Button asChild className="mt-6">
             <Link to="/shops">{t("cart_browse")}</Link>
@@ -188,7 +188,7 @@ function CheckoutPage() {
       toast.success(t("checkout_order_placed"));
       await navigate({ to: "/orders/$orderId", params: { orderId: orderId as string } });
     } catch (err) {
-      toast.error(supabaseErrorMessage(err));
+      toast.error(supabaseErrorText(t, err));
     } finally {
       setBusy(false);
     }

@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -6,7 +7,7 @@ import { shopHoursQuery, shopProductsQuery, shopQuery } from "@/lib/queries";
 import type { Product } from "@/lib/queries";
 import { StorageImage } from "@/lib/media";
 import { ETB } from "@/lib/format";
-import { closedReason, isShopOpenNow } from "@/lib/hours";
+import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
 import { useSaved } from "@/lib/saved";
 import { ProductCard } from "@/components/ligo/Cards";
 import { ProductGridSkeleton } from "@/components/ligo/Skeletons";
@@ -17,13 +18,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/shops/$shopId")({
   head: () => ({
     meta: [
-      { title: "Shop menu — የኔ Go · Bishoftu" },
+      { title: translations.en.shop_meta_title },
       {
         name: "description",
-        content: "Browse the menu and order delivery from this Bishoftu shop on የኔ Go.",
+        content: translations.en.shop_meta_desc,
       },
-      { property: "og:title", content: "Shop menu — የኔ Go" },
-      { property: "og:description", content: "Order delivery from this Bishoftu shop." },
+      { property: "og:title", content: translations.en.shop_meta_og_title },
+      { property: "og:description", content: translations.en.shop_meta_og_desc },
     ],
   }),
   component: ShopDetail,
@@ -194,7 +195,7 @@ function ShopDetail() {
 
         {!open && (
           <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
-            {closedReason(shop, hours)} {t("shop_closed_note")}
+            {t(closedReasonKey(shop, hours))} {t("shop_closed_note")}
           </div>
         )}
 

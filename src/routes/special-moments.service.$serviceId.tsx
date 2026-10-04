@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -34,11 +35,10 @@ import { OPTION_LABEL_KEY } from "@/lib/special-moments";
 export const Route = createFileRoute("/special-moments/service/$serviceId")({
   head: () => ({
     meta: [
-      { title: "Service — Special Moments · የኔ Go" },
+      { title: translations.en.smd_meta_title },
       {
         name: "description",
-        content:
-          "Service details, what's included, add-ons and availability for የኔ Go Special Moments.",
+        content: translations.en.smd_meta_desc,
       },
     ],
   }),
@@ -117,7 +117,7 @@ function ServiceDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
               <meta.icon className="h-3.5 w-3.5" />
-              {category?.name ?? meta.noun}
+              {category?.name ?? t(meta.nounKey)}
             </span>
             {service.occasion && (
               <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -151,7 +151,7 @@ function ServiceDetailPage() {
           )}
 
           <p className="mt-4 font-display text-2xl font-extrabold text-primary">
-            {pricingLabel(service.pricing_type, service.price, service.starting_price)}
+            {pricingLabel(t, service.pricing_type, service.price, service.starting_price)}
           </p>
           {isQuote && <p className="mt-1 text-sm text-muted-foreground">{t("smd_quote_note")}</p>}
 
@@ -298,7 +298,7 @@ function ServiceDetailPage() {
       {others.length > 0 && (
         <section className="container-ligo pb-16">
           <h2 className="font-display text-xl font-bold">
-            {t("smd_more_in", { category: category?.name ?? meta.noun })}
+            {t("smd_more_in", { category: category?.name ?? t(meta.nounKey) })}
           </h2>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {others.map((s) => (

@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -15,10 +16,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/account/orders/")({
   head: () => ({
     meta: [
-      { title: "My orders — የኔ Go" },
+      { title: translations.en.aoi_meta_title },
       {
         name: "description",
-        content: "Track current and past የኔ Go deliveries, reorder favourites and manage payments.",
+        content: translations.en.aoi_meta_desc,
       },
     ],
   }),
@@ -40,11 +41,7 @@ function OrdersPage() {
 
       {/* Status filter — horizontally scrollable on mobile */}
       <div className="-mx-4 overflow-x-auto px-4">
-        <div
-          role="tablist"
-          aria-label={t("acct_filter_orders")}
-          className="flex w-max gap-2 pb-1"
-        >
+        <div role="tablist" aria-label={t("acct_filter_orders")} className="flex w-max gap-2 pb-1">
           {ORDER_TABS.map((tabItem) => {
             const active = tab === tabItem.id;
             const count = counts[tabItem.id];
@@ -88,7 +85,9 @@ function OrdersPage() {
           title={
             data.length === 0
               ? t("acct_no_orders_title")
-              : t("acct_no_tab_orders", { tab: t(ORDER_TABS.find((x) => x.id === tab)?.labelKey ?? "order_tab_all") })
+              : t("acct_no_tab_orders", {
+                  tab: t(ORDER_TABS.find((x) => x.id === tab)?.labelKey ?? "order_tab_all"),
+                })
           }
           description={data.length === 0 ? t("acct_first_order_desc") : t("acct_no_match_desc")}
           action={

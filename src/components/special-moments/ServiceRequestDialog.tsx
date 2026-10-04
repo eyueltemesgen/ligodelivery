@@ -20,7 +20,7 @@ import { ETB } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { TranslationKey } from "@/lib/i18n";
-import { supabaseErrorMessage } from "@/lib/supa-error";
+import { supabaseErrorText } from "@/lib/supa-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -189,7 +189,7 @@ export function ServiceRequestDialog({
       onOpenChange(false);
       await navigate({ to: "/orders/$orderId", params: { orderId } });
     } catch (err) {
-      toast.error(supabaseErrorMessage(err));
+      toast.error(supabaseErrorText(t, err));
     } finally {
       setBusy(false);
     }

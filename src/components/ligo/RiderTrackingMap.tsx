@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export type RiderTrackingProps = {
   shopLat?: number | null;
@@ -31,6 +32,7 @@ export default function RiderTrackingMap({
   destLat,
   destLng,
 }: RiderTrackingProps) {
+  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const riderMarker = useRef<L.Marker | null>(null);
@@ -57,7 +59,7 @@ export default function RiderTrackingMap({
     if (!destMarker.current) {
       destMarker.current = L.marker([destLat, destLng], { icon: makeIcon("#16a34a") })
         .addTo(map)
-        .bindPopup("Delivery address");
+        .bindPopup(t("map_delivery_address"));
     } else {
       destMarker.current.setLatLng([destLat, destLng]);
     }
@@ -69,7 +71,7 @@ export default function RiderTrackingMap({
     if (!shopMarker.current) {
       shopMarker.current = L.marker([shopLat, shopLng], { icon: makeIcon("#f59e0b") })
         .addTo(map)
-        .bindPopup("Pickup (shop)");
+        .bindPopup(t("map_pickup_shop"));
     } else {
       shopMarker.current.setLatLng([shopLat, shopLng]);
     }
@@ -81,7 +83,7 @@ export default function RiderTrackingMap({
     if (!riderMarker.current) {
       riderMarker.current = L.marker([riderLat, riderLng], { icon: makeIcon("#2563eb") })
         .addTo(map)
-        .bindPopup("Your rider");
+        .bindPopup(t("map_your_rider"));
     } else {
       riderMarker.current.setLatLng([riderLat, riderLng]);
     }

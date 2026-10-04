@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { RequireAuth } from "@/components/auth/guards";
 import { AccountShell } from "@/components/account/AccountShell";
@@ -5,14 +6,13 @@ import { AccountShell } from "@/components/account/AccountShell";
 export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
-      { title: "My account — የኔ Go" },
+      { title: translations.en.acct_meta_title },
       {
         name: "description",
-        content:
-          "Your የኔ Go account center: track orders, manage addresses, saved products, profile and support.",
+        content: translations.en.acct_meta_desc,
       },
-      { property: "og:title", content: "My account — የኔ Go" },
-      { property: "og:description", content: "Manage your የኔ Go orders, addresses and profile." },
+      { property: "og:title", content: translations.en.acct_meta_title },
+      { property: "og:description", content: translations.en.acct_meta_og_desc },
     ],
   }),
   component: AccountLayout,

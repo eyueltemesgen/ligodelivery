@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -19,8 +20,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/account/wishlist")({
   head: () => ({
     meta: [
-      { title: "Saved products & shops — የኔ Go" },
-      { name: "description", content: "Your saved products and favourite shops on የኔ Go." },
+      { title: translations.en.saved_meta_title },
+      { name: "description", content: translations.en.saved_meta_desc },
     ],
   }),
   component: WishlistPage,

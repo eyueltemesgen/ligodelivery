@@ -23,15 +23,15 @@ import { StatusBadge } from "@/components/account/OrderCard";
 import { AccountState, CardSkeleton, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
+import { translations, type TranslationKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account/")({
   head: () => ({
     meta: [
-      { title: "Account overview — የኔ Go" },
+      { title: translations.en.aci_meta_title },
       {
         name: "description",
-        content: "What's happening with your የኔ Go account: active orders, saved items and totals.",
+        content: translations.en.aci_meta_desc,
       },
     ],
   }),
@@ -47,8 +47,18 @@ function AccountOverview() {
 
   const activeOrder = summary?.activeOrder ?? null;
 
-  const stats: { labelKey: TranslationKey; value: string | number; to: string; icon: typeof Package }[] = [
-    { labelKey: "acct_stat_orders", value: summary?.totalOrders ?? 0, to: "/account/orders", icon: Package },
+  const stats: {
+    labelKey: TranslationKey;
+    value: string | number;
+    to: string;
+    icon: typeof Package;
+  }[] = [
+    {
+      labelKey: "acct_stat_orders",
+      value: summary?.totalOrders ?? 0,
+      to: "/account/orders",
+      icon: Package,
+    },
     {
       labelKey: "acct_stat_saved",
       value: summary?.wishlistCount ?? 0,

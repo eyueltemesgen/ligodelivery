@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -11,8 +12,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Reset password — የኔ Go" },
-      { name: "description", content: "Choose a new password for your የኔ Go account." },
+      { title: translations.en.rp_meta_title },
+      { name: "description", content: translations.en.rp_meta_desc },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

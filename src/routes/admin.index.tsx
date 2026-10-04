@@ -28,14 +28,17 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB } from "@/lib/format";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations, type TranslationKey } from "@/lib/i18n";
 
 type RangeKey = "today" | "7d" | "30d";
 
-const RANGES: { key: RangeKey; label: string; days: number; prevLabel: string }[] = [
-  { key: "today", label: "Today", days: 1, prevLabel: "vs yesterday" },
-  { key: "7d", label: "Last 7 days", days: 7, prevLabel: "vs prior 7 days" },
-  { key: "30d", label: "Last 30 days", days: 30, prevLabel: "vs prior 30 days" },
-];
+const RANGES: { key: RangeKey; labelKey: TranslationKey; days: number; prevKey: TranslationKey }[] =
+  [
+    { key: "today", labelKey: "dash_today", days: 1, prevKey: "dash_vs_yesterday" },
+    { key: "7d", labelKey: "dash_last_7", days: 7, prevKey: "dash_vs_prior_7" },
+    { key: "30d", labelKey: "dash_last_30", days: 30, prevKey: "dash_vs_prior_30" },
+  ];
 
 export const Route = createFileRoute("/admin/")({
   validateSearch: (s: Record<string, unknown>) => {
@@ -45,13 +48,13 @@ export const Route = createFileRoute("/admin/")({
   },
   head: () => ({
     meta: [
-      { title: "Dashboard — የኔ Go Admin" },
+      { title: translations.en.adi_meta_title },
       {
         name: "description",
-        content: "የኔ Go operations dashboard: revenue, orders, riders and merchants.",
+        content: translations.en.adi_meta_desc,
       },
-      { property: "og:title", content: "Dashboard — የኔ Go Admin" },
-      { property: "og:description", content: "የኔ Go operations dashboard." },
+      { property: "og:title", content: translations.en.adi_meta_title },
+      { property: "og:description", content: translations.en.adi_meta_og_desc },
     ],
   }),
   component: AdminDashboard,
@@ -64,6 +67,7 @@ const startOfToday = () => {
 };
 
 function AdminDashboard() {
+  const { t } = useLanguage();
   const { range = "today" } = Route.useSearch();
   const navigate = useNavigate();
   const rangeDef = RANGES.find((r) => r.key === range) ?? RANGES[0]!;
@@ -162,9 +166,9 @@ function AdminDashboard() {
         prevCancelled: inPrev.filter((o) => o.status === "cancelled").length,
         volume,
         revenueSplit: [
-          { name: "Platform commission", value: Math.round(commission) },
-          { name: "Delivery fees", value: Math.round(deliveryFees) },
-          { name: "Merchant payouts", value: Math.round(merchantPayouts) },
+          { name: t("dash_platform_commission"), value: Math.round(commission) },
+          { name: t("dash_delivery_fees"), value: Math.round(deliveryFees) },
+          { name: t("dash_merchant_payouts"), value: Math.round(merchantPayouts) },
         ],
       };
     },
@@ -176,11 +180,13 @@ function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <h1 className="min-w-0 truncate font-display text-xl font-extrabold">Dashboard · {rangeDef.label}</h1>
+        <h1 className="min-w-0 truncate font-display text-xl font-extrabold">
+          {t("dash_title", { range: t(rangeDef.labelKey) })}
+        </h1>
         <div
           className="grid grid-cols-[auto_repeat(3,1fr)] items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-card sm:flex"
           role="group"
-          aria-label="Date range filter"
+          aria-label={t("dash_date_filter")}
         >
           <CalendarRange className="ml-1 h-4 w-4 text-muted-foreground" />
           {RANGES.map((r) => (
@@ -200,7 +206,7 @@ function AdminDashboard() {
                   : "text-muted-foreground hover:bg-secondary"
               }`}
             >
-              {r.label}
+              {t(r.labelKey)}
             </button>
           ))}
         </div>
@@ -209,54 +215,57 @@ function AdminDashboard() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
           icon={Wallet}
-          label="Revenue"
+          label={t("dash_revenue")}
           value={ETB(data?.revenue ?? 0)}
           delta={delta(data?.revenue ?? 0, data?.prevRevenue ?? 0)}
-          deltaLabel={rangeDef.prevLabel}
+          deltaLabel={t(rangeDef.prevKey)}
         />
         <Kpi
           icon={ShoppingBag}
-          label="Orders"
+          label={t("shell_orders")}
           value={String(data?.ordersCount ?? 0)}
           delta={delta(data?.ordersCount ?? 0, data?.prevOrdersCount ?? 0)}
-          deltaLabel={rangeDef.prevLabel}
+          deltaLabel={t(rangeDef.prevKey)}
         />
         <Kpi
           icon={Bike}
-          label="Active Riders"
-          value={`${data?.ridersOnline ?? 0} online · ${data?.ridersOnDelivery ?? 0} on delivery`}
+          label={t("dash_active_riders")}
+          value={t("dash_riders_value", {
+            online: data?.ridersOnline ?? 0,
+            delivery: data?.ridersOnDelivery ?? 0,
+          })}
         />
         <Kpi
           icon={Store}
-          label="Active Merchants"
+          label={t("dash_active_merchants")}
           value={`${data?.activeMerchants ?? 0} / ${data?.totalMerchants ?? 0}`}
         />
         <Kpi
           icon={Users}
-          label="Customers Joined"
+          label={t("dash_customers_joined")}
           value={String(data?.customersJoined ?? 0)}
           delta={delta(data?.customersJoined ?? 0, data?.prevCustomersJoined ?? 0)}
-          deltaLabel={rangeDef.prevLabel}
+          deltaLabel={t(rangeDef.prevKey)}
         />
         <Kpi
           icon={Clock}
-          label="Pending Orders"
+          label={t("dash_pending_orders")}
           value={String(data?.pendingOrders ?? 0)}
-          hint="Awaiting approval / dispatch"
+          hint={t("dash_awaiting")}
         />
         <Kpi
           icon={CheckCircle2}
-          label="Completed Deliveries"
+          label={t("dash_completed_deliveries")}
           value={String(data?.completed ?? 0)}
           delta={delta(data?.completed ?? 0, data?.prevCompleted ?? 0)}
-          deltaLabel={rangeDef.prevLabel}
+          deltaLabel={t(rangeDef.prevKey)}
         />
         <Kpi
           icon={XCircle}
-          label="Cancelled / Refunded"
+          label={t("dash_cancelled")}
           value={String(data?.cancelled ?? 0)}
           delta={delta(data?.cancelled ?? 0, data?.prevCancelled ?? 0)}
-          deltaLabel={rangeDef.prevLabel}
+          deltaLabel={t(rangeDef.prevKey)}
         />
       </div>
 
@@ -264,8 +273,8 @@ function AdminDashboard() {
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
           <h2 className="font-display text-base font-bold">
             {rangeDef.days === 1
-              ? "Hourly order volume vs capacity (today)"
-              : `Daily order volume (${rangeDef.label.toLowerCase()})`}
+              ? t("dash_volume_hourly")
+              : t("dash_volume_daily", { range: t(rangeDef.labelKey) })}
           </h2>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -286,7 +295,7 @@ function AdminDashboard() {
 
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
           <h2 className="font-display text-base font-bold">
-            Revenue distribution ({rangeDef.label.toLowerCase()})
+            {t("dash_revenue_dist", { range: t(rangeDef.labelKey) })}
           </h2>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">

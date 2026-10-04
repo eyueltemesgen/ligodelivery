@@ -3,9 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Eye, MousePointerClick, Percent, Megaphone, Trash2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { supabaseErrorMessage } from "@/lib/supa-error";
-import { StorageImage, uploadImage } from "@/lib/media";
-import { AD_STATUSES, AD_TYPES, ctr } from "@/lib/ads";
+import { supabaseErrorText } from "@/lib/supa-error";
+import { StorageImage, mediaErrorKey, uploadImage } from "@/lib/media";
+import { AD_STATUSES, AD_STATUS_LABEL_KEY, AD_TYPES, ctr } from "@/lib/ads";
 import { ETB } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +21,11 @@ type Run = (p: PromiseLike<{ error: unknown }>, ok?: string) => Promise<boolean>
 
 function useRun(): Run {
   const qc = useQueryClient();
+  const { t } = useLanguage();
   return async (p, ok) => {
     const { error } = await p;
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return false;
     }
     if (ok) toast.success(ok);
@@ -50,11 +51,21 @@ export function AdvertisingHub() {
           <TabsTrigger value="placements">{t("adv_tab_placements")}</TabsTrigger>
         </TabsList>
       </div>
-      <TabsContent value="ads"><AdsManager /></TabsContent>
-      <TabsContent value="campaigns"><Campaigns /></TabsContent>
-      <TabsContent value="advertisers"><Advertisers /></TabsContent>
-      <TabsContent value="packages"><Packages /></TabsContent>
-      <TabsContent value="placements"><Placements /></TabsContent>
+      <TabsContent value="ads">
+        <AdsManager />
+      </TabsContent>
+      <TabsContent value="campaigns">
+        <Campaigns />
+      </TabsContent>
+      <TabsContent value="advertisers">
+        <Advertisers />
+      </TabsContent>
+      <TabsContent value="packages">
+        <Packages />
+      </TabsContent>
+      <TabsContent value="placements">
+        <Placements />
+      </TabsContent>
     </Tabs>
   );
 }
@@ -62,7 +73,8 @@ export function AdvertisingHub() {
 function useLookups() {
   const placements = useQuery({
     queryKey: ["adm-ads", "placements"],
-    queryFn: async () => (await supabase.from("ad_placements").select("*").order("sort_order")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("ad_placements").select("*").order("sort_order")).data ?? [],
   });
   const advertisers = useQuery({
     queryKey: ["adm-ads", "advertisers"],
@@ -71,7 +83,8 @@ function useLookups() {
   const campaigns = useQuery({
     queryKey: ["adm-ads", "campaigns"],
     queryFn: async () =>
-      (await supabase.from("ad_campaigns").select("*").order("created_at", { ascending: false })).data ?? [],
+      (await supabase.from("ad_campaigns").select("*").order("created_at", { ascending: false }))
+        .data ?? [],
   });
   const packages = useQuery({
     queryKey: ["adm-ads", "packages"],
@@ -83,11 +96,13 @@ function useLookups() {
   });
   const products = useQuery({
     queryKey: ["adm-ads", "products"],
-    queryFn: async () => (await supabase.from("products").select("id,name,shop_id").order("name")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("products").select("id,name,shop_id").order("name")).data ?? [],
   });
   const categories = useQuery({
     queryKey: ["adm-ads", "categories"],
-    queryFn: async () => (await supabase.from("categories").select("id,name,slug").order("sort_order")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("categories").select("id,name,slug").order("sort_order")).data ?? [],
   });
   return {
     placements: placements.data ?? [],
@@ -123,24 +138,45 @@ type AdForm = {
   target_location: string;
 };
 const EMPTY: AdForm = {
-  title: "", subtitle: "", cta_label: "Order now", image_url: "", ad_type: "banner", placement: "HOME_TOP",
-  priority: "0", status: "active", advertiser_id: "", campaign_id: "", destination_type: "shop",
-  destination_id: "", destination_url: "", starts_at: "", ends_at: "", target_category_id: "",
-  target_shop_id: "", target_device: "all", target_location: "",
+  title: "",
+  subtitle: "",
+  cta_label: "",
+  image_url: "",
+  ad_type: "banner",
+  placement: "HOME_TOP",
+  priority: "0",
+  status: "active",
+  advertiser_id: "",
+  campaign_id: "",
+  destination_type: "shop",
+  destination_id: "",
+  destination_url: "",
+  starts_at: "",
+  ends_at: "",
+  target_category_id: "",
+  target_shop_id: "",
+  target_device: "all",
+  target_location: "",
 };
 
 function AdsManager() {
   const { t } = useLanguage();
   const L = useLookups();
   const run = useRun();
-  const [form, setForm] = useState<AdForm>(EMPTY);
+  const [form, setForm] = useState<AdForm>(() => ({ ...EMPTY, cta_label: t("adv_cta_default") }));
   const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState("all");
 
   const { data: ads = [] } = useQuery({
     queryKey: ["adm-ads", "list"],
     queryFn: async () =>
-      (await supabase.from("ads").select("*").order("placement").order("priority", { ascending: false })).data ?? [],
+      (
+        await supabase
+          .from("ads")
+          .select("*")
+          .order("placement")
+          .order("priority", { ascending: false })
+      ).data ?? [],
   });
   const { data: stats = [] } = useQuery({
     queryKey: ["adm-ads", "stats"],
@@ -202,7 +238,9 @@ function AdsManager() {
       advertiser_id: form.advertiser_id || null,
       campaign_id: form.campaign_id || null,
       destination_type: form.destination_type,
-      destination_id: ["shop", "product", "category"].includes(form.destination_type) ? form.destination_id || null : null,
+      destination_id: ["shop", "product", "category"].includes(form.destination_type)
+        ? form.destination_id || null
+        : null,
       destination_url: destUrl(),
       starts_at: fromLocal(form.starts_at),
       ends_at: fromLocal(form.ends_at),
@@ -214,21 +252,41 @@ function AdsManager() {
     const ok = form.id
       ? await run(supabase.from("ads").update(row).eq("id", form.id), t("adv_ok_ad_updated"))
       : await run(supabase.from("ads").insert(row), t("adv_ok_ad_published"));
-    if (ok) setForm(EMPTY);
+    if (ok) setForm({ ...EMPTY, cta_label: t("adv_cta_default") });
   };
 
   const edit = (a: (typeof ads)[number]) =>
     setForm({
-      id: a.id, title: a.title, subtitle: a.subtitle ?? "", cta_label: a.cta_label ?? "", image_url: a.image_url ?? "",
-      ad_type: a.ad_type, placement: a.placement, priority: String(a.priority), status: a.status,
-      advertiser_id: a.advertiser_id ?? "", campaign_id: a.campaign_id ?? "", destination_type: a.destination_type,
-      destination_id: a.destination_id ?? "", destination_url: a.destination_type === "external" ? (a.destination_url ?? "") : "",
-      starts_at: toLocal(a.starts_at), ends_at: toLocal(a.ends_at), target_category_id: a.target_category_id ?? "",
-      target_shop_id: a.target_shop_id ?? "", target_device: a.target_device, target_location: a.target_location ?? "",
+      id: a.id,
+      title: a.title,
+      subtitle: a.subtitle ?? "",
+      cta_label: a.cta_label ?? "",
+      image_url: a.image_url ?? "",
+      ad_type: a.ad_type,
+      placement: a.placement,
+      priority: String(a.priority),
+      status: a.status,
+      advertiser_id: a.advertiser_id ?? "",
+      campaign_id: a.campaign_id ?? "",
+      destination_type: a.destination_type,
+      destination_id: a.destination_id ?? "",
+      destination_url: a.destination_type === "external" ? (a.destination_url ?? "") : "",
+      starts_at: toLocal(a.starts_at),
+      ends_at: toLocal(a.ends_at),
+      target_category_id: a.target_category_id ?? "",
+      target_shop_id: a.target_shop_id ?? "",
+      target_device: a.target_device,
+      target_location: a.target_location ?? "",
     });
 
   const destOptions =
-    form.destination_type === "shop" ? L.shops : form.destination_type === "product" ? L.products : form.destination_type === "category" ? L.categories : [];
+    form.destination_type === "shop"
+      ? L.shops
+      : form.destination_type === "product"
+        ? L.products
+        : form.destination_type === "category"
+          ? L.categories
+          : [];
   const set = (k: keyof AdForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [k]: e.target.value });
   const shown = ads.filter((a) => filter === "all" || a.placement === filter);
@@ -252,43 +310,83 @@ function AdsManager() {
 
       <form onSubmit={save} className={card}>
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-bold">{form.id ? t("adv_edit_ad") : t("adv_create_ad")}</h2>
-          {form.id && <Button type="button" variant="ghost" size="sm" onClick={() => setForm(EMPTY)}>{t("adv_cancel_edit")}</Button>}
+          <h2 className="font-display text-lg font-bold">
+            {form.id ? t("adv_edit_ad") : t("adv_create_ad")}
+          </h2>
+          {form.id && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setForm(EMPTY)}>
+              {t("adv_cancel_edit")}
+            </Button>
+          )}
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <F label={t("adv_title")}><Input value={form.title} onChange={set("title")} maxLength={80} /></F>
-          <F label={t("adv_subtitle")}><Input value={form.subtitle} onChange={set("subtitle")} maxLength={140} /></F>
-          <F label={t("adv_button_text")}><Input value={form.cta_label} onChange={set("cta_label")} maxLength={24} /></F>
+          <F label={t("adv_title")}>
+            <Input value={form.title} onChange={set("title")} maxLength={80} />
+          </F>
+          <F label={t("adv_subtitle")}>
+            <Input value={form.subtitle} onChange={set("subtitle")} maxLength={140} />
+          </F>
+          <F label={t("adv_button_text")}>
+            <Input value={form.cta_label} onChange={set("cta_label")} maxLength={24} />
+          </F>
           <F label={t("adv_ad_type")}>
             <select className={sel} value={form.ad_type} onChange={set("ad_type")}>
-              {AD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {AD_TYPES.map((a) => (
+                <option key={a.value} value={a.value}>
+                  {t(a.labelKey)}
+                </option>
+              ))}
             </select>
           </F>
           <F label={t("adv_placement")}>
             <select className={sel} value={form.placement} onChange={set("placement")}>
-              {L.placements.map((p) => <option key={p.code} value={p.code}>{p.code} — {p.label}</option>)}
+              {L.placements.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.code} — {p.label}
+                </option>
+              ))}
             </select>
           </F>
-          <F label={t("adv_priority")}><Input type="number" value={form.priority} onChange={set("priority")} /></F>
+          <F label={t("adv_priority")}>
+            <Input type="number" value={form.priority} onChange={set("priority")} />
+          </F>
           <F label={t("adv_status")}>
             <select className={sel} value={form.status} onChange={set("status")}>
-              {AD_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              {AD_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {t(AD_STATUS_LABEL_KEY[s])}
+                </option>
+              ))}
             </select>
           </F>
           <F label={t("adv_advertiser")}>
             <select className={sel} value={form.advertiser_id} onChange={set("advertiser_id")}>
               <option value="">— none —</option>
-              {L.advertisers.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              {L.advertisers.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
             </select>
           </F>
           <F label={t("adv_campaign")}>
             <select className={sel} value={form.campaign_id} onChange={set("campaign_id")}>
               <option value="">— none —</option>
-              {L.campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {L.campaigns.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </F>
           <F label={t("adv_links_to")}>
-            <select className={sel} value={form.destination_type} onChange={(e) => setForm({ ...form, destination_type: e.target.value, destination_id: "" })}>
+            <select
+              className={sel}
+              value={form.destination_type}
+              onChange={(e) =>
+                setForm({ ...form, destination_type: e.target.value, destination_id: "" })
+              }
+            >
               <option value="shop">{t("adv_shop")}</option>
               <option value="product">{t("adv_product")}</option>
               <option value="category">{t("adv_category_service")}</option>
@@ -301,15 +399,29 @@ function AdsManager() {
             <F label={t("adv_destination")}>
               <select className={sel} value={form.destination_id} onChange={set("destination_id")}>
                 <option value="">— choose —</option>
-                {destOptions.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                {destOptions.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
               </select>
             </F>
           )}
           {form.destination_type === "external" && (
-            <F label={t("adv_website_url")}><Input value={form.destination_url} onChange={set("destination_url")} placeholder={t("adv_url_placeholder")} /></F>
+            <F label={t("adv_website_url")}>
+              <Input
+                value={form.destination_url}
+                onChange={set("destination_url")}
+                placeholder={t("adv_url_placeholder")}
+              />
+            </F>
           )}
-          <F label={t("adv_starts_optional")}><Input type="datetime-local" value={form.starts_at} onChange={set("starts_at")} /></F>
-          <F label={t("adv_ends_optional")}><Input type="datetime-local" value={form.ends_at} onChange={set("ends_at")} /></F>
+          <F label={t("adv_starts_optional")}>
+            <Input type="datetime-local" value={form.starts_at} onChange={set("starts_at")} />
+          </F>
+          <F label={t("adv_ends_optional")}>
+            <Input type="datetime-local" value={form.ends_at} onChange={set("ends_at")} />
+          </F>
           <F label={t("adv_device")}>
             <select className={sel} value={form.target_device} onChange={set("target_device")}>
               <option value="all">{t("adv_all_devices")}</option>
@@ -318,18 +430,36 @@ function AdsManager() {
             </select>
           </F>
           <F label={t("adv_only_category")}>
-            <select className={sel} value={form.target_category_id} onChange={set("target_category_id")}>
+            <select
+              className={sel}
+              value={form.target_category_id}
+              onChange={set("target_category_id")}
+            >
               <option value="">{t("adv_any")}</option>
-              {L.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {L.categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </F>
           <F label={t("adv_only_shop")}>
             <select className={sel} value={form.target_shop_id} onChange={set("target_shop_id")}>
               <option value="">{t("adv_any")}</option>
-              {L.shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {L.shops.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
             </select>
           </F>
-          <F label={t("adv_location_note")}><Input value={form.target_location} onChange={set("target_location")} placeholder={t("adv_location_placeholder")} /></F>
+          <F label={t("adv_location_note")}>
+            <Input
+              value={form.target_location}
+              onChange={set("target_location")}
+              placeholder={t("adv_location_placeholder")}
+            />
+          </F>
           <F label={t("adv_image")}>
             <Input
               type="file"
@@ -344,7 +474,8 @@ function AdsManager() {
                   setForm((v) => ({ ...v, image_url: path }));
                   toast.success(t("adv_ok_image_uploaded"));
                 } catch (err) {
-                  toast.error(supabaseErrorMessage(err));
+                  const mediaKey = mediaErrorKey(err);
+                  toast.error(mediaKey ? t(mediaKey) : supabaseErrorText(t, err));
                 } finally {
                   setUploading(false);
                 }
@@ -354,15 +485,23 @@ function AdsManager() {
         </div>
 
         <div className="mt-4">
-          <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t("adv_preview")}</p>
+          <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+            {t("adv_preview")}
+          </p>
           <div className="relative max-w-xl overflow-hidden rounded-2xl border border-border">
             <div className="relative aspect-[16/9] w-full">
               {form.image_url ? (
-                <StorageImage path={form.image_url} alt={form.title || t("adv_ad_alt")} className="absolute inset-0 h-full w-full" />
+                <StorageImage
+                  path={form.image_url}
+                  alt={form.title || t("adv_ad_alt")}
+                  className="absolute inset-0 h-full w-full"
+                />
               ) : (
                 <div className="absolute inset-0 bg-muted" />
               )}
-              <span className="absolute left-2 top-2 rounded bg-background/90 px-2 py-0.5 text-[10px] font-bold uppercase">{t("adv_sponsored")}</span>
+              <span className="absolute left-2 top-2 rounded bg-background/90 px-2 py-0.5 text-[10px] font-bold uppercase">
+                {t("adv_sponsored")}
+              </span>
             </div>
             <div className="p-3">
               <p className="font-display font-bold">{form.title || t("adv_ad_title")}</p>
@@ -378,9 +517,17 @@ function AdsManager() {
       <section className={card}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-bold">{t("adv_all_ads")}</h2>
-          <select className={`${sel} max-w-xs`} value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <select
+            className={`${sel} max-w-xs`}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
             <option value="all">{t("adv_all_placements")}</option>
-            {L.placements.map((p) => <option key={p.code} value={p.code}>{p.code}</option>)}
+            {L.placements.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.code}
+              </option>
+            ))}
           </select>
         </div>
         <ul className="mt-3 space-y-2">
@@ -388,33 +535,80 @@ function AdsManager() {
             const s = statOf(a.id);
             const live = isLive(a);
             return (
-              <li key={a.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-2">
-                <StorageImage path={a.image_url} alt={a.title} className="h-12 w-20 shrink-0 rounded" />
+              <li
+                key={a.id}
+                className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-2"
+              >
+                <StorageImage
+                  path={a.image_url}
+                  alt={a.title}
+                  className="h-12 w-20 shrink-0 rounded"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{a.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {a.placement} · {t("adv_priority_short")} {a.priority} ·{" "}
                     <span className={live ? "font-semibold text-primary" : ""}>
-                      {live ? t("adv_live") : a.status === "active" ? t("adv_scheduled_expired") : a.status}
+                      {live
+                        ? t("adv_live")
+                        : a.status === "active"
+                          ? t("adv_scheduled_expired")
+                          : a.status}
                     </span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {t("adv_stats_line", { imp: s.imp, clk: s.clk, ctr: ctr(s.imp, s.clk).toFixed(2) })}
+                    {t("adv_stats_line", {
+                      imp: s.imp,
+                      clk: s.clk,
+                      ctr: ctr(s.imp, s.clk).toFixed(2),
+                    })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Switch
                     aria-label={t("adv_aria_active")}
                     checked={a.status === "active"}
-                    onCheckedChange={(v) => run(supabase.from("ads").update({ status: v ? "active" : "paused" }).eq("id", a.id))}
+                    onCheckedChange={(v) =>
+                      run(
+                        supabase
+                          .from("ads")
+                          .update({ status: v ? "active" : "paused" })
+                          .eq("id", a.id),
+                      )
+                    }
                   />
-                  <Button size="icon" variant="ghost" aria-label={t("adv_aria_edit")} onClick={() => { edit(a); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={t("adv_aria_edit")}
+                    onClick={() => {
+                      edit(a);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => run(supabase.from("ads").update({ status: "archived" }).eq("id", a.id), t("adv_ok_archived"))}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      run(
+                        supabase.from("ads").update({ status: "archived" }).eq("id", a.id),
+                        t("adv_ok_archived"),
+                      )
+                    }
+                  >
                     {t("adv_archive")}
                   </Button>
-                  <Button size="icon" variant="ghost" aria-label={t("adv_aria_delete")} onClick={() => { if (confirm(t("adv_confirm_delete_ad", { title: a.title }))) void run(supabase.from("ads").delete().eq("id", a.id), t("adv_ok_deleted")); }}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={t("adv_aria_delete")}
+                    onClick={() => {
+                      if (confirm(t("adv_confirm_delete_ad", { title: a.title })))
+                        void run(supabase.from("ads").delete().eq("id", a.id), t("adv_ok_deleted"));
+                    }}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -449,36 +643,81 @@ function Advertisers() {
         onSubmit={async (e) => {
           e.preventDefault();
           if (!f.name.trim()) return;
-          if (await run(supabase.from("advertisers").insert({ ...f, shop_id: f.shop_id || null }), t("adv_ok_advertiser_added")))
+          if (
+            await run(
+              supabase.from("advertisers").insert({ ...f, shop_id: f.shop_id || null }),
+              t("adv_ok_advertiser_added"),
+            )
+          )
             setF({ name: "", contact_name: "", phone: "", email: "", shop_id: "" });
         }}
       >
-        <F label={t("adv_business_name")}><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></F>
-        <F label={t("adv_contact_person")}><Input value={f.contact_name} onChange={(e) => setF({ ...f, contact_name: e.target.value })} /></F>
-        <F label={t("adv_phone")}><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></F>
-        <F label={t("adv_email")}><Input value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></F>
+        <F label={t("adv_business_name")}>
+          <Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        </F>
+        <F label={t("adv_contact_person")}>
+          <Input
+            value={f.contact_name}
+            onChange={(e) => setF({ ...f, contact_name: e.target.value })}
+          />
+        </F>
+        <F label={t("adv_phone")}>
+          <Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+        </F>
+        <F label={t("adv_email")}>
+          <Input value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+        </F>
         <F label={t("adv_linked_shop")}>
-          <select className={sel} value={f.shop_id} onChange={(e) => setF({ ...f, shop_id: e.target.value })}>
+          <select
+            className={sel}
+            value={f.shop_id}
+            onChange={(e) => setF({ ...f, shop_id: e.target.value })}
+          >
             <option value="">{t("adv_none")}</option>
-            {shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {shops.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
           </select>
         </F>
-        <div className="flex items-end"><Button type="submit" className="w-full">{t("adv_add_advertiser")}</Button></div>
+        <div className="flex items-end">
+          <Button type="submit" className="w-full">
+            {t("adv_add_advertiser")}
+          </Button>
+        </div>
       </form>
       <ul className="space-y-2">
         {advertisers.map((a) => (
           <li key={a.id} className={`${card} flex flex-wrap items-center gap-2 p-3`}>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{a.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{[a.contact_name, a.phone, a.email].filter(Boolean).join(" · ")}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {[a.contact_name, a.phone, a.email].filter(Boolean).join(" · ")}
+              </p>
             </div>
-            <Switch checked={a.is_active} onCheckedChange={(v) => run(supabase.from("advertisers").update({ is_active: v }).eq("id", a.id))} />
-            <Button size="icon" variant="ghost" aria-label={t("adv_aria_delete")} onClick={() => { if (confirm(t("adv_confirm_delete_advertiser"))) void run(supabase.from("advertisers").delete().eq("id", a.id)); }}>
+            <Switch
+              checked={a.is_active}
+              onCheckedChange={(v) =>
+                run(supabase.from("advertisers").update({ is_active: v }).eq("id", a.id))
+              }
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={t("adv_aria_delete")}
+              onClick={() => {
+                if (confirm(t("adv_confirm_delete_advertiser")))
+                  void run(supabase.from("advertisers").delete().eq("id", a.id));
+              }}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </li>
         ))}
-        {advertisers.length === 0 && <p className="text-sm text-muted-foreground">{t("adv_no_advertisers")}</p>}
+        {advertisers.length === 0 && (
+          <p className="text-sm text-muted-foreground">{t("adv_no_advertisers")}</p>
+        )}
       </ul>
     </div>
   );
@@ -488,7 +727,13 @@ function Campaigns() {
   const { t } = useLanguage();
   const { campaigns, advertisers, packages } = useLookups();
   const run = useRun();
-  const [f, setF] = useState({ name: "", advertiser_id: "", package_id: "", starts_at: "", ends_at: "" });
+  const [f, setF] = useState({
+    name: "",
+    advertiser_id: "",
+    package_id: "",
+    starts_at: "",
+    ends_at: "",
+  });
   return (
     <div className="space-y-4">
       <form
@@ -509,22 +754,56 @@ function Campaigns() {
           if (ok) setF({ name: "", advertiser_id: "", package_id: "", starts_at: "", ends_at: "" });
         }}
       >
-        <F label={t("adv_campaign_name")}><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></F>
-        <F label="Advertiser">
-          <select className={sel} value={f.advertiser_id} onChange={(e) => setF({ ...f, advertiser_id: e.target.value })}>
+        <F label={t("adv_campaign_name")}>
+          <Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        </F>
+        <F label={t("adv_advertiser")}>
+          <select
+            className={sel}
+            value={f.advertiser_id}
+            onChange={(e) => setF({ ...f, advertiser_id: e.target.value })}
+          >
             <option value="">{t("adv_none")}</option>
-            {advertisers.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            {advertisers.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
           </select>
         </F>
         <F label={t("adv_package")}>
-          <select className={sel} value={f.package_id} onChange={(e) => setF({ ...f, package_id: e.target.value })}>
+          <select
+            className={sel}
+            value={f.package_id}
+            onChange={(e) => setF({ ...f, package_id: e.target.value })}
+          >
             <option value="">{t("adv_none")}</option>
-            {packages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            {packages.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
           </select>
         </F>
-        <F label={t("adv_starts")}><Input type="datetime-local" value={f.starts_at} onChange={(e) => setF({ ...f, starts_at: e.target.value })} /></F>
-        <F label={t("adv_ends")}><Input type="datetime-local" value={f.ends_at} onChange={(e) => setF({ ...f, ends_at: e.target.value })} /></F>
-        <div className="flex items-end"><Button type="submit" className="w-full">{t("adv_create_campaign")}</Button></div>
+        <F label={t("adv_starts")}>
+          <Input
+            type="datetime-local"
+            value={f.starts_at}
+            onChange={(e) => setF({ ...f, starts_at: e.target.value })}
+          />
+        </F>
+        <F label={t("adv_ends")}>
+          <Input
+            type="datetime-local"
+            value={f.ends_at}
+            onChange={(e) => setF({ ...f, ends_at: e.target.value })}
+          />
+        </F>
+        <div className="flex items-end">
+          <Button type="submit" className="w-full">
+            {t("adv_create_campaign")}
+          </Button>
+        </div>
       </form>
       <ul className="space-y-2">
         {campaigns.map((c) => (
@@ -532,18 +811,27 @@ function Campaigns() {
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{c.name}</p>
               <p className="text-xs text-muted-foreground">
-                {advertisers.find((a) => a.id === c.advertiser_id)?.name ?? t("adv_no_advertiser")} · {c.status}
+                {advertisers.find((a) => a.id === c.advertiser_id)?.name ?? t("adv_no_advertiser")}{" "}
+                · {c.status}
                 {c.ends_at && t("adv_until", { date: new Date(c.ends_at).toLocaleDateString() })}
               </p>
             </div>
-            <select className={`${sel} w-32`} value={c.status} onChange={(e) => run(supabase.from("ad_campaigns").update({ status: e.target.value }).eq("id", c.id))}>
-              <option value="active">active</option>
-              <option value="paused">paused</option>
-              <option value="archived">archived</option>
+            <select
+              className={`${sel} w-32`}
+              value={c.status}
+              onChange={(e) =>
+                run(supabase.from("ad_campaigns").update({ status: e.target.value }).eq("id", c.id))
+              }
+            >
+              <option value="active">{t("adv_st_active")}</option>
+              <option value="paused">{t("adv_st_paused")}</option>
+              <option value="archived">{t("adv_st_archived")}</option>
             </select>
           </li>
         ))}
-        {campaigns.length === 0 && <p className="text-sm text-muted-foreground">{t("adv_no_campaigns")}</p>}
+        {campaigns.length === 0 && (
+          <p className="text-sm text-muted-foreground">{t("adv_no_campaigns")}</p>
+        )}
       </ul>
     </div>
   );
@@ -553,7 +841,12 @@ function Packages() {
   const { t } = useLanguage();
   const { packages, placements } = useLookups();
   const run = useRun();
-  const [f, setF] = useState({ name: "", duration_days: "7", price: "0", placements: [] as string[] });
+  const [f, setF] = useState({
+    name: "",
+    duration_days: "7",
+    price: "0",
+    placements: [] as string[],
+  });
   return (
     <div className="space-y-4">
       <form
@@ -562,16 +855,41 @@ function Packages() {
           e.preventDefault();
           if (!f.name.trim()) return;
           const ok = await run(
-            supabase.from("ad_packages").insert({ name: f.name.trim(), duration_days: Number(f.duration_days), price: Number(f.price), placements: f.placements }),
+            supabase.from("ad_packages").insert({
+              name: f.name.trim(),
+              duration_days: Number(f.duration_days),
+              price: Number(f.price),
+              placements: f.placements,
+            }),
             t("adv_ok_package_added"),
           );
           if (ok) setF({ name: "", duration_days: "7", price: "0", placements: [] });
         }}
       >
         <div className="grid gap-3 sm:grid-cols-3">
-          <F label={t("adv_name")}><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t("adv_package_name_placeholder")} /></F>
-          <F label={t("adv_duration")}><Input type="number" min={1} value={f.duration_days} onChange={(e) => setF({ ...f, duration_days: e.target.value })} /></F>
-          <F label={t("adv_price_etb")}><Input type="number" min={0} value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></F>
+          <F label={t("adv_name")}>
+            <Input
+              value={f.name}
+              onChange={(e) => setF({ ...f, name: e.target.value })}
+              placeholder={t("adv_package_name_placeholder")}
+            />
+          </F>
+          <F label={t("adv_duration")}>
+            <Input
+              type="number"
+              min={1}
+              value={f.duration_days}
+              onChange={(e) => setF({ ...f, duration_days: e.target.value })}
+            />
+          </F>
+          <F label={t("adv_price_etb")}>
+            <Input
+              type="number"
+              min={0}
+              value={f.price}
+              onChange={(e) => setF({ ...f, price: e.target.value })}
+            />
+          </F>
         </div>
         <div className="flex flex-wrap gap-2">
           {placements.map((p) => {
@@ -580,7 +898,14 @@ function Packages() {
               <button
                 key={p.code}
                 type="button"
-                onClick={() => setF({ ...f, placements: on ? f.placements.filter((x) => x !== p.code) : [...f.placements, p.code] })}
+                onClick={() =>
+                  setF({
+                    ...f,
+                    placements: on
+                      ? f.placements.filter((x) => x !== p.code)
+                      : [...f.placements, p.code],
+                  })
+                }
                 className={`rounded-full border px-3 py-1 text-xs ${on ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
               >
                 {p.code}
@@ -595,10 +920,29 @@ function Packages() {
           <li key={p.id} className={`${card} flex flex-wrap items-center gap-2 p-3`}>
             <div className="min-w-0 flex-1">
               <p className="font-semibold">{p.name}</p>
-              <p className="text-xs text-muted-foreground">{t("adv_package_line", { days: p.duration_days, price: ETB(Number(p.price)), placements: p.placements.join(", ") || t("adv_no_placements") })}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("adv_package_line", {
+                  days: p.duration_days,
+                  price: ETB(Number(p.price)),
+                  placements: p.placements.join(", ") || t("adv_no_placements"),
+                })}
+              </p>
             </div>
-            <Switch checked={p.is_active} onCheckedChange={(v) => run(supabase.from("ad_packages").update({ is_active: v }).eq("id", p.id))} />
-            <Button size="icon" variant="ghost" aria-label={t("adv_aria_delete")} onClick={() => { if (confirm(t("adv_confirm_delete_package"))) void run(supabase.from("ad_packages").delete().eq("id", p.id)); }}>
+            <Switch
+              checked={p.is_active}
+              onCheckedChange={(v) =>
+                run(supabase.from("ad_packages").update({ is_active: v }).eq("id", p.id))
+              }
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={t("adv_aria_delete")}
+              onClick={() => {
+                if (confirm(t("adv_confirm_delete_package")))
+                  void run(supabase.from("ad_packages").delete().eq("id", p.id));
+              }}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </li>
@@ -617,12 +961,20 @@ function Placements() {
       <p className="text-sm text-muted-foreground">{t("adv_placements_hint")}</p>
       <ul className="mt-3 space-y-2">
         {placements.map((p) => (
-          <li key={p.code} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+          <li
+            key={p.code}
+            className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
+          >
             <div className="min-w-0">
               <p className="font-mono text-sm font-bold">{p.code}</p>
               <p className="truncate text-xs text-muted-foreground">{p.label}</p>
             </div>
-            <Switch checked={p.is_active} onCheckedChange={(v) => run(supabase.from("ad_placements").update({ is_active: v }).eq("code", p.code))} />
+            <Switch
+              checked={p.is_active}
+              onCheckedChange={(v) =>
+                run(supabase.from("ad_placements").update({ is_active: v }).eq("code", p.code))
+              }
+            />
           </li>
         ))}
       </ul>

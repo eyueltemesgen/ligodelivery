@@ -116,7 +116,7 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t("ph_email")}
               className="pl-9"
             />
           </div>

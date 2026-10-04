@@ -1,3 +1,5 @@
+import type { TranslationKey } from "@/lib/i18n";
+
 /** Extract the full PostgREST error detail (message + details + hint + code). */
 export function supabaseErrorMessage(err: unknown): string {
   if (!err || typeof err !== "object") return "Request failed";
@@ -8,6 +10,12 @@ export function supabaseErrorMessage(err: unknown): string {
       `(${e.details}${e.hint ? ` — hint: ${e.hint}` : ""}${e.code ? ` [${e.code}]` : ""})`,
     );
   return parts.filter(Boolean).join(" ");
+}
+
+/** Localized error text: falls back to a translated message for non-API errors. */
+export function supabaseErrorText(t: (key: TranslationKey) => string, err: unknown): string {
+  if (!err || typeof err !== "object") return t("supa_request_failed");
+  return supabaseErrorMessage(err);
 }
 
 /** True when an RPC endpoint is missing from the live project (404). */

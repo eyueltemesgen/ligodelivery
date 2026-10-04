@@ -76,28 +76,27 @@ export type MerchantPromotion = {
 };
 
 export const MERCHANT_STATUS_LABEL: Record<MerchantStatus, string> = {
-  pending: "Pending review",
-  under_review: "Under review",
-  approved: "Approved",
-  rejected: "Rejected",
-  suspended: "Suspended",
+  pending: "pending",
+  under_review: "under_review",
+  approved: "approved",
+  rejected: "rejected",
+  suspended: "suspended",
 };
 
 export const PROMOTION_LABEL: Record<MerchantPromotion["kind"], string> = {
-  featured_shop: "Featured shop",
-  featured_product: "Featured product",
-  homepage: "Homepage placement",
+  featured_shop: "featured_shop",
+  featured_product: "featured_product",
+  homepage: "homepage",
 };
 
 /** Statuses a shop owner is allowed to move an order through. */
-export const MERCHANT_NEXT_STATUS: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> =
-  {
-    pending: { to: "preparing", label: "Accept & start preparing" },
-    pending_payment: { to: "preparing", label: "Accept & start preparing" },
-    payment_verification: { to: "preparing", label: "Accept & start preparing" },
-    confirmed: { to: "preparing", label: "Accept & start preparing" },
-    preparing: { to: "ready_for_pickup", label: "Mark ready for pickup" },
-  };
+export const MERCHANT_NEXT_STATUS: Partial<Record<OrderStatus, { to: OrderStatus }>> = {
+  pending: { to: "preparing" },
+  pending_payment: { to: "preparing" },
+  payment_verification: { to: "preparing" },
+  confirmed: { to: "preparing" },
+  preparing: { to: "ready_for_pickup" },
+};
 
 export const merchantProfileQuery = (uid: string | undefined) => ({
   queryKey: ["merchant-profile", uid],

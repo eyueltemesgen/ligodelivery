@@ -1,10 +1,11 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, KeyRound, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { supabaseErrorMessage } from "@/lib/supa-error";
+import { supabaseErrorText } from "@/lib/supa-error";
 import { uploadImage } from "@/lib/media";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
@@ -18,8 +19,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/account/profile")({
   head: () => ({
     meta: [
-      { title: "Profile & security — የኔ Go" },
-      { name: "description", content: "Manage your የኔ Go profile, contact details and password." },
+      { title: translations.en.ap_meta_title },
+      { name: "description", content: translations.en.ap_meta_desc },
     ],
   }),
   component: ProfilePage,
@@ -59,7 +60,7 @@ function ProfilePage() {
       .eq("id", user.id);
     setSavingProfile(false);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     await refresh();
@@ -159,9 +160,7 @@ function ProfilePage() {
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="pf-email" value={user?.email ?? ""} className="pl-9" disabled />
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t("prof_email_hint")}
-              </p>
+              <p className="text-xs text-muted-foreground">{t("prof_email_hint")}</p>
             </div>
           </div>
           <Button type="submit" disabled={savingProfile || !profileDirty}>
@@ -223,7 +222,7 @@ function PasswordForm() {
     const { error } = await supabase.auth.updateUser({ password: next });
     setBusy(false);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     setCurrent("");

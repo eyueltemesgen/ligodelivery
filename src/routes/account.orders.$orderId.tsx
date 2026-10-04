@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
@@ -29,7 +30,12 @@ import { publicSettingsQuery } from "@/lib/queries";
 import { useCart } from "@/lib/cart";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
-import { StatusBadge, paymentLabel, paymentLabelKey, paymentStatusLabelKey } from "@/components/account/OrderCard";
+import {
+  StatusBadge,
+  paymentLabel,
+  paymentLabelKey,
+  paymentStatusLabelKey,
+} from "@/components/account/OrderCard";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,10 +59,10 @@ const BISHOFTU: [number, number] = [8.7522, 38.9969];
 export const Route = createFileRoute("/account/orders/$orderId")({
   head: () => ({
     meta: [
-      { title: "Order details — የኔ Go" },
+      { title: translations.en.aod_meta_title },
       {
         name: "description",
-        content: "Delivery timeline, payment and rider details for your order.",
+        content: translations.en.aod_meta_desc,
       },
     ],
   }),
@@ -283,9 +289,9 @@ function OrderDetails() {
                     <CreditCard className="h-4 w-4 text-primary" />
                   )}
                   {(() => {
-                      const key = paymentLabelKey(order.payment_method);
-                      return key ? t(key) : paymentLabel(order.payment_method);
-                    })()}
+                    const key = paymentLabelKey(order.payment_method);
+                    return key ? t(key) : paymentLabel(order.payment_method);
+                  })()}
                 </dd>
               </div>
               <div>
@@ -326,14 +332,14 @@ function OrderDetails() {
                         ))}
                     </ul>
                   ) : (
-                    <p className="mt-1 text-muted-foreground">
-                      {t("od_payment_details_soon")}
-                    </p>
+                    <p className="mt-1 text-muted-foreground">{t("od_payment_details_soon")}</p>
                   )}
                   {payment["instructions"] && (
                     <p className="mt-2 text-xs text-muted-foreground">{payment["instructions"]}</p>
                   )}
-                  <p className="mt-2 font-semibold">{t("od_amount_to_send", { amount: ETB(order.total) })}</p>
+                  <p className="mt-2 font-semibold">
+                    {t("od_amount_to_send", { amount: ETB(order.total) })}
+                  </p>
                 </div>
                 <PaymentProofForm
                   orderId={orderId}
@@ -424,9 +430,7 @@ function OrderDetails() {
                 <span className="font-display text-base font-extrabold tracking-widest text-accent-foreground">
                   {order.delivery_pin}
                 </span>
-                <span className="mt-0.5 block text-xs">
-                  {t("od_delivery_pin_hint")}
-                </span>
+                <span className="mt-0.5 block text-xs">{t("od_delivery_pin_hint")}</span>
               </p>
             )}
           </section>
@@ -582,11 +586,7 @@ function PaymentProofForm({
 
   return (
     <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
-      {existing && (
-        <p className="text-xs text-muted-foreground">
-          {t("od_proof_reviewing")}
-        </p>
-      )}
+      {existing && <p className="text-xs text-muted-foreground">{t("od_proof_reviewing")}</p>}
       <div className="space-y-1.5">
         <Label htmlFor="proof-ref">{t("od_proof_ref")}</Label>
         <Input

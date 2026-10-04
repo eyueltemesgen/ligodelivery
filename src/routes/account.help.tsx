@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -29,8 +30,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/account/help")({
   head: () => ({
     meta: [
-      { title: "Help & support — የኔ Go" },
-      { name: "description", content: "Get help with your የኔ Go orders, payments and deliveries." },
+      { title: translations.en.ah_meta_title },
+      { name: "description", content: translations.en.ah_meta_desc },
     ],
   }),
   validateSearch: (s: Record<string, unknown>) => {
@@ -116,7 +117,10 @@ function HelpPage() {
 
       {/* Order-related support */}
       <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <SectionHeading title={t("help_order_support")} description={t("help_order_support_desc")} />
+        <SectionHeading
+          title={t("help_order_support")}
+          description={t("help_order_support_desc")}
+        />
         {recentOrders.length === 0 ? (
           <p className="mt-4 text-sm text-muted-foreground">
             {t("help_no_orders")}{" "}

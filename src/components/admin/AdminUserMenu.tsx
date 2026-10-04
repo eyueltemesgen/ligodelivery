@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const initial = (name: string) =>
   name
@@ -20,10 +21,11 @@ const initial = (name: string) =>
     .toUpperCase();
 
 export function AdminUserMenu() {
+  const { t } = useLanguage();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const name = profile?.full_name || "Admin";
+  const name = profile?.full_name || t("aum_admin");
   const email = profile?.email || "";
 
   const handleSignOut = async () => {
@@ -37,7 +39,7 @@ export function AdminUserMenu() {
         <button
           type="button"
           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-secondary"
-          aria-label="Admin user menu"
+          aria-label={t("aum_aria")}
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
             {initial(name) || <UserRound className="h-4 w-4" />}
@@ -57,7 +59,7 @@ export function AdminUserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-          Bishoftu · Hub 01 (production)
+          {t("aum_hub")}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -65,7 +67,7 @@ export function AdminUserMenu() {
           className="gap-2 text-destructive focus:text-destructive"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {t("aum_sign_out")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,4 +1,5 @@
 import { useMediaUrl } from "@/lib/media";
+import { useLanguage } from "@/hooks/useLanguage";
 
 /** Avatar that resolves a storage path (or remote URL) with an initial fallback. */
 export function IdentityAvatar({
@@ -10,12 +11,13 @@ export function IdentityAvatar({
   name: string | null | undefined;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const url = useMediaUrl(path);
   if (url)
     return (
       <img
         src={url}
-        alt={name || "Avatar"}
+        alt={name || t("avatar_alt")}
         className={`${className} shrink-0 rounded-full border border-border object-cover`}
       />
     );

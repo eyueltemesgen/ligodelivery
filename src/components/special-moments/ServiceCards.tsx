@@ -43,7 +43,7 @@ export function ServiceCategoryCard({
           <h3 className="font-display text-base font-bold">{category.name}</h3>
         </div>
         <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-          {category.tagline || meta.blurb}
+          {category.tagline || t(meta.blurbKey)}
         </p>
         {count != null && (
           <p className="mt-3 text-xs font-semibold text-primary">
@@ -116,7 +116,7 @@ export function ServiceCard({ service }: { service: Service }) {
           )}
         </div>
         <p className="mt-3 font-display text-base font-extrabold text-primary">
-          {pricingLabel(service.pricing_type, service.price, service.starting_price)}
+          {pricingLabel(t, service.pricing_type, service.price, service.starting_price)}
         </p>
       </div>
     </Link>

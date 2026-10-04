@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function OrderMap({
   lat,
@@ -13,6 +14,7 @@ export default function OrderMap({
   riderLat?: number | null;
   riderLng?: number | null;
 }) {
+  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const riderMarker = useRef<L.Marker | null>(null);
@@ -25,19 +27,21 @@ export default function OrderMap({
     }).addTo(map);
     L.circleMarker([lat, lng], { radius: 9, color: "#16a34a", fillOpacity: 0.9 })
       .addTo(map)
-      .bindPopup("Delivery address");
+      .bindPopup(t("map_delivery_address"));
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, [lat, lng]);
+  }, [lat, lng, t]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || riderLat == null || riderLng == null) return;
     if (!riderMarker.current) {
-      riderMarker.current = L.marker([riderLat, riderLng]).addTo(map).bindPopup("Your rider");
+      riderMarker.current = L.marker([riderLat, riderLng])
+        .addTo(map)
+        .bindPopup(t("map_your_rider"));
     } else {
       riderMarker.current.setLatLng([riderLat, riderLng]);
     }
@@ -47,7 +51,7 @@ export default function OrderMap({
         [riderLat, riderLng],
       ]).pad(0.3),
     );
-  }, [riderLat, riderLng, lat, lng]);
+  }, [riderLat, riderLng, lat, lng, t]);
 
   return <div ref={ref} className="h-72 w-full rounded-xl border border-border" />;
 }

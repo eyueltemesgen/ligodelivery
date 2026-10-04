@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isMissingTable } from "@/lib/supa-error";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type SavedValue = {
   wishlistIds: Set<string>;
@@ -34,6 +35,7 @@ const EMPTY = new Set<string>();
  * the wishlist / favorites / summary queries on completion.
  */
 export function SavedProvider({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -67,7 +69,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
 
   const requireUser = useCallback(() => {
     if (user) return true;
-    toast.info("Sign in to save items to your account");
+    toast.info(t("saved_sign_in"));
     void navigate({ to: "/login" });
     return false;
   }, [user, navigate]);
@@ -96,18 +98,14 @@ export function SavedProvider({ children }: { children: ReactNode }) {
           else next.delete(productId);
           return next;
         });
-        toast.error(
-          isMissingTable(error)
-            ? "Saved products are being set up — please try again shortly"
-            : "Could not update saved products",
-        );
+        toast.error(isMissingTable(error) ? t("saved_setting_up") : t("saved_update_failed"));
         return;
       }
-      toast.success(saved ? "Removed from saved products" : "Saved to your products");
+      toast.success(saved ? t("saved_removed") : t("saved_added"));
       void qc.invalidateQueries({ queryKey: ["wishlist"] });
       void qc.invalidateQueries({ queryKey: ["account-summary"] });
     },
-    [requireUser, user, wishlistIds, qc],
+    [requireUser, user, wishlistIds, qc, t],
   );
 
   const toggleShop = useCallback(
@@ -134,18 +132,14 @@ export function SavedProvider({ children }: { children: ReactNode }) {
           else next.delete(shopId);
           return next;
         });
-        toast.error(
-          isMissingTable(error)
-            ? "Favorite shops are being set up — please try again shortly"
-            : "Could not update favorite shops",
-        );
+        toast.error(isMissingTable(error) ? t("fav_setting_up") : t("fav_update_failed"));
         return;
       }
-      toast.success(fav ? "Removed from favorite shops" : "Added to favorite shops");
+      toast.success(fav ? t("fav_removed") : t("fav_added"));
       void qc.invalidateQueries({ queryKey: ["shop-favorites"] });
       void qc.invalidateQueries({ queryKey: ["account-summary"] });
     },
-    [requireUser, user, favoriteShopIds, qc],
+    [requireUser, user, favoriteShopIds, qc, t],
   );
 
   const value = useMemo<SavedValue>(

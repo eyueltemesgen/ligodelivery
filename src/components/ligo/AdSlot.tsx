@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { adsQuery, currentDevice, trackAd, type Ad } from "@/lib/ads";
 import { StorageImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type Ctx = { categoryId?: string | null; shopId?: string | null };
 
@@ -17,6 +18,7 @@ export function AdSlot({
   context?: Ctx;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const { data = [] } = useQuery(adsQuery(placement));
   const [device, setDevice] = useState<"mobile" | "desktop" | null>(null);
   useEffect(() => setDevice(currentDevice()), []);
@@ -34,13 +36,14 @@ export function AdSlot({
 
   if (ads.length === 0) return null;
   return (
-    <section className={className ?? "container-ligo py-4"} aria-label="Advertisements">
+    <section className={className ?? "container-ligo py-4"} aria-label={t("ads_aria")}>
       <Carousel ads={ads} />
     </section>
   );
 }
 
 function Carousel({ ads }: { ads: Ad[] }) {
+  const { t: tr } = useLanguage();
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef<number | null>(null);
@@ -101,7 +104,7 @@ function Carousel({ ads }: { ads: Ad[] }) {
         <>
           <button
             type="button"
-            aria-label="Previous ad"
+            aria-label={tr("ads_prev")}
             onClick={() => go(-1)}
             className="absolute left-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow sm:flex"
           >
@@ -109,7 +112,7 @@ function Carousel({ ads }: { ads: Ad[] }) {
           </button>
           <button
             type="button"
-            aria-label="Next ad"
+            aria-label={tr("ads_next")}
             onClick={() => go(1)}
             className="absolute right-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow sm:flex"
           >
@@ -120,7 +123,7 @@ function Carousel({ ads }: { ads: Ad[] }) {
               <button
                 key={a.id}
                 type="button"
-                aria-label={`Show ad ${k + 1}`}
+                aria-label={tr("ads_show", { n: k + 1 })}
                 onClick={() => setI(k)}
                 className={cn(
                   "h-2 rounded-full bg-background/80 transition-all",
@@ -136,22 +139,30 @@ function Carousel({ ads }: { ads: Ad[] }) {
 }
 
 function Slide({ ad, priority, hidden }: { ad: Ad; priority: boolean; hidden: boolean }) {
+  const { t: tr } = useLanguage();
   const href = ad.destination_url;
   const external = !!href && /^https?:/.test(href);
   const body = (
     <div className="relative grid min-w-0 sm:grid-cols-[1.4fr_1fr]">
       <div className="relative aspect-[16/9] w-full sm:aspect-auto sm:min-h-56">
         {ad.image_url ? (
-          <StorageImage path={ad.image_url} alt={ad.title} priority={priority} className="absolute inset-0 h-full w-full" />
+          <StorageImage
+            path={ad.image_url}
+            alt={ad.title}
+            priority={priority}
+            className="absolute inset-0 h-full w-full"
+          />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30" />
         )}
         <span className="absolute left-2 top-2 rounded bg-background/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground">
-          Sponsored
+          {tr("ads_sponsored")}
         </span>
       </div>
       <div className="flex min-w-0 flex-col justify-center gap-1 p-4 pb-8 sm:p-6">
-        <p className="break-words font-display text-lg font-bold leading-tight sm:text-2xl">{ad.title}</p>
+        <p className="break-words font-display text-lg font-bold leading-tight sm:text-2xl">
+          {ad.title}
+        </p>
         {ad.subtitle && <p className="break-words text-sm text-muted-foreground">{ad.subtitle}</p>}
         {ad.cta_label && href && (
           <span className="mt-2 inline-flex w-fit rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground">

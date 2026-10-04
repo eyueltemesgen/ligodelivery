@@ -1,3 +1,4 @@
+import type { TranslationKey } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Banner = {
@@ -13,14 +14,14 @@ export type Banner = {
 };
 
 export const BANNER_PLACEMENTS = [
-  { value: "home_top", label: "Home — top (above hero)" },
-  { value: "home_hero", label: "Home — hero image" },
-  { value: "home_middle", label: "Home — middle (after categories)" },
-  { value: "home_bottom", label: "Home — bottom" },
-  { value: "shops", label: "Shops page" },
-  { value: "offers", label: "Offers page" },
-  { value: "categories", label: "Categories page" },
-] as const;
+  { value: "home_top", labelKey: "bp_home_top" },
+  { value: "home_hero", labelKey: "bp_home_hero" },
+  { value: "home_middle", labelKey: "bp_home_middle" },
+  { value: "home_bottom", labelKey: "bp_home_bottom" },
+  { value: "shops", labelKey: "bp_shops" },
+  { value: "offers", labelKey: "bp_offers" },
+  { value: "categories", labelKey: "bp_categories" },
+] as const satisfies readonly { value: string; labelKey: TranslationKey }[];
 
 export const DEFAULT_CONTENT = {
   brand_name: "የኔ Go",
@@ -56,33 +57,37 @@ export const DEFAULT_CONTENT = {
 
 export type SiteContent = typeof DEFAULT_CONTENT;
 
-export const CONTENT_FIELDS: { key: keyof SiteContent; label: string; long?: boolean }[] = [
-  { key: "brand_name", label: "Brand name" },
-  { key: "brand_short_name", label: "Short name (header logo)" },
-  { key: "brand_tagline", label: "Logo tagline" },
-  { key: "city", label: "City" },
-  { key: "hero_badge", label: "Hero badge" },
-  { key: "hero_title", label: "Hero title", long: true },
-  { key: "hero_subtitle", label: "Hero subtitle", long: true },
-  { key: "hero_primary_cta", label: "Hero primary button" },
-  { key: "hero_secondary_cta", label: "Hero secondary button" },
-  { key: "categories_title", label: "Categories section title" },
-  { key: "offers_title", label: "Offers section title" },
-  { key: "shops_title", label: "Shops section title" },
-  { key: "trending_title", label: "Trending section title" },
-  { key: "how_title", label: "How it works title" },
-  { key: "how_step1_title", label: "Step 1 title" },
-  { key: "how_step1_text", label: "Step 1 text", long: true },
-  { key: "how_step2_title", label: "Step 2 title" },
-  { key: "how_step2_text", label: "Step 2 text", long: true },
-  { key: "how_step3_title", label: "Step 3 title" },
-  { key: "how_step3_text", label: "Step 3 text", long: true },
-  { key: "footer_tagline", label: "Footer tagline", long: true },
-  { key: "contact_phone", label: "Contact phone" },
-  { key: "contact_email", label: "Contact email" },
-  { key: "contact_address", label: "Contact address" },
-  { key: "developer_name", label: "Developer name" },
-  { key: "company_name", label: "Company name" },
+export const CONTENT_FIELDS: {
+  key: keyof SiteContent;
+  labelKey: TranslationKey;
+  long?: boolean;
+}[] = [
+  { key: "brand_name", labelKey: "cf_brand_name" },
+  { key: "brand_short_name", labelKey: "cf_brand_short_name" },
+  { key: "brand_tagline", labelKey: "cf_brand_tagline" },
+  { key: "city", labelKey: "cf_city" },
+  { key: "hero_badge", labelKey: "cf_hero_badge" },
+  { key: "hero_title", labelKey: "cf_hero_title", long: true },
+  { key: "hero_subtitle", labelKey: "cf_hero_subtitle", long: true },
+  { key: "hero_primary_cta", labelKey: "cf_hero_primary_cta" },
+  { key: "hero_secondary_cta", labelKey: "cf_hero_secondary_cta" },
+  { key: "categories_title", labelKey: "cf_categories_title" },
+  { key: "offers_title", labelKey: "cf_offers_title" },
+  { key: "shops_title", labelKey: "cf_shops_title" },
+  { key: "trending_title", labelKey: "cf_trending_title" },
+  { key: "how_title", labelKey: "cf_how_title" },
+  { key: "how_step1_title", labelKey: "cf_how_step1_title" },
+  { key: "how_step1_text", labelKey: "cf_how_step1_text", long: true },
+  { key: "how_step2_title", labelKey: "cf_how_step2_title" },
+  { key: "how_step2_text", labelKey: "cf_how_step2_text", long: true },
+  { key: "how_step3_title", labelKey: "cf_how_step3_title" },
+  { key: "how_step3_text", labelKey: "cf_how_step3_text", long: true },
+  { key: "footer_tagline", labelKey: "cf_footer_tagline", long: true },
+  { key: "contact_phone", labelKey: "cf_contact_phone" },
+  { key: "contact_email", labelKey: "cf_contact_email" },
+  { key: "contact_address", labelKey: "cf_contact_address" },
+  { key: "developer_name", labelKey: "cf_developer_name" },
+  { key: "company_name", labelKey: "cf_company_name" },
 ];
 
 export const siteContentQuery = {

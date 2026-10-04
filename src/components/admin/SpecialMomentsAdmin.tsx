@@ -12,8 +12,8 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isMissingTable, supabaseErrorMessage } from "@/lib/supa-error";
-import { uploadImage } from "@/lib/media";
+import { isMissingTable, supabaseErrorText } from "@/lib/supa-error";
+import { mediaErrorKey, uploadImage } from "@/lib/media";
 import { ETB, formatDate } from "@/lib/format";
 import {
   OCCASIONS,
@@ -216,13 +216,16 @@ function RequestRow({
       toast.success(t("sma_request_marked", { status: t(REQUEST_STATUS_LABEL_KEY[status]) }));
       onChanged();
     } catch (err) {
-      toast.error(supabaseErrorMessage(err));
+      const mediaKey = mediaErrorKey(err);
+      toast.error(mediaKey ? t(mediaKey) : supabaseErrorText(t, err));
     } finally {
       setBusy(false);
     }
   };
 
-  const reveal = request.recipient_name ? t("sma_for_recipient", { name: request.recipient_name }) : null;
+  const reveal = request.recipient_name
+    ? t("sma_for_recipient", { name: request.recipient_name })
+    : null;
 
   return (
     <li className="rounded-xl border border-border bg-card p-4 shadow-card">
@@ -246,9 +249,15 @@ function RequestRow({
       </div>
 
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {request.occasion && <span>{t("sma_occasion_label")} {request.occasion}</span>}
+        {request.occasion && (
+          <span>
+            {t("sma_occasion_label")} {request.occasion}
+          </span>
+        )}
         {(request.surprise_type || request.event_type) && (
-          <span>{t("sma_type_label")} {request.surprise_type ?? request.event_type}</span>
+          <span>
+            {t("sma_type_label")} {request.surprise_type ?? request.event_type}
+          </span>
         )}
         {request.event_date && (
           <span className="flex items-center gap-1">
@@ -277,7 +286,8 @@ function RequestRow({
       {open && (
         <div className="mt-3 space-y-2 rounded-lg bg-surface p-3 text-sm">
           <p>
-            <span className="text-muted-foreground">{t("sma_customer_label")}</span> {request.customer_name ?? "—"}{" "}
+            <span className="text-muted-foreground">{t("sma_customer_label")}</span>{" "}
+            {request.customer_name ?? "—"}{" "}
             {request.customer_phone ? `· ${request.customer_phone}` : ""}
           </p>
           {request.location && (
@@ -286,14 +296,41 @@ function RequestRow({
               {request.location}
             </p>
           )}
-          {request.recipient_phone && <p>{t("sma_recipient_phone")} {request.recipient_phone}</p>}
-          {request.theme && <p>{t("sma_theme")} {request.theme}</p>}
-          {request.food_preferences && <p>{t("sma_food_prefs")} {request.food_preferences}</p>}
-          {request.budget != null && <p>{t("sma_budget")} {ETB(request.budget)}</p>}
-          {request.message && <p>{t("sma_message")} {request.message}</p>}
-          {request.special_instructions && <p>{t("sma_instructions")} {request.special_instructions}</p>}
+          {request.recipient_phone && (
+            <p>
+              {t("sma_recipient_phone")} {request.recipient_phone}
+            </p>
+          )}
+          {request.theme && (
+            <p>
+              {t("sma_theme")} {request.theme}
+            </p>
+          )}
+          {request.food_preferences && (
+            <p>
+              {t("sma_food_prefs")} {request.food_preferences}
+            </p>
+          )}
+          {request.budget != null && (
+            <p>
+              {t("sma_budget")} {ETB(request.budget)}
+            </p>
+          )}
+          {request.message && (
+            <p>
+              {t("sma_message")} {request.message}
+            </p>
+          )}
+          {request.special_instructions && (
+            <p>
+              {t("sma_instructions")} {request.special_instructions}
+            </p>
+          )}
           {request.addons.length > 0 && (
-            <p>{t("sma_addons_label")} {request.addons.map((a) => `${a.name} (${ETB(a.price)})`).join(", ")}</p>
+            <p>
+              {t("sma_addons_label")}{" "}
+              {request.addons.map((a) => `${a.name} (${ETB(a.price)})`).join(", ")}
+            </p>
           )}
           {request.order_id && <p className="text-primary">{t("sma_order_created")}</p>}
         </div>
@@ -406,7 +443,8 @@ function CategoriesAdmin() {
       void qc.invalidateQueries({ queryKey: ["service-categories"] });
       toast.success(t("sma_category_created"));
     } catch (err) {
-      toast.error(supabaseErrorMessage(err));
+      const mediaKey = mediaErrorKey(err);
+      toast.error(mediaKey ? t(mediaKey) : supabaseErrorText(t, err));
     } finally {
       setBusy(false);
     }
@@ -418,7 +456,7 @@ function CategoriesAdmin() {
       .update(p as never)
       .eq("id", id);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-service-categories"] });
@@ -426,13 +464,10 @@ function CategoriesAdmin() {
   };
 
   const remove = async (id: string, name: string) => {
-    if (
-      !window.confirm(t("sma_delete_category_confirm", { name }))
-    )
-      return;
+    if (!window.confirm(t("sma_delete_category_confirm", { name }))) return;
     const { error } = await supabase.from("service_categories").delete().eq("id", id);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     void qc.invalidateQueries({ queryKey: ["admin-service-categories"] });
@@ -479,7 +514,9 @@ function CategoriesAdmin() {
       </form>
 
       <ul className="space-y-2">
-        {rows.length === 0 && <li className="text-sm text-muted-foreground">{t("sma_no_categories")}</li>}
+        {rows.length === 0 && (
+          <li className="text-sm text-muted-foreground">{t("sma_no_categories")}</li>
+        )}
         {rows.map((c) => (
           <li key={c.id} className="rounded-xl border border-border bg-card p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -675,7 +712,8 @@ function ServicesAdmin() {
       setImageFile(null);
       invalidate();
     } catch (err) {
-      toast.error(supabaseErrorMessage(err));
+      const mediaKey = mediaErrorKey(err);
+      toast.error(mediaKey ? t(mediaKey) : supabaseErrorText(t, err));
     } finally {
       setBusy(false);
     }
@@ -687,15 +725,14 @@ function ServicesAdmin() {
       .update(p as never)
       .eq("id", id);
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     invalidate();
   };
 
   const remove = async (id: string, name: string) => {
-    if (!window.confirm(t("sma_delete_service_confirm", { name })))
-      return;
+    if (!window.confirm(t("sma_delete_service_confirm", { name }))) return;
     const { error } = await supabase.from("services").delete().eq("id", id);
     if (error) {
       const { error: deactivateError } = await supabase
@@ -703,7 +740,7 @@ function ServicesAdmin() {
         .update({ is_active: false })
         .eq("id", id);
       if (deactivateError) {
-        toast.error(supabaseErrorMessage(error));
+        toast.error(supabaseErrorText(t, error));
         return;
       }
       toast.success(t("sma_referenced_hidden"));
@@ -718,9 +755,7 @@ function ServicesAdmin() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display text-lg font-bold">{t("sma_services_heading")}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t("sma_services_desc")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("sma_services_desc")}</p>
         </div>
         <Button onClick={() => setEditing(emptyForm())}>
           <Plus className="mr-2 h-4 w-4" />
@@ -989,7 +1024,11 @@ function ServicesAdmin() {
                   {t("sma_cancel")}
                 </Button>
                 <Button type="submit" disabled={busy}>
-                  {busy ? t("sma_saving") : editing.id ? t("sma_save_changes") : t("sma_create_service")}
+                  {busy
+                    ? t("sma_saving")
+                    : editing.id
+                      ? t("sma_save_changes")
+                      : t("sma_create_service")}
                 </Button>
               </div>
             </form>
@@ -1045,7 +1084,12 @@ function ServiceAdminRow({
           <Button size="sm" variant="outline" onClick={() => setAddonsOpen((v) => !v)}>
             {t("sma_addons")}
           </Button>
-          <Button size="icon" variant="ghost" aria-label={t("sma_edit_named", { name: service.name })} onClick={onEdit}>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("sma_edit_named", { name: service.name })}
+            onClick={onEdit}
+          >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
@@ -1095,7 +1139,7 @@ function AddonsEditor({ serviceId }: { serviceId: string }) {
       price: Number(price) || 0,
     });
     if (error) {
-      toast.error(supabaseErrorMessage(error));
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     setName("");

@@ -8,21 +8,20 @@ import { Button } from "@/components/ui/button";
 import { GridSkeleton } from "@/components/account/States";
 import { siteContentQuery } from "@/lib/content";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
+import { translations, type TranslationKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/special-moments/")({
   head: () => ({
     meta: [
-      { title: "Special Moments — የኔ Go" },
+      { title: translations.en.smh_meta_title },
       {
         name: "description",
-        content:
-          "Arrange gifts, surprises, catering and decoration for life's important occasions with የኔ Go.",
+        content: translations.en.smh_meta_desc,
       },
-      { property: "og:title", content: "Special Moments — የኔ Go" },
+      { property: "og:title", content: translations.en.smh_meta_og_title },
       {
         property: "og:description",
-        content: "Gifts, surprises, holiday gifts, catering and decoration from one place.",
+        content: translations.en.smh_meta_og_desc,
       },
     ],
   }),

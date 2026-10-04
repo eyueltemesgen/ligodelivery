@@ -17,7 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
+import { translations, type TranslationKey } from "@/lib/i18n";
 import { isShopOpenNow } from "@/lib/hours";
 import { categoriesQuery, type Product, type Shop } from "@/lib/queries";
 import { ETB } from "@/lib/format";
@@ -71,14 +71,13 @@ const NEXT_LABEL_KEY: Partial<Record<OrderStatus, TranslationKey>> = {
 export const Route = createFileRoute("/merchant")({
   head: () => ({
     meta: [
-      { title: "Merchant dashboard — የኔ Go" },
+      { title: translations.en.md_meta_title },
       {
         name: "description",
-        content:
-          "Manage your የኔ Go shop: live orders, products, opening hours, promotions and earnings.",
+        content: translations.en.md_meta_desc,
       },
-      { property: "og:title", content: "Merchant dashboard — የኔ Go" },
-      { property: "og:description", content: "Run your የኔ Go store from one dashboard." },
+      { property: "og:title", content: translations.en.md_meta_title },
+      { property: "og:description", content: translations.en.md_meta_og_desc },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bike, ClipboardList, Star, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
-import { STATUS_LABEL, statusTone, type OrderStatus } from "@/lib/orders";
+import { STATUS_LABEL_KEY, statusTone, type OrderStatus } from "@/lib/orders";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
 import { TierBadge } from "@/components/ligo/TierBadge";
 import {
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export type RiderDossierIdentity = {
   avatarUrl?: string | null | undefined;
@@ -38,6 +39,7 @@ export function RiderDossier({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useLanguage();
   const { data } = useQuery({
     queryKey: ["rider-dossier", riderId],
     enabled: open && !!riderId,
@@ -103,10 +105,8 @@ export function RiderDossier({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Rider dossier</DialogTitle>
-          <DialogDescription>
-            Delivery history, earnings, customer ratings and dispatch behaviour.
-          </DialogDescription>
+          <DialogTitle>{t("rd_dossier_title")}</DialogTitle>
+          <DialogDescription>{t("rd_dossier_desc")}</DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
@@ -117,7 +117,7 @@ export function RiderDossier({
               className="h-12 w-12 text-base"
             />
             <span
-              aria-label={identity?.isOnline ? "Online" : "Offline"}
+              aria-label={identity?.isOnline ? t("rd_online") : t("rd_offline")}
               className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card ${
                 identity?.isOnline ? "bg-primary" : "bg-muted-foreground/40"
               }`}
@@ -126,7 +126,8 @@ export function RiderDossier({
           <div className="min-w-0 flex-1">
             <p className="truncate font-display font-bold">{riderName}</p>
             <p className="text-xs capitalize text-muted-foreground">
-              {identity?.isOnline ? "Online now" : "Offline"} · {identity?.vehicleType ?? "—"}
+              {identity?.isOnline ? t("rd_online_now") : t("rd_offline")} ·{" "}
+              {identity?.vehicleType ?? "—"}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -146,38 +147,42 @@ export function RiderDossier({
         <div className="grid gap-3 sm:grid-cols-3">
           <Stat
             icon={ClipboardList}
-            label="Deliveries"
+            label={t("rd_deliveries")}
             value={String(data?.deliveries ?? 0)}
-            hint={`${(data?.totalKm ?? 0).toFixed(1)} km covered`}
+            hint={t("rd_km_covered", { km: (data?.totalKm ?? 0).toFixed(1) })}
           />
           <Stat
             icon={Wallet}
-            label="Total earnings"
+            label={t("rd_total_earnings")}
             value={ETB(data?.totalEarnings ?? 0)}
-            hint={`${ETB(data?.pendingEarnings ?? 0)} unpaid`}
+            hint={t("rd_unpaid", { amount: ETB(data?.pendingEarnings ?? 0) })}
           />
           <Stat
             icon={Star}
-            label="Rating"
+            label={t("rd_rating")}
             value={data?.avgRating != null ? `${data.avgRating.toFixed(2)} ★` : "—"}
-            hint={`${data?.ratingCount ?? 0} customer ratings`}
+            hint={t("rd_rating_count", { count: data?.ratingCount ?? 0 })}
           />
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2 text-sm">
           <span className="flex items-center gap-2 text-muted-foreground">
-            <Bike className="h-4 w-4" /> Offer acceptance
+            <Bike className="h-4 w-4" /> {t("rd_offer_acceptance")}
           </span>
           <span className="font-semibold">
             {data?.acceptanceRate != null
-              ? `${data.acceptanceRate}% (${data.accepted} accepted · ${data.declined} declined)`
-              : "No offers yet"}
+              ? t("rd_acceptance", {
+                  rate: data.acceptanceRate,
+                  accepted: data.accepted,
+                  declined: data.declined,
+                })
+              : t("rd_no_offers")}
           </span>
         </div>
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Payout requests
+            {t("rd_payout_requests")}
           </p>
           {data?.payoutRequests.length ? (
             <ul className="max-h-36 space-y-1.5 overflow-y-auto">
@@ -200,19 +205,19 @@ export function RiderDossier({
                   </span>
                   <span className="ml-auto text-xs text-muted-foreground">
                     {formatDate(p.created_at)}
-                    {p.processed_at ? ` · processed ${formatDate(p.processed_at)}` : ""}
+                    {p.processed_at ? t("rd_processed", { date: formatDate(p.processed_at) }) : ""}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No payout requests yet.</p>
+            <p className="text-sm text-muted-foreground">{t("rd_no_payouts")}</p>
           )}
         </div>
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Recent deliveries
+            {t("rd_recent_deliveries")}
           </p>
           {data?.recentOrders.length ? (
             <ul className="max-h-56 space-y-1.5 overflow-y-auto">
@@ -225,7 +230,9 @@ export function RiderDossier({
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusTone(o.status)}`}
                   >
-                    {STATUS_LABEL[o.status as OrderStatus] ?? o.status}
+                    {STATUS_LABEL_KEY[o.status as OrderStatus]
+                      ? t(STATUS_LABEL_KEY[o.status as OrderStatus])
+                      : o.status}
                   </span>
                   <span className="ml-auto font-medium">{ETB(o.total)}</span>
                   <span className="text-xs text-muted-foreground">{formatDate(o.created_at)}</span>
@@ -233,7 +240,7 @@ export function RiderDossier({
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No deliveries recorded yet.</p>
+            <p className="text-sm text-muted-foreground">{t("rd_no_deliveries")}</p>
           )}
         </div>
       </DialogContent>

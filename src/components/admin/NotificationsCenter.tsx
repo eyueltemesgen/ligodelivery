@@ -6,8 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/format";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export function NotificationsCenter() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -69,7 +71,7 @@ export function NotificationsCenter() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label="Notifications"
+          aria-label={t("nc_aria")}
           className="relative rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
           <Bell className="h-4 w-4" />
@@ -82,22 +84,20 @@ export function NotificationsCenter() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[calc(100vw-1.5rem)] max-w-96 p-0">
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
-          <p className="text-sm font-semibold">Notifications</p>
+          <p className="text-sm font-semibold">{t("nc_title")}</p>
           {notifications.some((n) => !n.is_read) && (
             <button
               type="button"
               onClick={() => void markAllRead()}
               className="text-xs font-medium text-primary hover:underline"
             >
-              Mark all read
+              {t("nc_mark_all_read")}
             </button>
           )}
         </div>
         <ul className="max-h-80 overflow-y-auto">
           {notifications.length === 0 && (
-            <li className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Nothing here yet.
-            </li>
+            <li className="px-4 py-6 text-center text-sm text-muted-foreground">{t("nc_empty")}</li>
           )}
           {notifications.map((n) => (
             <li
@@ -120,7 +120,7 @@ export function NotificationsCenter() {
             onClick={() => setOpen(false)}
             className="text-xs font-medium text-primary hover:underline"
           >
-            View all notifications
+            {t("nc_view_all")}
           </Link>
         </div>
       </PopoverContent>

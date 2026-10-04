@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -39,11 +40,10 @@ export const Route = createFileRoute("/special-moments/search")({
   },
   head: () => ({
     meta: [
-      { title: "Search Special Moments — የኔ Go" },
+      { title: translations.en.sms_meta_title },
       {
         name: "description",
-        content:
-          "Search and filter gifts, surprises, holiday gifts, catering and decoration by category, occasion, price and location.",
+        content: translations.en.sms_meta_desc,
       },
     ],
   }),

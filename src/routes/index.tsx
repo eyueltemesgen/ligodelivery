@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -27,16 +28,15 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "የኔ Go — Fast. Local. Delivered." },
+      { title: translations.en.root_meta_title },
       {
         name: "description",
-        content:
-          "Order food, groceries, pharmacy items and more from Bishoftu shops. Fast local delivery, live tracking and Telebirr, CBE or cash payment.",
+        content: translations.en.index_meta_desc,
       },
-      { property: "og:title", content: "የኔ Go — Fast. Local. Delivered." },
+      { property: "og:title", content: translations.en.root_meta_title },
       {
         property: "og:description",
-        content: "Fast local delivery across Bishoftu with live order tracking.",
+        content: translations.en.index_meta_og_desc,
       },
     ],
   }),

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export function ThemeToggle() {
+  const { t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   // Avoid hydration mismatch: the server can't know the stored theme.
   const [mounted, setMounted] = useState(false);
@@ -14,7 +16,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={dark ? t("theme_switch_light") : t("theme_switch_dark")}
       className="relative grid h-9 w-9 place-items-center rounded-md transition-all duration-100 hover:bg-secondary active:scale-95"
     >
       <Sun

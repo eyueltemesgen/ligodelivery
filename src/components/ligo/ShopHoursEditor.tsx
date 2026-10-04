@@ -6,6 +6,18 @@ import { DAY_NAMES, type ShopHoursRow } from "@/lib/hours";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
+
+const DAY_KEY: Record<number, TranslationKey> = {
+  0: "day_sun",
+  1: "day_mon",
+  2: "day_tue",
+  3: "day_wed",
+  4: "day_thu",
+  5: "day_fri",
+  6: "day_sat",
+};
 
 type DayDraft = { opens_at: string; closes_at: string; is_closed: boolean };
 
@@ -32,6 +44,7 @@ export function ShopHoursEditor({
   fallbackOpen?: string;
   fallbackClose?: string;
 }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<DayDraft[] | null>(null);
   const [savingDay, setSavingDay] = useState<number | null>(null);
@@ -72,7 +85,7 @@ export function ShopHoursEditor({
       return;
     }
     void qc.invalidateQueries({ queryKey: ["shop-hours", shopId] });
-    toast.success(`${DAY_NAMES[day]} hours saved`);
+    toast.success(t("hours_saved", { day: t(DAY_KEY[day]!) }));
   };
 
   return (
@@ -82,9 +95,9 @@ export function ShopHoursEditor({
           key={day}
           className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2 text-sm"
         >
-          <span className="w-24 font-medium">{DAY_NAMES[day]}</span>
+          <span className="w-24 font-medium">{t(DAY_KEY[day]!)}</span>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            Closed
+            {t("common_closed")}
             <Switch checked={d.is_closed} onCheckedChange={(v) => setDay(day, { is_closed: v })} />
           </label>
           {!d.is_closed && (
@@ -111,7 +124,7 @@ export function ShopHoursEditor({
             disabled={savingDay === day}
             onClick={() => void saveDay(day)}
           >
-            {savingDay === day ? "Saving…" : "Save"}
+            {savingDay === day ? t("aop_saving") : t("aop_save")}
           </Button>
         </div>
       ))}

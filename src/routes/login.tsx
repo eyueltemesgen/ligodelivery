@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { AuthPortal } from "@/components/auth/AuthPortal";
 
@@ -9,13 +10,13 @@ export const Route = createFileRoute("/login")({
   },
   head: () => ({
     meta: [
-      { title: "Sign in — የኔ Go" },
+      { title: translations.en.login_meta_title },
       {
         name: "description",
-        content: "Sign in to your የኔ Go customer account to order in Bishoftu.",
+        content: translations.en.login_meta_desc,
       },
-      { property: "og:title", content: "Sign in — የኔ Go" },
-      { property: "og:description", content: "Access your የኔ Go customer account." },
+      { property: "og:title", content: translations.en.login_meta_og_title },
+      { property: "og:description", content: translations.en.login_meta_og_desc },
     ],
   }),
   component: () => <AuthPortal kind="customer" />,

@@ -1,3 +1,4 @@
+import type { TranslationKey } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Ad = {
@@ -18,13 +19,20 @@ export type Ad = {
 };
 
 export const AD_TYPES = [
-  { value: "banner", label: "Homepage banner" },
-  { value: "sponsored_shop", label: "Sponsored shop" },
-  { value: "sponsored_product", label: "Sponsored product" },
-  { value: "promo_card", label: "Promotional card" },
-] as const;
+  { value: "banner", labelKey: "adt_banner" },
+  { value: "sponsored_shop", labelKey: "adt_sponsored_shop" },
+  { value: "sponsored_product", labelKey: "adt_sponsored_product" },
+  { value: "promo_card", labelKey: "adt_promo_card" },
+] as const satisfies readonly { value: string; labelKey: TranslationKey }[];
 
 export const AD_STATUSES = ["draft", "active", "paused", "archived"] as const;
+
+export const AD_STATUS_LABEL_KEY: Record<(typeof AD_STATUSES)[number], TranslationKey> = {
+  draft: "adv_st_draft",
+  active: "adv_st_active",
+  paused: "adv_st_paused",
+  archived: "adv_st_archived",
+};
 
 /** Only the live ads for one placement — RLS already hides paused/expired/scheduled ads. */
 export const adsQuery = (placement: string) => ({

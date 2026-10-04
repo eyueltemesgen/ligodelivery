@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
@@ -19,13 +20,13 @@ const ACTIVE_STATUSES = ["accepted", "arrived_at_merchant", "picked_up", "on_the
 export const Route = createFileRoute("/admin/map")({
   head: () => ({
     meta: [
-      { title: "Live Delivery Map — የኔ Go Admin" },
+      { title: translations.en.adm_meta_title },
       {
         name: "description",
-        content: "Real-time rider, merchant and delivery tracking for የኔ Go dispatch.",
+        content: translations.en.adm_meta_desc,
       },
-      { property: "og:title", content: "Live Delivery Map — የኔ Go Admin" },
-      { property: "og:description", content: "Real-time dispatch tracking." },
+      { property: "og:title", content: translations.en.adm_meta_og_title },
+      { property: "og:description", content: translations.en.adm_meta_og_desc },
     ],
   }),
   component: LiveMapPage,
@@ -244,8 +245,7 @@ function LiveMapPage() {
                 {STATUS_LABEL_KEY[selectedOrder.status as OrderStatus]
                   ? t(STATUS_LABEL_KEY[selectedOrder.status as OrderStatus])
                   : selectedOrder.status}{" "}
-                ·{" "}
-                {ETB(selectedOrder.total)}
+                · {ETB(selectedOrder.total)}
               </p>
               <p className="mt-1 text-xs">{selectedOrder.delivery_address}</p>
               <Button

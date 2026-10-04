@@ -1,3 +1,4 @@
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -5,7 +6,7 @@ import { Bike, Clock, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
-import { uploadImage } from "@/lib/media";
+import { mediaErrorKey, uploadImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,16 +15,15 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/rider/join")({
   head: () => ({
     meta: [
-      { title: "Become a የኔ Go rider in Bishoftu" },
+      { title: translations.en.rj_meta_title },
       {
         name: "description",
-        content:
-          "Earn with የኔ Go — deliver food and groceries around Bishoftu on your own schedule.",
+        content: translations.en.rj_meta_desc,
       },
-      { property: "og:title", content: "Become a የኔ Go rider" },
+      { property: "og:title", content: translations.en.rj_meta_og_title },
       {
         property: "og:description",
-        content: "Deliver with የኔ Go in Bishoftu and earn on your schedule.",
+        content: translations.en.rj_meta_og_desc,
       },
     ],
   }),
@@ -71,7 +71,8 @@ function RiderJoin() {
       if (error) throw error;
       toast.success(t("rj_submitted"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("rj_err"));
+      const mediaKey = mediaErrorKey(err);
+      toast.error(mediaKey ? t(mediaKey) : err instanceof Error ? err.message : t("rj_err"));
     } finally {
       setBusy(false);
     }

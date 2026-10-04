@@ -3,12 +3,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Bike, Lock, Mail, ShoppingBag, Smartphone, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadImage } from "@/lib/media";
+import { mediaErrorKey, uploadImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
+import { translations, type TranslationKey } from "@/lib/i18n";
 
 type SignupRole = "customer" | "rider";
 
@@ -45,6 +45,8 @@ const PAYOUT_METHODS = [
 ] as const;
 
 function friendlyError(t: (k: TranslationKey) => string, err: unknown): string {
+  const mediaKey = mediaErrorKey(err);
+  if (mediaKey) return t(mediaKey);
   const msg = err instanceof Error ? err.message : "";
   const lower = msg.toLowerCase();
   if (lower.includes("already registered") || lower.includes("already been registered"))
@@ -62,13 +64,13 @@ export const Route = createFileRoute("/register")({
   },
   head: () => ({
     meta: [
-      { title: "Create your account — የኔ Go" },
+      { title: translations.en.reg_meta_title },
       {
         name: "description",
-        content: "Join የኔ Go as a customer or rider in Bishoftu.",
+        content: translations.en.reg_meta_desc,
       },
-      { property: "og:title", content: "Create your account — የኔ Go" },
-      { property: "og:description", content: "Join የኔ Go as a customer or rider." },
+      { property: "og:title", content: translations.en.reg_meta_title },
+      { property: "og:description", content: translations.en.reg_meta_og_desc },
     ],
   }),
   component: RegisterPage,
@@ -214,7 +216,7 @@ function RegisterPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t("ph_email")}
                 className="pl-9"
                 required
               />

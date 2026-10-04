@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export type LiveMapRider = {
   id: string;
@@ -56,6 +57,7 @@ export default function LiveMap({
   destinations: LiveMapDestination[];
   onSelectRider: (riderId: string) => void;
 }) {
+  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const riderMarkers = useRef(new Map<string, L.Marker>());
@@ -117,7 +119,9 @@ export default function LiveMap({
           s.id,
           L.marker([s.lat, s.lng], { icon: divIcon(COLORS.shop, 18) })
             .addTo(map)
-            .bindTooltip(`${s.name} (${s.activeOrders} active)`, { direction: "top" }),
+            .bindTooltip(t("lm_shop_tooltip", { name: s.name, count: s.activeOrders }), {
+              direction: "top",
+            }),
         );
       }
     }
@@ -141,7 +145,7 @@ export default function LiveMap({
           d.orderId,
           L.marker([d.lat, d.lng], { icon: divIcon(COLORS.dest, 16) })
             .addTo(map)
-            .bindTooltip(`Order ${d.code}`, { direction: "top" }),
+            .bindTooltip(t("lm_order_tooltip", { code: d.code }), { direction: "top" }),
         );
       }
       const rider = d.riderId ? riders.find((r) => r.id === d.riderId) : null;
@@ -180,35 +184,35 @@ export default function LiveMap({
     <div className="relative h-full w-full">
       <div ref={ref} className="h-full w-full" />
       <div className="absolute bottom-3 left-3 z-[1000] rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-card">
-        <p className="font-semibold">Legend</p>
+        <p className="font-semibold">{t("lm_legend")}</p>
         <p className="mt-1 flex items-center gap-2">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.idle }}
           />{" "}
-          Rider online
+          {t("lm_rider_online")}
           <span
             className="ml-2 inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.delivering }}
           />{" "}
-          On delivery
+          {t("lm_on_delivery")}
           <span
             className="ml-2 inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.offline }}
           />{" "}
-          Offline
+          {t("lm_offline")}
         </p>
         <p className="mt-0.5 flex items-center gap-2">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.shop }}
           />{" "}
-          Merchant
+          {t("lm_merchant")}
           <span
             className="ml-2 inline-block h-2.5 w-2.5 rounded-full"
             style={{ background: COLORS.dest }}
           />{" "}
-          Destination
+          {t("lm_destination")}
         </p>
       </div>
     </div>

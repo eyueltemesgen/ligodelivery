@@ -4,9 +4,11 @@ import { Clock, ShieldAlert, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Role } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/useLanguage";
 
 function Loading() {
-  return <div className="container-ligo py-16 text-muted-foreground">Loading…</div>;
+  const { t } = useLanguage();
+  return <div className="container-ligo py-16 text-muted-foreground">{t("common_loading")}</div>;
 }
 
 function Message({
@@ -43,17 +45,18 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 /** /admin/* — admin role in user_roles only. */
 export function AdminGate({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
+  const { t } = useLanguage();
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/admin/login" />;
   if (!isAdmin)
     return (
       <Message
         icon={ShieldAlert}
-        title="Admins only"
-        body="This area is restricted to የኔ Go operations staff."
+        title={t("guard_admins_only")}
+        body={t("guard_admins_only_body")}
         action={
           <Button asChild variant="outline">
-            <Link to="/">Back to the app</Link>
+            <Link to="/">{t("guard_back_to_app")}</Link>
           </Button>
         }
       />
@@ -64,6 +67,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
 /** /rider/* — rider role; approved riders see the portal, others see their verification state. */
 export function RiderGate({ children }: { children: React.ReactNode }) {
   const { user, loading, isRider } = useAuth();
+  const { t } = useLanguage();
   const { data: rider, isLoading } = useQuery({
     queryKey: ["rider-me", user?.id],
     enabled: !!user && isRider,
@@ -79,11 +83,11 @@ export function RiderGate({ children }: { children: React.ReactNode }) {
     return (
       <Message
         icon={ShieldAlert}
-        title="You're not registered as a rider"
+        title={t("guard_not_rider")}
         action={
           <Button asChild>
             <Link to="/register" search={{ role: "rider" }}>
-              Apply to become a rider
+              {t("guard_apply_rider")}
             </Link>
           </Button>
         }
@@ -94,16 +98,16 @@ export function RiderGate({ children }: { children: React.ReactNode }) {
     return (
       <Message
         icon={Clock}
-        title={rejected ? "Application needs attention" : "Approval pending"}
+        title={rejected ? t("guard_application_attention") : t("guard_approval_pending")}
         body={
           rejected
-            ? `Our team reviewed your application: ${rider?.review_notes ?? "please update your details and resubmit."}`
-            : "Your rider account is under review. You'll be able to go online as soon as an admin approves your documents."
+            ? t("guard_review_notes", { notes: rider?.review_notes ?? t("guard_review_default") })
+            : t("guard_under_review")
         }
         action={
           rejected ? (
             <Button asChild>
-              <Link to="/rider/join">Update & resubmit application</Link>
+              <Link to="/rider/join">{t("guard_update_resubmit")}</Link>
             </Button>
           ) : undefined
         }
@@ -116,6 +120,7 @@ export function RiderGate({ children }: { children: React.ReactNode }) {
 /** /merchant/* — merchant role with an admin-verified (active) shop. */
 export function MerchantGate({ children }: { children: React.ReactNode }) {
   const { user, loading, isMerchant, isAdmin } = useAuth();
+  const { t } = useLanguage();
   const { data: shops = [], isLoading } = useQuery({
     queryKey: ["merchant-gate-shops", user?.id],
     enabled: !!user && isMerchant && !isAdmin,
@@ -131,31 +136,21 @@ export function MerchantGate({ children }: { children: React.ReactNode }) {
     return (
       <Message
         icon={ShieldAlert}
-        title="Merchants only"
-        body="Shop accounts are set up by the የኔ Go team — contact us to onboard your store."
+        title={t("guard_merchants_only")}
+        body={t("guard_merchants_only_body")}
         action={
           <Button asChild variant="outline">
-            <Link to="/">Back to the app</Link>
+            <Link to="/">{t("guard_back_to_app")}</Link>
           </Button>
         }
       />
     );
   if (!isAdmin) {
     if (shops.length === 0)
-      return (
-        <Message
-          icon={Store}
-          title="No shop linked to your account"
-          body="The የኔ Go team will link your shop after onboarding. Contact us if you think this is a mistake."
-        />
-      );
+      return <Message icon={Store} title={t("guard_no_shop")} body={t("guard_no_shop_body")} />;
     if (!shops.some((s) => s.is_active))
       return (
-        <Message
-          icon={Clock}
-          title="Shop verification pending"
-          body="Your shop is being reviewed by the የኔ Go team. You'll be able to manage it here as soon as it's verified."
-        />
+        <Message icon={Clock} title={t("guard_shop_pending")} body={t("guard_shop_pending_body")} />
       );
   }
   return <>{children}</>;

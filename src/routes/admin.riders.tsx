@@ -8,7 +8,7 @@ import { notify } from "@/lib/orders";
 import { useMediaUrl } from "@/lib/media";
 import { formatDate } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { TranslationKey } from "@/lib/i18n";
+import { translations, type TranslationKey } from "@/lib/i18n";
 import { RiderDossier } from "@/components/admin/RiderDossier";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
 import { TierBadge } from "@/components/ligo/TierBadge";
@@ -34,13 +34,13 @@ import {
 export const Route = createFileRoute("/admin/riders")({
   head: () => ({
     meta: [
-      { title: "Rider approvals — የኔ Go" },
+      { title: translations.en.ar_meta_title },
       {
         name: "description",
-        content: "Review rider applications, verify documents and approve riders.",
+        content: translations.en.ar_meta_desc,
       },
-      { property: "og:title", content: "Rider approvals — የኔ Go" },
-      { property: "og:description", content: "Rider verification queue for የኔ Go admins." },
+      { property: "og:title", content: translations.en.ar_meta_title },
+      { property: "og:description", content: translations.en.ar_meta_og_desc },
     ],
   }),
   component: RiderApprovalQueue,
@@ -129,12 +129,7 @@ function RiderApprovalQueue() {
       toast.error(error.message);
       return;
     }
-    await notify(
-      r.id,
-      "Rider approved",
-      "You're verified! Go online to start receiving orders.",
-      "rider",
-    );
+    await notify(r.id, t("ar_notify_approved_title"), t("ar_notify_approved_body"), "rider");
     void qc.invalidateQueries({ queryKey: ["admin-riders-full"] });
     toast.success(t("ar_approved_toast"));
   };
@@ -163,9 +158,7 @@ function RiderApprovalQueue() {
         {t("ar_awaiting_review", { count: pendingCount })}
       </p>
       <div className="mt-4 space-y-3">
-        {riders.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t("ar_no_apps")}</p>
-        )}
+        {riders.length === 0 && <p className="text-sm text-muted-foreground">{t("ar_no_apps")}</p>}
         {riders.map((r) => {
           const badge =
             STATUS_BADGE[r.verification_status] ?? STATUS_BADGE["pending_verification"]!;
@@ -330,7 +323,12 @@ function DocLink({ path, label }: { path: string | null; label: string }) {
   const { t } = useLanguage();
   const url = useMediaUrl(path);
   if (!path) return <span className="text-muted-foreground">{label}: —</span>;
-  if (!url) return <span className="text-muted-foreground">{label}: {t("ar_loading")}</span>;
+  if (!url)
+    return (
+      <span className="text-muted-foreground">
+        {label}: {t("ar_loading")}
+      </span>
+    );
   return (
     <a
       href={url}
@@ -379,8 +377,8 @@ function RejectDialog({
     }
     await notify(
       rider.id,
-      "Rider application needs attention",
-      `Please review and resubmit: ${notes.trim()}`,
+      t("ar_notify_rejected_title"),
+      t("ar_notify_rejected_body", { notes: notes.trim() }),
       "rider",
     );
     toast.success(t("ar_feedback_sent"));
