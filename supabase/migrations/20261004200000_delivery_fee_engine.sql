@@ -41,7 +41,7 @@ ALTER TABLE public.delivery_fee_rules ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS delivery_fee_rules_public_read ON public.delivery_fee_rules;
 CREATE POLICY delivery_fee_rules_public_read ON public.delivery_fee_rules
-  FOR SELECT TO anon, authenticated USING (is_active OR public.is_admin());
+  FOR SELECT TO anon, authenticated USING (is_active);
 
 DROP POLICY IF EXISTS delivery_fee_rules_admin_write ON public.delivery_fee_rules;
 CREATE POLICY delivery_fee_rules_admin_write ON public.delivery_fee_rules
@@ -133,7 +133,7 @@ ALTER TABLE public.product_options ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS product_option_groups_read ON public.product_option_groups;
 CREATE POLICY product_option_groups_read ON public.product_option_groups
-  FOR SELECT TO anon, authenticated USING (is_active OR public.is_admin());
+  FOR SELECT TO anon, authenticated USING (is_active);
 
 DROP POLICY IF EXISTS product_option_groups_write ON public.product_option_groups;
 CREATE POLICY product_option_groups_write ON public.product_option_groups
@@ -149,7 +149,7 @@ CREATE POLICY product_option_groups_write ON public.product_option_groups
 
 DROP POLICY IF EXISTS product_options_read ON public.product_options;
 CREATE POLICY product_options_read ON public.product_options
-  FOR SELECT TO anon, authenticated USING (is_active OR public.is_admin());
+  FOR SELECT TO anon, authenticated USING (is_active);
 
 DROP POLICY IF EXISTS product_options_write ON public.product_options;
 CREATE POLICY product_options_write ON public.product_options
