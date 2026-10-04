@@ -3,18 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { searchQuery } from "@/lib/queries";
 import { ProductCard, ShopCard } from "@/components/ligo/Cards";
 import { ProductGridSkeleton, ShopGridSkeleton } from "@/components/ligo/Skeletons";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/i18n";
 
 export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>) => ({ q: typeof s["q"] === "string" ? s["q"] : "" }),
   head: () => ({
     meta: [
-      { title: "Search — የኔ Go · Bishoftu" },
+      { title: translations.en.meta_search_title },
       {
         name: "description",
-        content: "Search shops and products available for delivery in Bishoftu.",
+        content: translations.en.meta_search_desc,
       },
-      { property: "og:title", content: "Search — የኔ Go" },
-      { property: "og:description", content: "Find shops and products in Bishoftu." },
+      { property: "og:title", content: translations.en.meta_search_title },
+      { property: "og:description", content: translations.en.meta_search_og_desc },
     ],
   }),
   component: SearchPage,
@@ -23,12 +25,13 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q } = Route.useSearch();
   const { data, isLoading } = useQuery(searchQuery(q));
+  const { t } = useLanguage();
 
   return (
     <div className="container-ligo py-10">
-      <h1 className="font-display text-3xl font-extrabold">Search results</h1>
+      <h1 className="font-display text-3xl font-extrabold">{t("search_heading")}</h1>
       <p className="mt-2 text-muted-foreground">
-        {q ? `Showing matches for “${q}”` : "Type something in the search bar above."}
+        {q ? t("search_showing", { q }) : t("search_hint")}
       </p>
       {isLoading && q && (
         <div className="mt-8 space-y-10">
@@ -40,7 +43,7 @@ function SearchPage() {
         <>
           {data.shops.length > 0 && (
             <section className="mt-8">
-              <h2 className="font-display text-xl font-bold">Shops</h2>
+              <h2 className="font-display text-xl font-bold">{t("common_shops")}</h2>
               <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {data.shops.map((s) => (
                   <ShopCard key={s.id} shop={s} />
@@ -50,7 +53,7 @@ function SearchPage() {
           )}
           {data.products.length > 0 && (
             <section className="mt-8">
-              <h2 className="font-display text-xl font-bold">Products</h2>
+              <h2 className="font-display text-xl font-bold">{t("common_products")}</h2>
               <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {data.products.map((p) => (
                   <ProductCard key={p.id} product={p} />
@@ -59,7 +62,7 @@ function SearchPage() {
             </section>
           )}
           {q && data.shops.length === 0 && data.products.length === 0 && (
-            <p className="mt-8 text-sm text-muted-foreground">Nothing matched your search.</p>
+            <p className="mt-8 text-sm text-muted-foreground">{t("search_none")}</p>
           )}
         </>
       )}

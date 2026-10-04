@@ -5,18 +5,19 @@ import { offersQuery } from "@/lib/queries";
 import { ShopGridSkeleton } from "@/components/ligo/Skeletons";
 import { StorageImage } from "@/lib/media";
 import { formatDate } from "@/lib/format";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/i18n";
 
 export const Route = createFileRoute("/offers")({
   head: () => ({
     meta: [
-      { title: "Offers & discounts — የኔ Go · Bishoftu" },
+      { title: translations.en.meta_offers_title },
       {
         name: "description",
-        content:
-          "Live discounts and promotions from Bishoftu restaurants and shops on የኔ Go.",
+        content: translations.en.meta_offers_desc,
       },
-      { property: "og:title", content: "Offers & discounts — የኔ Go" },
-      { property: "og:description", content: "Live promotions from Bishoftu shops." },
+      { property: "og:title", content: translations.en.meta_offers_title },
+      { property: "og:description", content: translations.en.meta_offers_og_desc },
     ],
   }),
   component: OffersPage,
@@ -24,19 +25,18 @@ export const Route = createFileRoute("/offers")({
 
 function OffersPage() {
   const { data = [], isLoading } = useQuery(offersQuery);
+  const { t } = useLanguage();
   return (
     <div className="container-ligo py-10">
       <BannerSlot placement="offers" className="px-0 py-4" />
-      <h1 className="font-display text-3xl font-extrabold">Offers</h1>
-      <p className="mt-2 text-muted-foreground">Deals running right now in Bishoftu.</p>
+      <h1 className="font-display text-3xl font-extrabold">{t("offers_heading")}</h1>
+      <p className="mt-2 text-muted-foreground">{t("offers_subtitle")}</p>
       {isLoading ? (
         <div className="mt-8">
           <ShopGridSkeleton />
         </div>
       ) : data.length === 0 ? (
-        <p className="mt-8 text-sm text-muted-foreground">
-          No active offers right now — check back soon.
-        </p>
+        <p className="mt-8 text-sm text-muted-foreground">{t("offers_empty")}</p>
       ) : (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((o) => (
@@ -48,13 +48,15 @@ function OffersPage() {
               <div className="space-y-1 p-4">
                 <div className="inline-flex rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
                   {o.discount_type === "percent"
-                    ? `${o.discount_value}% off`
-                    : `${o.discount_value} ETB off`}
+                    ? t("offers_percent_off", { value: o.discount_value })
+                    : t("offers_etb_off", { value: o.discount_value })}
                 </div>
                 <h2 className="font-display text-lg font-bold">{o.title}</h2>
                 <p className="text-sm text-muted-foreground">{o.description}</p>
                 {o.ends_at && (
-                  <p className="text-xs text-muted-foreground">Ends {formatDate(o.ends_at)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("offers_ends", { date: formatDate(o.ends_at) })}
+                  </p>
                 )}
               </div>
             </article>

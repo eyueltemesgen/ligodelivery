@@ -4,18 +4,19 @@ import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery } from "@/lib/queries";
 import { CategoryCardSkeleton } from "@/components/ligo/Skeletons";
 import { StorageImage } from "@/lib/media";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/i18n";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "Browse categories — የኔ Go · Bishoftu" },
+      { title: translations.en.meta_categories_title },
       {
         name: "description",
-        content:
-          "Restaurants, groceries, pharmacy, bakery and more — browse every የኔ Go delivery category in Bishoftu.",
+        content: translations.en.meta_categories_desc,
       },
-      { property: "og:title", content: "Browse categories — የኔ Go" },
-      { property: "og:description", content: "Every የኔ Go delivery category in Bishoftu." },
+      { property: "og:title", content: translations.en.meta_categories_title },
+      { property: "og:description", content: translations.en.meta_categories_og_desc },
     ],
   }),
   component: CategoriesPage,
@@ -23,11 +24,12 @@ export const Route = createFileRoute("/categories")({
 
 function CategoriesPage() {
   const { data = [], isLoading } = useQuery(categoriesQuery);
+  const { t } = useLanguage();
   return (
     <div className="container-ligo py-10">
       <BannerSlot placement="categories" className="px-0 py-4" />
-      <h1 className="font-display text-3xl font-extrabold">Categories</h1>
-      <p className="mt-2 text-muted-foreground">Pick what you need delivered today.</p>
+      <h1 className="font-display text-3xl font-extrabold">{t("categories_heading")}</h1>
+      <p className="mt-2 text-muted-foreground">{t("categories_subtitle")}</p>
       {isLoading ? (
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }, (_, i) => (

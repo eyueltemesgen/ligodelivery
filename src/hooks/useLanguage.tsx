@@ -7,8 +7,8 @@ type LanguageValue = {
   language: Language;
   setLanguage: (language: Language) => void;
   toggleLanguage: () => void;
-  /** Translate a UI copy key for the active language. */
-  t: (key: TranslationKey) => string;
+  /** Translate a UI copy key, replacing `{name}` placeholders from `vars`. */
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
 };
 
 const LanguageContext = createContext<LanguageValue | null>(null);
@@ -37,7 +37,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguage,
     toggleLanguage: () =>
       setLanguage((l) => LANGUAGES[(LANGUAGES.indexOf(l) + 1) % LANGUAGES.length] ?? "en"),
-    t: (key) => translations[language][key],
+    t: (key, vars) => {
+      const text = translations[language][key];
+      if (!vars) return text;
+      return text.replace(/\{(\w+)\}/g, (match, name: string) =>
+        name in vars ? String(vars[name]) : match,
+      );
+    },
   };
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

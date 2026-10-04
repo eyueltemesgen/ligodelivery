@@ -6,17 +6,19 @@ import type { Product, Shop } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { useSaved } from "@/lib/saved";
+import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 
 /** Delivery window shown as a range, e.g. "15–25 min", with safe fallbacks. */
 const deliveryWindow = (mins: number | null | undefined) => {
   const base = Math.max(Number(mins) || 25, 5);
-  return `${base}–${base + 10} min`;
+  return `${base}–${base + 10}`;
 };
 
 export function ShopCard({ shop }: { shop: Shop }) {
   const open = shop.is_online !== false && isShopOpen(shop.opens_at, shop.closes_at);
   const { isFavoriteShop, toggleShop } = useSaved();
+  const { t } = useLanguage();
   const favorite = isFavoriteShop(shop.id);
   return (
     <Link
@@ -33,12 +35,14 @@ export function ShopCard({ shop }: { shop: Shop }) {
         <span
           className={`absolute left-3 top-3 rounded-full px-2 py-1 text-[11px] font-semibold ${open ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
         >
-          {open ? "Open now" : "Closed"}
+          {open ? t("common_open_now") : t("common_closed")}
         </span>
         <button
           type="button"
           aria-label={
-            favorite ? `Remove ${shop.name} from favorites` : `Save ${shop.name} to favorites`
+            favorite
+              ? t("cards_remove_shop", { name: shop.name })
+              : t("cards_save_shop", { name: shop.name })
           }
           aria-pressed={favorite}
           onClick={(e) => {
@@ -54,7 +58,7 @@ export function ShopCard({ shop }: { shop: Shop }) {
         </button>
         <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[11px] font-semibold text-foreground shadow-sm">
           <Clock className="h-3 w-3 text-primary" />
-          {deliveryWindow(shop.delivery_time_min)}
+          {deliveryWindow(shop.delivery_time_min)} {t("common_min")}
         </span>
       </div>
       <div className="space-y-2 p-4">
@@ -65,11 +69,13 @@ export function ShopCard({ shop }: { shop: Shop }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
             <Star className="h-3 w-3 fill-warning text-warning" />
-            {Number(shop.rating) > 0 ? Number(shop.rating).toFixed(1) : "New"}
+            {Number(shop.rating) > 0 ? Number(shop.rating).toFixed(1) : t("common_new")}
           </span>
           <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
             <Truck className="h-3 w-3" />
-            {Number(shop.delivery_fee) > 0 ? `${ETB(shop.delivery_fee)} fee` : "Free delivery"}
+            {Number(shop.delivery_fee) > 0
+              ? t("common_fee", { amount: ETB(shop.delivery_fee) })
+              : t("common_free_delivery")}
           </span>
         </div>
       </div>
@@ -90,6 +96,7 @@ export function ProductCard({
 }) {
   const { add } = useCart();
   const { isSavedProduct, toggleProduct } = useSaved();
+  const { t } = useLanguage();
   const saved = isSavedProduct(product.id);
   const price = discounted(Number(product.price), product.discount_percent);
   return (
@@ -108,7 +115,11 @@ export function ProductCard({
         />
         <button
           type="button"
-          aria-label={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
+          aria-label={
+            saved
+              ? t("cards_remove_product", { name: product.name })
+              : t("cards_save_product", { name: product.name })
+          }
           aria-pressed={saved}
           onClick={(e) => {
             e.stopPropagation();
@@ -145,22 +156,22 @@ export function ProductCard({
               add({
                 productId: product.id,
                 shopId: product.shop_id,
-                shopName: shopName ?? "Shop",
+                shopName: shopName ?? t("cards_shop_fallback"),
                 name: product.name,
                 imagePath: product.image_url,
                 unitPrice: price,
               });
-              toast.success(`${product.name} added to cart`);
+              toast.success(t("cards_added_to_cart", { name: product.name }));
             }}
           >
             {orderingDisabled ? (
-              "Closed"
+              t("common_closed")
             ) : product.in_stock ? (
               <>
-                <Plus className="h-4 w-4" /> Add
+                <Plus className="h-4 w-4" /> {t("common_add")}
               </>
             ) : (
-              "Out"
+              t("common_out")
             )}
           </Button>
         </div>

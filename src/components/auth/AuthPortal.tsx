@@ -8,62 +8,64 @@ import { portalPathFor } from "@/components/auth/guards";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 
 export type PortalKind = "customer" | "merchant" | "rider" | "admin";
 
-type PortalCopy = { title: string; subtitle: string; role: Role | null };
+type PortalCopy = { titleKey: TranslationKey; subtitleKey: TranslationKey; role: Role | null };
 
 const COPY: Record<PortalKind, PortalCopy> = {
   customer: {
-    title: "Welcome back",
-    subtitle: "Sign in to order food & groceries",
+    titleKey: "auth_welcome",
+    subtitleKey: "auth_customer_sub",
     role: "customer",
   },
   merchant: {
-    title: "Store Partner portal",
-    subtitle: "Sign in to manage your shop, orders and menu",
+    titleKey: "auth_merchant_title",
+    subtitleKey: "auth_merchant_sub",
     role: "merchant",
   },
   rider: {
-    title: "Driver portal",
-    subtitle: "Sign in to go online and deliver with የኔ Go",
+    titleKey: "auth_rider_title",
+    subtitleKey: "auth_rider_sub",
     role: "rider",
   },
   admin: {
-    title: "Administrative sign-in",
-    subtitle: "Restricted to የኔ Go operations staff",
+    titleKey: "auth_admin_title",
+    subtitleKey: "auth_admin_sub",
     role: "admin",
   },
 };
 
 function PortalShell({ kind, children }: { kind: PortalKind; children: ReactNode }) {
   const copy = COPY[kind];
+  const { t } = useLanguage();
   return (
     <div className="container-ligo flex justify-center py-12">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-pop">
-        <h1 className="font-display text-2xl font-extrabold">{copy.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</p>
+        <h1 className="font-display text-2xl font-extrabold">{t(copy.titleKey)}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t(copy.subtitleKey)}</p>
         {children}
       </div>
     </div>
   );
 }
 
-function friendlyError(err: unknown): string {
+function friendlyErrorKey(err: unknown): TranslationKey {
   const msg = err instanceof Error ? err.message : "";
   const lower = msg.toLowerCase();
   if (lower.includes("invalid login") || lower.includes("invalid credentials"))
-    return "Wrong email or password.";
-  if (lower.includes("rate limit") || lower.includes("too many requests"))
-    return "Too many attempts — please wait a minute and try again.";
-  if (lower.includes("email not confirmed"))
-    return "Please confirm your email first, then sign in.";
-  return msg || "Could not sign in";
+    return "auth_err_invalid";
+  if (lower.includes("rate limit") || lower.includes("too many requests")) return "auth_err_rate";
+  if (lower.includes("email not confirmed")) return "auth_err_unconfirmed";
+  return "auth_err_generic";
 }
 
 export function AuthPortal({ kind }: { kind: PortalKind }) {
   const navigate = useNavigate();
   const { user, roles, loading } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -79,7 +81,7 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) {
-      toast.error("Enter your email and password");
+      toast.error(t("auth_enter_creds"));
       return;
     }
     setBusy(true);
@@ -89,10 +91,10 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
         password,
       });
       if (error) throw error;
-      toast.success("Signed in");
+      toast.success(t("auth_signed_in"));
       // The useEffect above navigates to the correct portal once the session lands.
     } catch (err) {
-      toast.error(friendlyError(err));
+      toast.error(t(friendlyErrorKey(err)));
     } finally {
       setBusy(false);
     }
@@ -104,7 +106,7 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
     <PortalShell kind={kind}>
       <form onSubmit={signIn} className="mt-5 space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("auth_email")}</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -121,23 +123,23 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
         </div>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("auth_password")}</Label>
             <button
               type="button"
               onClick={async () => {
                 if (!trimmedEmail.includes("@")) {
-                  toast.error("Enter your email first, then tap forgot password");
+                  toast.error(t("auth_forgot_first"));
                   return;
                 }
                 const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
                   redirectTo: `${window.location.origin}/reset-password`,
                 });
-                if (error) toast.error(friendlyError(error));
-                else toast.success("Password reset link sent — check your email");
+                if (error) toast.error(t(friendlyErrorKey(error)));
+                else toast.success(t("auth_reset_sent"));
               }}
               className="text-xs font-semibold text-primary hover:underline"
             >
-              Forgot password?
+              {t("auth_forgot")}
             </button>
           </div>
           <div className="relative">
@@ -155,20 +157,24 @@ export function AuthPortal({ kind }: { kind: PortalKind }) {
           </div>
         </div>
         <Button type="submit" className="w-full" disabled={busy || !valid}>
-          {busy ? "Signing in…" : "Sign in"}
+          {busy ? t("auth_signing_in") : t("auth_sign_in")}
         </Button>
       </form>
 
       {showRegister && (
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          {kind === "customer" ? "New to የኔ Go? " : kind === "merchant" ? "New store? " : "New driver? "}
+          {kind === "customer"
+            ? t("auth_new_customer")
+            : kind === "merchant"
+              ? t("auth_new_store")
+              : t("auth_new_driver")}{" "}
           {kind === "rider" ? (
             <Link to="/rider/join" className="font-semibold text-primary">
-              Apply to become a rider
+              {t("auth_apply_rider")}
             </Link>
           ) : (
             <Link to="/register" className="font-semibold text-primary">
-              Create an account
+              {t("auth_create_account")}
             </Link>
           )}
         </p>
