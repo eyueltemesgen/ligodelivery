@@ -3,6 +3,8 @@ import { CalendarDays, MapPin, Star, Wallet } from "lucide-react";
 import type { Service, ServiceCategory } from "@/lib/special-moments";
 import { categoryMeta, pricingLabel } from "@/lib/service-catalog";
 import { StorageImage } from "@/lib/media";
+import { useLanguage } from "@/hooks/useLanguage";
+import { OPTION_LABEL_KEY } from "@/lib/special-moments";
 import { cn } from "@/lib/utils";
 
 /** Category tile used on the Special Moments hub and the homepage strip. */
@@ -15,6 +17,7 @@ export function ServiceCategoryCard({
   count?: number;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const meta = categoryMeta(category.slug);
   const Icon = meta.icon;
   return (
@@ -44,7 +47,7 @@ export function ServiceCategoryCard({
         </p>
         {count != null && (
           <p className="mt-3 text-xs font-semibold text-primary">
-            {count > 0 ? `${count} available` : "Coming soon"}
+            {count > 0 ? t("sc_available", { count }) : t("sc_coming_soon")}
           </p>
         )}
       </div>
@@ -68,6 +71,7 @@ export function ServiceCategoryPill({ category }: { category: ServiceCategory })
 }
 
 export function ServiceCard({ service }: { service: Service }) {
+  const { t } = useLanguage();
   return (
     <Link
       to="/special-moments/service/$serviceId"
@@ -91,11 +95,11 @@ export function ServiceCard({ service }: { service: Service }) {
         </div>
         {service.occasion && (
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {service.occasion}
+            {t(OPTION_LABEL_KEY[service.occasion] ?? "sms_any_occasion")}
           </p>
         )}
         <p className="mt-2 line-clamp-2 flex-1 text-sm text-muted-foreground">
-          {service.description || "Details available on the service page."}
+          {service.description || t("sc_details_default")}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {service.service_area && (
@@ -107,7 +111,7 @@ export function ServiceCard({ service }: { service: Service }) {
           {service.lead_time_hours > 0 && (
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3.5 w-3.5" />
-              {service.lead_time_hours}h notice
+              {t("sc_notice", { hours: service.lead_time_hours })}
             </span>
           )}
         </div>

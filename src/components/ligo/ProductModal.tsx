@@ -5,6 +5,8 @@ import type { Product } from "@/lib/queries";
 import { ETB, discounted } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
 import { useCart } from "@/lib/cart";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,31 +17,31 @@ import { Textarea } from "@/components/ui/textarea";
  */
 export type OptionGroup = {
   key: string;
-  label: string;
-  choices: { name: string; priceDelta: number }[];
+  labelKey: TranslationKey;
+  choices: { nameKey: TranslationKey; priceDelta: number }[];
   multi: boolean;
 };
 
 export const DEFAULT_OPTION_GROUPS: OptionGroup[] = [
   {
     key: "size",
-    label: "Size",
+    labelKey: "pm_size",
     multi: false,
     choices: [
-      { name: "Regular", priceDelta: 0 },
-      { name: "Large", priceDelta: 40 },
-      { name: "Family", priceDelta: 90 },
+      { nameKey: "pm_size_regular", priceDelta: 0 },
+      { nameKey: "pm_size_large", priceDelta: 40 },
+      { nameKey: "pm_size_family", priceDelta: 90 },
     ],
   },
   {
     key: "extras",
-    label: "Extras",
+    labelKey: "pm_extras",
     multi: true,
     choices: [
-      { name: "Extra cheese", priceDelta: 25 },
-      { name: "Extra sauce", priceDelta: 10 },
-      { name: "Spicy", priceDelta: 0 },
-      { name: "Extra portion", priceDelta: 45 },
+      { nameKey: "pm_extra_cheese", priceDelta: 25 },
+      { nameKey: "pm_extra_sauce", priceDelta: 10 },
+      { nameKey: "pm_spicy", priceDelta: 0 },
+      { nameKey: "pm_extra_portion", priceDelta: 45 },
     ],
   },
 ];
@@ -56,6 +58,7 @@ export function ProductModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const { add } = useCart();
+  const { t } = useLanguage();
   const [qty, setQty] = useState(1);
   const [notes, setNotes] = useState("");
   const [picked, setPicked] = useState<Record<string, string[]>>({});
@@ -68,7 +71,7 @@ export function ProductModal({
   const addonsTotal = useMemo(() => {
     let sum = 0;
     for (const g of DEFAULT_OPTION_GROUPS) {
-      for (const c of g.choices) if (picked[g.key]?.includes(c.name)) sum += c.priceDelta;
+      for (const c of g.choices) if (picked[g.key]?.includes(c.nameKey)) sum += c.priceDelta;
     }
     return sum;
   }, [picked]);
@@ -99,7 +102,7 @@ export function ProductModal({
   const addToCart = () => {
     if (!product) return;
     const selections = DEFAULT_OPTION_GROUPS.flatMap((g) =>
-      (picked[g.key] ?? []).map((c) => `${g.label}: ${c}`),
+      (picked[g.key] ?? []).map((c) => `${t(g.labelKey)}: ${t(c as TranslationKey)}`),
     );
     const noteText = [selections.join(" · "), notes.trim()].filter(Boolean).join(" — ");
     add(
@@ -113,7 +116,7 @@ export function ProductModal({
       },
       qty,
     );
-    toast.success(`${product.name} added to cart`);
+    toast.success(t("pm_added", { name: product.name }));
     onOpenChange(false);
     reset();
   };
@@ -151,26 +154,28 @@ export function ProductModal({
           {DEFAULT_OPTION_GROUPS.map((g) => (
             <div key={g.key}>
               <p className="text-sm font-bold">
-                {g.label}
+                {t(g.labelKey)}
                 {g.multi && (
-                  <span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span>
+                  <span className="ml-1 text-xs font-normal text-muted-foreground">
+                    {t("pm_optional")}
+                  </span>
                 )}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {g.choices.map((c) => {
-                  const active = picked[g.key]?.includes(c.name);
+                  const active = picked[g.key]?.includes(c.nameKey);
                   return (
                     <button
-                      key={c.name}
+                      key={c.nameKey}
                       type="button"
-                      onClick={() => toggle(g, c.name)}
+                      onClick={() => toggle(g, c.nameKey)}
                       className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                         active
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-background hover:bg-secondary"
                       }`}
                     >
-                      {c.name}
+                      {t(c.nameKey)}
                       {c.priceDelta > 0 && <span className="ml-1">+{ETB(c.priceDelta)}</span>}
                     </button>
                   );
@@ -180,11 +185,11 @@ export function ProductModal({
           ))}
 
           <div>
-            <p className="text-sm font-bold">Special instructions</p>
+            <p className="text-sm font-bold">{t("pm_instructions")}</p>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. no onions, extra hot…"
+              placeholder={t("pm_instructions_placeholder")}
               className="mt-2"
               rows={2}
             />
@@ -195,7 +200,7 @@ export function ProductModal({
           <div className="flex items-center gap-3 rounded-full border border-border px-2 py-1.5">
             <button
               onClick={() => setQty((q) => Math.max(1, q - 1))}
-              aria-label="Decrease quantity"
+              aria-label={t("cart_decrease")}
               className="rounded-full p-1 hover:bg-secondary"
             >
               <Minus className="h-4 w-4" />
@@ -203,14 +208,16 @@ export function ProductModal({
             <span className="min-w-5 text-center font-bold">{qty}</span>
             <button
               onClick={() => setQty((q) => q + 1)}
-              aria-label="Increase quantity"
+              aria-label={t("cart_increase")}
               className="rounded-full p-1 hover:bg-secondary"
             >
               <Plus className="h-4 w-4" />
             </button>
           </div>
           <Button className="flex-1" onClick={addToCart} disabled={!product.in_stock}>
-            {product.in_stock ? `Add to order · ${ETB(unitPrice * qty)}` : "Out of stock"}
+            {product.in_stock
+              ? t("pm_add_to_order", { total: ETB(unitPrice * qty) })
+              : t("pm_out_of_stock")}
           </Button>
         </div>
       </DialogContent>

@@ -10,6 +10,7 @@ import {
   GIFT_TYPES,
   HOLIDAY_OCCASIONS,
   OCCASIONS,
+  OPTION_LABEL_KEY,
   SURPRISE_TYPES,
   createServiceRequest,
   placeServiceOrder,
@@ -17,6 +18,8 @@ import {
 } from "@/lib/special-moments";
 import { ETB } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 import { supabaseErrorMessage } from "@/lib/supa-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,13 +42,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-const PAYMENT_METHODS = [
-  { id: "cash", label: "Cash on delivery" },
-  { id: "mobile_money", label: "Mobile Money" },
-  { id: "telebirr", label: "Telebirr" },
-  { id: "cbe", label: "CBE Birr" },
-  { id: "chapa", label: "Chapa" },
-  { id: "boa", label: "Bank of Abyssinia" },
+const PAYMENT_METHODS: { id: string; labelKey: TranslationKey }[] = [
+  { id: "cash", labelKey: "pay_cash" },
+  { id: "mobile_money", labelKey: "pay_mobile_money" },
+  { id: "telebirr", labelKey: "pay_telebirr" },
+  { id: "cbe", labelKey: "pay_cbe" },
+  { id: "chapa", labelKey: "pay_chapa" },
+  { id: "boa", labelKey: "pay_boa" },
 ];
 
 const occasionOptionsFor = (slug: string) =>
@@ -59,12 +62,12 @@ const typeOptionsFor = (slug: string) => {
   return null;
 };
 
-const typeFieldLabel = (slug: string, isQuote: boolean) => {
-  if (slug === "surprises") return "Surprise type";
-  if (slug === "catering") return "Catering type";
-  if (slug === "decoration") return "Decoration type";
-  if (slug === "gifts" || slug === "holiday-gifts") return "Gift type";
-  return isQuote ? "Service type" : "Type";
+const typeFieldLabelKey = (slug: string, isQuote: boolean): TranslationKey => {
+  if (slug === "surprises") return "srd_type_surprise";
+  if (slug === "catering") return "srd_type_catering";
+  if (slug === "decoration") return "srd_type_decoration";
+  if (slug === "gifts" || slug === "holiday-gifts") return "srd_type_gift";
+  return isQuote ? "srd_type_service" : "srd_type";
 };
 
 export function ServiceRequestDialog({
@@ -79,6 +82,7 @@ export function ServiceRequestDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { user, profile } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const isQuote = service.pricing_type === "quote";
   const { data: addons = [] } = useQuery(serviceAddonsQuery(service.id));
@@ -133,11 +137,11 @@ export function ServiceRequestDialog({
       return;
     }
     if (!customerName.trim() || !customerPhone.trim()) {
-      toast.error("Add your name and phone number so we can reach you.");
+      toast.error(t("srd_err_contact"));
       return;
     }
     if (isEvent && !eventDate) {
-      toast.error("Choose the event date.");
+      toast.error(t("srd_err_date"));
       return;
     }
     setBusy(true);
@@ -166,7 +170,7 @@ export function ServiceRequestDialog({
       });
 
       if (isQuote) {
-        toast.success("Quote request sent. Our team will confirm pricing shortly.");
+        toast.success(t("srd_sent"));
         onOpenChange(false);
         await navigate({
           to: "/account/service-requests/$requestId",
@@ -181,7 +185,7 @@ export function ServiceRequestDialog({
         address: location || undefined,
         instructions,
       });
-      toast.success("Booking placed — awaiting payment verification");
+      toast.success(t("srd_booked"));
       onOpenChange(false);
       await navigate({ to: "/orders/$orderId", params: { orderId } });
     } catch (err) {
@@ -196,30 +200,25 @@ export function ServiceRequestDialog({
       <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-xl overflow-y-auto p-5 sm:w-full">
         <DialogHeader>
           <DialogTitle className="font-display text-xl font-extrabold">
-            {isQuote ? "Request a quote" : "Book this service"}
+            {isQuote ? t("srd_title_quote") : t("srd_title_book")}
           </DialogTitle>
           <DialogDescription>
-            {service.name} ·{" "}
-            {isQuote
-              ? "Tell us what you need and we will send a tailored quote."
-              : "Share the occasion details and confirm to continue to payment."}
+            {service.name} · {isQuote ? t("srd_desc_quote") : t("srd_desc_book")}
           </DialogDescription>
         </DialogHeader>
 
         {!user ? (
           <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              Sign in to your የኔ Go account to continue.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("srd_signin_note")}</p>
             <Button asChild className="w-full">
-              <Link to="/login">Sign in</Link>
+              <Link to="/login">{t("srd_signin")}</Link>
             </Button>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="sm-name">Your name</Label>
+                <Label htmlFor="sm-name">{t("srd_your_name")}</Label>
                 <Input
                   id="sm-name"
                   value={customerName}
@@ -228,7 +227,7 @@ export function ServiceRequestDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sm-phone">Your phone</Label>
+                <Label htmlFor="sm-phone">{t("srd_your_phone")}</Label>
                 <Input
                   id="sm-phone"
                   value={customerPhone}
@@ -241,25 +240,25 @@ export function ServiceRequestDialog({
             {(isSurprise || categorySlug === "gifts") && (
               <fieldset className="space-y-4 rounded-lg border border-border p-4">
                 <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {isSurprise ? "Recipient & reveal" : "Recipient"}
+                  {isSurprise ? t("srd_recipient_reveal") : t("srd_recipient")}
                 </legend>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="sm-recipient">Recipient name</Label>
+                    <Label htmlFor="sm-recipient">{t("srd_recipient_name")}</Label>
                     <Input
                       id="sm-recipient"
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
-                      placeholder="Who is this for?"
+                      placeholder={t("srd_recipient_name_ph")}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="sm-recipient-phone">Recipient contact / location</Label>
+                    <Label htmlFor="sm-recipient-phone">{t("srd_recipient_contact")}</Label>
                     <Input
                       id="sm-recipient-phone"
                       value={recipientPhone}
                       onChange={(e) => setRecipientPhone(e.target.value)}
-                      placeholder="Phone or delivery location for the recipient"
+                      placeholder={t("srd_recipient_contact_ph")}
                     />
                   </div>
                 </div>
@@ -271,9 +270,9 @@ export function ServiceRequestDialog({
                       className="mt-0.5"
                     />
                     <span>
-                      Send anonymously
+                      {t("srd_anon")}
                       <span className="mt-0.5 block text-xs text-muted-foreground">
-                        We will not reveal your name to the recipient unless you choose to.
+                        {t("srd_anon_note")}
                       </span>
                     </span>
                   </label>
@@ -283,13 +282,13 @@ export function ServiceRequestDialog({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="sm-occasion">Occasion</Label>
+                <Label htmlFor="sm-occasion">{t("srd_occasion")}</Label>
                 <Input
                   id="sm-occasion"
                   list="sm-occasions"
                   value={occasion}
                   onChange={(e) => setOccasion(e.target.value)}
-                  placeholder="Select or type an occasion"
+                  placeholder={t("srd_occasion_ph")}
                 />
                 <datalist id="sm-occasions">
                   {occasionOptionsFor(categorySlug).map((o) => (
@@ -298,16 +297,16 @@ export function ServiceRequestDialog({
                 </datalist>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sm-type">{typeFieldLabel(categorySlug, isQuote)}</Label>
+                <Label htmlFor="sm-type">{t(typeFieldLabelKey(categorySlug, isQuote))}</Label>
                 {typeOptions ? (
                   <Select value={typeValue} onValueChange={setTypeValue}>
                     <SelectTrigger id="sm-type">
-                      <SelectValue placeholder="Choose one" />
+                      <SelectValue placeholder={t("srd_choose_one")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {typeOptions.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {typeOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {t(OPTION_LABEL_KEY[opt] ?? "srd_type")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -317,7 +316,7 @@ export function ServiceRequestDialog({
                     id="sm-type"
                     value={typeValue}
                     onChange={(e) => setTypeValue(e.target.value)}
-                    placeholder="e.g. Gift bundle"
+                    placeholder={t("srd_type_ph")}
                   />
                 )}
               </div>
@@ -326,7 +325,7 @@ export function ServiceRequestDialog({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="sm-date">
-                  {isEvent ? "Event date" : "Preferred date"}
+                  {isEvent ? t("srd_event_date") : t("srd_preferred_date")}
                   {isEvent && <span className="text-destructive"> *</span>}
                 </Label>
                 <Input
@@ -338,7 +337,7 @@ export function ServiceRequestDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sm-time">Preferred time</Label>
+                <Label htmlFor="sm-time">{t("srd_preferred_time")}</Label>
                 <Input
                   id="sm-time"
                   type="time"
@@ -349,18 +348,18 @@ export function ServiceRequestDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="sm-location">Location / delivery address</Label>
+              <Label htmlFor="sm-location">{t("srd_location")}</Label>
               <Input
                 id="sm-location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Kebele, landmark, venue or house number"
+                placeholder={t("srd_location_ph")}
               />
             </div>
 
             {isEvent && (
               <div className="space-y-1.5">
-                <Label htmlFor="sm-guests">Number of guests</Label>
+                <Label htmlFor="sm-guests">{t("srd_guests")}</Label>
                 <Input
                   id="sm-guests"
                   type="number"
@@ -373,67 +372,67 @@ export function ServiceRequestDialog({
 
             {categorySlug === "catering" && (
               <div className="space-y-1.5">
-                <Label htmlFor="sm-food">Food preferences</Label>
+                <Label htmlFor="sm-food">{t("srd_food")}</Label>
                 <Textarea
                   id="sm-food"
                   value={foodPreferences}
                   onChange={(e) => setFoodPreferences(e.target.value)}
-                  placeholder="Vegetarian, fasting, allergies, cuisine preferences…"
+                  placeholder={t("srd_food_ph")}
                 />
               </div>
             )}
 
             {categorySlug === "decoration" && (
               <div className="space-y-1.5">
-                <Label htmlFor="sm-theme">Theme / colours</Label>
+                <Label htmlFor="sm-theme">{t("srd_theme")}</Label>
                 <Input
                   id="sm-theme"
                   value={theme}
                   onChange={(e) => setTheme(e.target.value)}
-                  placeholder="e.g. white and gold, balloons and flowers"
+                  placeholder={t("srd_theme_ph")}
                 />
               </div>
             )}
 
             <div className="space-y-1.5">
               <Label htmlFor="sm-message">
-                {isSurprise ? "Message for the recipient" : "Personal message"}
+                {isSurprise ? t("srd_message_recipient") : t("srd_message")}
               </Label>
               <Textarea
                 id="sm-message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Add a message to include with this order (optional)"
+                placeholder={t("srd_message_ph")}
               />
             </div>
 
             {isQuote && (
               <div className="space-y-1.5">
-                <Label htmlFor="sm-budget">Budget (optional)</Label>
+                <Label htmlFor="sm-budget">{t("srd_budget")}</Label>
                 <Input
                   id="sm-budget"
                   type="number"
                   min={0}
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  placeholder="Approx. budget in ETB"
+                  placeholder={t("srd_budget_ph")}
                 />
               </div>
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="sm-instructions">Special instructions</Label>
+              <Label htmlFor="sm-instructions">{t("srd_instructions")}</Label>
               <Textarea
                 id="sm-instructions"
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
-                placeholder="Anything the team should know"
+                placeholder={t("srd_instructions_ph")}
               />
             </div>
 
             {addons.length > 0 && (
               <div className="space-y-2">
-                <Label>Optional add-ons</Label>
+                <Label>{t("srd_addons")}</Label>
                 <ul className="space-y-2">
                   {addons.map((a) => {
                     const active = selectedAddons.some((x) => x.name === a.name);
@@ -478,7 +477,7 @@ export function ServiceRequestDialog({
 
             {!isQuote && (
               <div className="space-y-2">
-                <Label>Payment method</Label>
+                <Label>{t("srd_payment")}</Label>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {PAYMENT_METHODS.map((m) => (
                     <button
@@ -490,7 +489,7 @@ export function ServiceRequestDialog({
                         method === m.id ? "border-primary bg-primary-soft" : "border-border",
                       )}
                     >
-                      {m.label}
+                      {t(m.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -499,36 +498,35 @@ export function ServiceRequestDialog({
 
             <div className="rounded-lg border border-border bg-surface p-3 text-sm">
               {isQuote ? (
-                <p className="text-muted-foreground">
-                  Quote requests are free. You will only pay after our team confirms the price and
-                  you accept the quote.
-                </p>
+                <p className="text-muted-foreground">{t("srd_quote_note")}</p>
               ) : (
                 <div className="space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Service</span>
+                    <span className="text-muted-foreground">{t("srd_service")}</span>
                     <span>{ETB(basePrice)}</span>
                   </div>
                   {addonsTotal > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Add-ons</span>
+                      <span className="text-muted-foreground">{t("srd_addons_total")}</span>
                       <span>{ETB(addonsTotal)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-display font-bold">
-                    <span>Subtotal</span>
+                    <span>{t("srd_subtotal")}</span>
                     <span>{ETB(bookingTotal ?? 0)}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Delivery and any final adjustments are confirmed in the order summary.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("srd_delivery_note")}</p>
                 </div>
               )}
             </div>
 
             <Button type="submit" className="w-full" disabled={busy}>
               <CalendarClock className="mr-2 h-4 w-4" />
-              {busy ? "Submitting…" : isQuote ? "Request quote" : "Continue to payment"}
+              {busy
+                ? t("srd_submitting")
+                : isQuote
+                  ? t("srd_request_quote")
+                  : t("srd_continue_payment")}
             </Button>
           </form>
         )}
