@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { HTML_LANG, LANGUAGES, translations, type Language, type TranslationKey } from "@/lib/i18n";
 
 const STORAGE_KEY = "ligo-lang";
@@ -43,19 +51,26 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = HTML_LANG[language];
   }, [language, ready]);
 
-  const value: LanguageValue = {
-    language,
-    setLanguage,
-    toggleLanguage: () =>
-      setLanguage((l) => LANGUAGES[(LANGUAGES.indexOf(l) + 1) % LANGUAGES.length] ?? "en"),
-    t: (key, vars) => {
+  const t = useCallback(
+    (key: TranslationKey, vars?: Record<string, string | number>) => {
       const text = translations[language][key];
       if (!vars) return text;
       return text.replace(/\{(\w+)\}/g, (match, name: string) =>
         name in vars ? String(vars[name]) : match,
       );
     },
-  };
+    [language],
+  );
+
+  const toggleLanguage = useCallback(
+    () => setLanguage((l) => LANGUAGES[(LANGUAGES.indexOf(l) + 1) % LANGUAGES.length] ?? "en"),
+    [],
+  );
+
+  const value: LanguageValue = useMemo(
+    () => ({ language, setLanguage, toggleLanguage, t }),
+    [language, toggleLanguage, t],
+  );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
