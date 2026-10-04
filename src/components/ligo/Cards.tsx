@@ -164,6 +164,7 @@ export function ProductCard({
                 name: product.name,
                 imagePath: product.image_url,
                 unitPrice: price,
+                options: [],
               });
               toast.success(t("cards_added_to_cart", { name: product.name }));
             }}

@@ -181,6 +181,11 @@ export function OrderCard({ order }: { order: OrderRow }) {
           <div>
             <dt className="text-muted-foreground">{t("checkout_delivery")}</dt>
             <dd className="font-medium">{ETB(order.delivery_fee)}</dd>
+            {order.delivery_distance != null && Number(order.delivery_distance) > 0 && (
+              <dd className="text-[11px] text-muted-foreground">
+                {Number(order.delivery_distance).toFixed(1)} km
+              </dd>
+            )}
           </div>
           <div>
             <dt className="text-muted-foreground">{t("checkout_total")}</dt>
@@ -270,6 +275,7 @@ function ReorderButton({ items, shop }: { items: OrderItemRow[]; shop?: ShopLite
             name: it.product_name,
             imagePath: it.image_url,
             unitPrice: Number(it.unit_price),
+            options: [],
           });
         }
         toast.success(

@@ -172,6 +172,7 @@ function OrderDetails() {
         name: it.product_name,
         imagePath: it.image_url,
         unitPrice: Number(it.unit_price),
+        options: [],
       });
     }
     toast.success(t("od_items_added"));
@@ -451,6 +452,12 @@ function OrderDetails() {
                 <dt className="text-muted-foreground">{t("od_delivery_fee")}</dt>
                 <dd>{ETB(order.delivery_fee)}</dd>
               </div>
+              {order.delivery_distance != null && Number(order.delivery_distance) > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <dt>{t("od_distance")}</dt>
+                  <dd>{Number(order.delivery_distance).toFixed(1)} km</dd>
+                </div>
+              )}
               {Number(order.tip) > 0 && (
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">{t("od_rider_tip")}</dt>

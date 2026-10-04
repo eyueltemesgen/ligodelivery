@@ -210,6 +210,85 @@ export const searchQuery = (term: string) => ({
   },
 });
 
+export type DeliveryFeeRule = {
+  id: string;
+  min_distance: number;
+  max_distance: number | null;
+  fee: number;
+  label: string | null;
+  is_active: boolean;
+  priority: number;
+};
+
+/** Active distance brackets. Public so the checkout can show how a fee is built. */
+export const deliveryFeeRulesQuery = {
+  queryKey: ["delivery-fee-rules"],
+  staleTime: 5 * 60_000,
+  queryFn: async () =>
+    unwrap<DeliveryFeeRule[]>(
+      await supabase
+        .from("delivery_fee_rules")
+        .select("id,min_distance,max_distance,fee,label,is_active,priority")
+        .eq("is_active", true)
+        .order("priority")
+        .order("min_distance"),
+    ),
+};
+
+export type ProductOption = {
+  id: string;
+  group_id: string;
+  name: string;
+  price_delta: number;
+  sort_order: number;
+  is_active?: boolean | undefined;
+};
+export type ProductOptionGroup = {
+  id: string;
+  product_id: string;
+  name: string;
+  is_required: boolean;
+  is_multi: boolean;
+  sort_order: number;
+  product_options: ProductOption[];
+};
+
+/**
+ * Real, per-product option groups. A missing table (migration not yet applied)
+ * degrades to an empty list so products without options keep working.
+ */
+export const productOptionsQuery = (productId: string) => ({
+  queryKey: ["product-options", productId],
+  staleTime: 5 * 60_000,
+  enabled: !!productId,
+  queryFn: async (): Promise<ProductOptionGroup[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("product_option_groups")
+        .select(
+          "id,product_id,name,is_required,is_multi,sort_order,product_options(id,group_id,name,price_delta,sort_order,is_active)",
+        )
+        .eq("product_id", productId)
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return (
+        (data ?? []) as unknown as (ProductOptionGroup & {
+          product_options: (ProductOption & { is_active: boolean })[];
+        })[]
+      ).map((g) => ({
+        ...g,
+        product_options: (g.product_options ?? [])
+          .filter((o) => o.is_active !== false)
+          .sort((a, b) => a.sort_order - b.sort_order),
+      }));
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn("product options unavailable", err);
+      return [];
+    }
+  },
+});
+
 export const publicSettingsQuery = {
   queryKey: ["settings", "public"],
   staleTime: 5 * 60_000,

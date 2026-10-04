@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
-import { Lock } from "lucide-react";
+import { AlertTriangle, Lock, MapPin } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,12 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { ETB } from "@/lib/format";
 import { supabaseErrorText } from "@/lib/supa-error";
 import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
-import { addressesQuery } from "@/lib/account";
+import { addressesQuery, type AddressRow } from "@/lib/account";
+import { quoteDeliveryFee, DELIVERY_FAILURE_KEY, formatDistance } from "@/lib/delivery";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery } from "@tanstack/react-query";
 import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
@@ -45,6 +46,11 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
+type FeeState =
+  | { status: "loading" }
+  | { status: "ready"; distance: number; fee: number; rule: string }
+  | { status: "error"; reason: TranslationKey };
+
 function CheckoutPage() {
   const { items, subtotal, shopId, shopName, clear } = useCart();
   const { t } = useLanguage();
@@ -60,9 +66,12 @@ function CheckoutPage() {
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [address, setAddress] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [method, setMethod] = useState("cash");
   const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [fee, setFee] = useState<FeeState>({ status: "loading" });
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
@@ -72,29 +81,58 @@ function CheckoutPage() {
     if (selectedAddressId || savedAddresses.length === 0) return;
     const def = savedAddresses.find((a) => a.is_default) ?? savedAddresses[0];
     if (!def) return;
-    setSelectedAddressId(def.id);
-    setAddress([def.address, def.area, def.city].filter(Boolean).join(", "));
-    setInstructions(def.instructions ?? "");
-    if (def.full_name) setName(def.full_name);
-    if (def.phone) setPhone(def.phone);
+    applyAddress(def);
   }, [savedAddresses, selectedAddressId]);
 
-  const chooseAddress = (a: (typeof savedAddresses)[number]) => {
+  const applyAddress = (a: AddressRow) => {
     setSelectedAddressId(a.id);
     setAddress([a.address, a.area, a.city].filter(Boolean).join(", "));
     setInstructions(a.instructions ?? "");
+    setLat(a.lat);
+    setLng(a.lng);
     if (a.full_name) setName(a.full_name);
     if (a.phone) setPhone(a.phone);
   };
+
+  const chooseAddress = (a: AddressRow) => applyAddress(a);
 
   const platform = (publicSettings?.["platform"] ?? {}) as {
     base_delivery_fee?: number;
     surge_multiplier?: number;
   };
   const surge = Math.max(Number(platform.surge_multiplier ?? 1), 1);
-  const deliveryFee = Math.round(
+  const flatFallback = Math.round(
     Number(shop?.delivery_fee ?? platform.base_delivery_fee ?? 50) * surge,
   );
+
+  // Recalculate the delivery fee whenever the destination changes. The number
+  // always comes from the server; the client never invents a fee.
+  useEffect(() => {
+    let cancelled = false;
+    if (!shopId) return;
+    setFee({ status: "loading" });
+    void quoteDeliveryFee(shopId, lat, lng).then((q) => {
+      if (cancelled) return;
+      if (q.ok) {
+        setFee({ status: "ready", distance: q.distance, fee: q.deliveryFee, rule: q.pricingRule });
+      } else if (q.flatFee != null && q.reason !== "outside_service_area") {
+        // Shop not geolocated yet → keep the legacy flat fee, but never for an
+        // explicitly out-of-area location.
+        setFee({ status: "ready", distance: 0, fee: q.flatFee, rule: "flat" });
+      } else if (q.reason === "error") {
+        // Engine/RPC not deployed yet: preserve the previous flat-fee checkout.
+        setFee({ status: "ready", distance: 0, fee: flatFallback, rule: "flat" });
+      } else {
+        setFee({ status: "error", reason: DELIVERY_FAILURE_KEY[q.reason] });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [shopId, lat, lng, flatFallback]);
+
+  const deliveryFee = fee.status === "ready" ? fee.fee : 0;
+  const feeUnavailable = fee.status === "error";
   const promoDiscount = promo?.discount ?? 0;
   const total = Math.max(subtotal + deliveryFee + tip - promoDiscount, 0);
 
@@ -119,7 +157,7 @@ function CheckoutPage() {
       return;
     }
     setPromo({ code: r.code ?? code, discount: Number(r.discount ?? 0) });
-    toast.success(`Promo applied — you save ${ETB(Number(r.discount ?? 0))}`);
+    toast.success(t("checkout_promo_applied_toast", { amount: ETB(Number(r.discount ?? 0)) }));
   };
   const shopLoaded = !shopId || !!shop;
   const shopOpen = shopLoaded ? isShopOpenNow(shop ?? {}, hours) : false;
@@ -168,18 +206,29 @@ function CheckoutPage() {
       toast.error(t("checkout_closed_toast"));
       return;
     }
+    if (feeUnavailable) {
+      toast.error(t(fee.status === "error" ? fee.reason : "delivery_err_generic"));
+      return;
+    }
     setBusy(true);
     try {
-      // Server-side placement: prices, fees and totals are recomputed in the database.
+      // Server-side placement: prices, options, distance, fee and totals are
+      // recomputed in the database. Coordinates are only a hint, not a fee.
       const { data: orderId, error } = await supabase.rpc("place_order", {
         p_shop_id: shopId!,
-        p_items: items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
+        p_items: items.map((i) => ({
+          product_id: i.productId,
+          quantity: i.quantity,
+          option_ids: i.options.map((o) => o.id),
+        })),
         p_payment_method: method,
         p_customer_name: name.trim(),
         p_customer_phone: phone.trim(),
         p_delivery_address: address.trim(),
         p_delivery_instructions: instructions.trim(),
         p_tip: tip,
+        p_lat: lat as number,
+        p_lng: lng as number,
         ...(promo ? { p_coupon_code: promo.code } : {}),
       });
       if (error) throw error;
@@ -194,7 +243,7 @@ function CheckoutPage() {
     }
   };
 
-  const canProceed = name.trim() && phone.trim() && address.trim();
+  const canProceed = name.trim() && phone.trim() && address.trim() && !feeUnavailable;
 
   return (
     <form
@@ -298,6 +347,16 @@ function CheckoutPage() {
                 placeholder={t("checkout_notes_placeholder")}
               />
             </div>
+
+            <DeliveryStatus fee={fee} flatFallback={flatFallback} />
+
+            {lat == null || lng == null ? (
+              <p className="flex items-start gap-2 rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                {t("checkout_pin_hint")}
+              </p>
+            ) : null}
+
             <Button
               type="button"
               className="w-full"
@@ -362,9 +421,12 @@ function CheckoutPage() {
         <p className="text-xs text-muted-foreground">{shopName}</p>
         <ul className="space-y-1 text-sm">
           {items.map((i) => (
-            <li key={i.productId} className="flex justify-between gap-3">
+            <li key={i.lineId} className="flex justify-between gap-3">
               <span className="text-muted-foreground">
                 {i.quantity} × {i.name}
+                {i.options.length > 0 && (
+                  <span className="block text-xs">{i.options.map((o) => o.name).join(" · ")}</span>
+                )}
               </span>
               <span>{ETB(i.unitPrice * i.quantity)}</span>
             </li>
@@ -379,8 +441,13 @@ function CheckoutPage() {
             <span>
               {surge > 1 ? t("checkout_delivery_surge", { surge }) : t("checkout_delivery")}
             </span>
-            <span>{ETB(deliveryFee)}</span>
+            <span>{fee.status === "ready" ? ETB(fee.fee) : "—"}</span>
           </div>
+          {fee.status === "ready" && fee.distance > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {t("checkout_delivery_distance", { km: formatDistance(fee.distance) })}
+            </p>
+          )}
           {tip > 0 && (
             <div className="flex justify-between">
               <span>{t("checkout_rider_tip")}</span>
@@ -431,11 +498,38 @@ function CheckoutPage() {
           </div>
         </div>
         {step === 2 && (
-          <Button type="submit" className="w-full" disabled={busy}>
+          <Button type="submit" className="w-full" disabled={busy || feeUnavailable}>
             {busy ? t("checkout_placing") : t("checkout_place_order")}
           </Button>
         )}
       </aside>
     </form>
+  );
+}
+
+function DeliveryStatus({ fee, flatFallback }: { fee: FeeState; flatFallback: number }) {
+  const { t } = useLanguage();
+  if (fee.status === "loading")
+    return (
+      <p className="rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">
+        {t("delivery_calculating")}
+      </p>
+    );
+  if (fee.status === "error")
+    return (
+      <p className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        {t(fee.reason)}
+      </p>
+    );
+  return (
+    <p className="flex items-center justify-between rounded-lg bg-primary-soft p-3 text-xs font-medium text-accent-foreground">
+      <span>
+        {fee.distance > 0
+          ? t("checkout_delivery_distance", { km: formatDistance(fee.distance) })
+          : t("delivery_flat_note")}
+      </span>
+      <span className="font-bold">{ETB(fee.fee || flatFallback)}</span>
+    </p>
   );
 }

@@ -62,7 +62,7 @@ function CartPage() {
         <ul className="mt-6 space-y-3">
           {items.map((i) => (
             <li
-              key={i.productId}
+              key={i.lineId}
               className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
             >
               <StorageImage
@@ -74,6 +74,11 @@ function CartPage() {
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{i.name}</p>
+                {i.options.length > 0 && (
+                  <p className="truncate text-xs text-muted-foreground">
+                    {i.options.map((o) => o.name).join(" · ")}
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">{ETB(i.unitPrice)}</p>
               </div>
               <div className="flex items-center gap-1">
@@ -81,7 +86,7 @@ function CartPage() {
                   variant="outline"
                   size="icon"
                   aria-label={t("cart_decrease")}
-                  onClick={() => setQty(i.productId, i.quantity - 1)}
+                  onClick={() => setQty(i.lineId, i.quantity - 1)}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -90,7 +95,7 @@ function CartPage() {
                   variant="outline"
                   size="icon"
                   aria-label={t("cart_increase")}
-                  onClick={() => setQty(i.productId, i.quantity + 1)}
+                  onClick={() => setQty(i.lineId, i.quantity + 1)}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -98,7 +103,7 @@ function CartPage() {
                   variant="ghost"
                   size="icon"
                   aria-label={t("cart_remove", { name: i.name })}
-                  onClick={() => remove(i.productId)}
+                  onClick={() => remove(i.lineId)}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>

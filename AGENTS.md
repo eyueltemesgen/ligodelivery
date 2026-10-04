@@ -59,7 +59,17 @@
 - Static config maps (ad types/statuses, banner placements, service categories, merchant statuses) expose i18n keys rather than English labels.
 
 ## Performance conventions
+
 - Images: render through `StorageImage` (`src/lib/media.tsx`) with a `width` prop so the signed URL hits Supabase's image renderer. Signed URLs are cached per (bucket, path, width) and untransformed images are batch-signed; do not add per-image `createSignedUrl` calls elsewhere. `createSignedUrls` cannot carry transforms, so sized images sign individually by design.
 - Toasts: import `toast` from `src/lib/toast`, never from `sonner` directly. `src/lib/toast.tsx` lazy-loads sonner and its `<Toaster>` host on the first toast, keeping ~14 kB gzip out of every route. `ToastHost` is mounted once in `src/routes/__root.tsx`.
 - Public catalogue queries in `src/lib/queries.ts` carry explicit `staleTime` and a `limit` (`SHOP_PAGE_SIZE`, `PRODUCT_PAGE_SIZE`). Keep new list queries bounded; add `staleTime` for anything public.
 - Indexes for hot read paths live in `supabase/migrations/20261004190000_performance_indexes.sql` (additive/idempotent, apply via Lovable/Supabase).
+
+## Delivery Fee Engine & Menu System
+- Migration: `supabase/migrations/20261004200000_delivery_fee_engine.sql` (additive/idempotent). Apply before deploying the matching app build.
+- Single source of truth: `public.calculate_delivery_fee(shop_id, lat, lng)` returns `{ok,distance,delivery_fee,pricing_rule}` or `{ok:false,reason}` (`customer_location_unavailable`, `shop_location_unavailable`, `outside_service_area`, `no_rule`). Never compute a fee in the client; `src/lib/delivery.ts` only displays what the RPC returns.
+- Pricing methods: `delivery_fee_rules` brackets (admin CRUD, CHECK forbids inverted ranges) or `base+km` in `settings.delivery`. Distance is haversine; road routing is not used.
+- `place_order` re-prices option deltas and recomputes subtotal/delivery/total server-side, then snapshots `delivery_distance`, `delivery_rule`, `shop_lat/lng`, `customer_lat/lng` on the order. Historical orders are never recalculated.
+- Shops without lat/lng fall back to their flat `shops.delivery_fee`; checkout also falls back to the flat fee if the RPC is missing.
+- Product options live in `product_option_groups` + `product_options`; cart lines are keyed by `productId + option ids` (`lineId` in `src/lib/cart.tsx`).
+- Admin: Delivery Fees tab, shop map location picker, product option editor. All new UI is translated in en/am/or.

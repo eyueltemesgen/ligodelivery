@@ -242,6 +242,7 @@ function AccountOverview() {
                         name: p.product_name,
                         imagePath: p.image_url,
                         unitPrice: Number(p.unit_price),
+                        options: [],
                       });
                       toast.success(t("acct_added_to_cart", { name: p.product_name }));
                     }}

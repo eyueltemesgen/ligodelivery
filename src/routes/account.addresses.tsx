@@ -10,6 +10,7 @@ import { isMissingColumn, supabaseErrorText } from "@/lib/supa-error";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
+import { LocationPicker } from "@/components/ligo/LocationPicker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,6 +67,8 @@ type FormState = {
   address: string;
   instructions: string;
   is_default: boolean;
+  lat: number | null;
+  lng: number | null;
 };
 
 const EMPTY_FORM: FormState = {
@@ -76,6 +79,8 @@ const EMPTY_FORM: FormState = {
   address: "",
   instructions: "",
   is_default: false,
+  lat: null,
+  lng: null,
 };
 
 function AddressesPage() {
@@ -106,6 +111,8 @@ function AddressesPage() {
       address: a.address,
       instructions: a.instructions ?? "",
       is_default: a.is_default,
+      lat: a.lat,
+      lng: a.lng,
     });
 
   const invalidate = () => {
@@ -143,6 +150,8 @@ function AddressesPage() {
       address: form.address.trim(),
       instructions: form.instructions.trim() || null,
       is_default: form.is_default,
+      lat: form.lat,
+      lng: form.lng,
     };
     const withArea = { ...base, area: form.area || null, city: "Bishoftu" };
     const write = (payload: typeof base) =>
@@ -252,6 +261,12 @@ function AddressesPage() {
               <p className="mt-2 text-sm font-medium">{a.address}</p>
               <p className="text-sm text-muted-foreground">
                 {[a.area, a.city].filter(Boolean).join(", ")}
+                {a.lat != null && a.lng != null && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-primary">
+                    <MapPin className="h-3 w-3" />
+                    {t("addr_pinned")}
+                  </span>
+                )}
               </p>
               {a.instructions && (
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -372,6 +387,15 @@ function AddressesPage() {
                   onChange={(e) => setForm({ ...form, instructions: e.target.value })}
                   rows={2}
                   placeholder={t("addr_instructions_placeholder")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t("addr_pin_location")}</Label>
+                <p className="text-xs text-muted-foreground">{t("addr_pin_hint")}</p>
+                <LocationPicker
+                  lat={form.lat}
+                  lng={form.lng}
+                  onChange={(lat, lng) => setForm({ ...form, lat, lng })}
                 />
               </div>
               <label className="flex items-center gap-2 text-sm">

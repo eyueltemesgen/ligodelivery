@@ -29,6 +29,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { MarketingHub } from "@/components/admin/MarketingHub";
+import { DeliveryFeesAdmin } from "@/components/admin/DeliveryFeesAdmin";
+import { ProductOptionsAdmin } from "@/components/admin/ProductOptionsAdmin";
+import { LocationPicker } from "@/components/ligo/LocationPicker";
 import { SpecialMomentsAdmin } from "@/components/admin/SpecialMomentsAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -47,6 +50,7 @@ const OPS_TABS = [
   "content",
   "financials",
   "settings",
+  "delivery",
   "system",
 ] as const;
 type OpsTab = (typeof OPS_TABS)[number];
@@ -128,6 +132,9 @@ function AdminPage() {
             <TabsTrigger value="settings" className="min-h-9">
               {t("aop_tab_settings")}
             </TabsTrigger>
+            <TabsTrigger value="delivery" className="min-h-9">
+              {t("aop_tab_delivery")}
+            </TabsTrigger>
             <TabsTrigger value="system" className="min-h-9">
               {t("aop_tab_system")}
             </TabsTrigger>
@@ -174,6 +181,9 @@ function AdminPage() {
         </TabsContent>
         <TabsContent value="settings">
           <SettingsAdmin />
+        </TabsContent>
+        <TabsContent value="delivery">
+          <DeliveryFeesAdmin />
         </TabsContent>
         <TabsContent value="system">
           <SystemAdmin />
@@ -610,6 +620,31 @@ function OrdersAdmin() {
           <p className="text-sm text-muted-foreground">
             {ETB(o.total)} · {o.payment_method} · {o.payment_status}
           </p>
+          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
+            <div>
+              <dt className="text-muted-foreground">{t("cart_subtotal")}</dt>
+              <dd>{ETB(o.subtotal)}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{t("checkout_delivery")}</dt>
+              <dd>
+                {ETB(o.delivery_fee)}
+                {o.delivery_distance != null && Number(o.delivery_distance) > 0 && (
+                  <span className="ml-1 text-muted-foreground">
+                    ({Number(o.delivery_distance).toFixed(1)} km)
+                  </span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{t("dfe_label")}</dt>
+              <dd>{o.delivery_rule ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{t("checkout_total")}</dt>
+              <dd className="font-semibold">{ETB(o.total)}</dd>
+            </div>
+          </dl>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {DISPATCHABLE_STATUSES.includes(o.status) && (
               <Button
@@ -1040,6 +1075,8 @@ function ShopsAdmin() {
     category_id: "",
     delivery_fee: "50",
     delivery_time_min: "30",
+    lat: "",
+    lng: "",
   });
   const [file, setFile] = useState<File | null>(null);
   const { data: rows = [] } = useQuery({
@@ -1064,6 +1101,8 @@ function ShopsAdmin() {
         category_id: form.category_id || null,
         delivery_fee: Number(form.delivery_fee),
         delivery_time_min: Number(form.delivery_time_min),
+        lat: form.lat.trim() === "" ? null : Number(form.lat),
+        lng: form.lng.trim() === "" ? null : Number(form.lng),
         image_url: image,
         cover_url: image,
       });
@@ -1076,6 +1115,8 @@ function ShopsAdmin() {
         category_id: "",
         delivery_fee: "50",
         delivery_time_min: "30",
+        lat: "",
+        lng: "",
       });
       setFile(null);
       void qc.invalidateQueries({ queryKey: ["admin-shops"] });
@@ -1147,6 +1188,22 @@ function ShopsAdmin() {
             onChange={(e) => setForm({ ...form, delivery_time_min: e.target.value })}
           />
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            step="0.000001"
+            placeholder={t("aop_lat")}
+            value={form.lat}
+            onChange={(e) => setForm({ ...form, lat: e.target.value })}
+          />
+          <Input
+            type="number"
+            step="0.000001"
+            placeholder={t("aop_lng")}
+            value={form.lng}
+            onChange={(e) => setForm({ ...form, lng: e.target.value })}
+          />
+        </div>
         <Input
           type="file"
           accept="image/*"
@@ -1215,6 +1272,45 @@ function ShopsAdmin() {
                   shopId={s.id}
                   fallbackOpen={s.opens_at.slice(0, 5)}
                   fallbackClose={s.closes_at.slice(0, 5)}
+                />
+              </div>
+            </details>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+                {t("aop_shop_location")}
+              </summary>
+              <div className="mt-2 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    defaultValue={s.lat ?? ""}
+                    placeholder={t("aop_lat")}
+                    className="h-9"
+                    onBlur={(e) =>
+                      void toggle(s.id, {
+                        lat: e.target.value === "" ? null : Number(e.target.value),
+                      })
+                    }
+                  />
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    defaultValue={s.lng ?? ""}
+                    placeholder={t("aop_lng")}
+                    className="h-9"
+                    onBlur={(e) =>
+                      void toggle(s.id, {
+                        lng: e.target.value === "" ? null : Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <LocationPicker
+                  lat={s.lat}
+                  lng={s.lng}
+                  height={220}
+                  onChange={(lat, lng) => void toggle(s.id, { lat, lng })}
                 />
               </div>
             </details>
@@ -1379,6 +1475,12 @@ function ProductsAdmin() {
                 />
               </label>
             </div>
+            <details className="mt-2 w-full">
+              <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                {t("po_title")}
+              </summary>
+              <ProductOptionsAdmin productId={p.id} />
+            </details>
           </li>
         ))}
       </ul>
