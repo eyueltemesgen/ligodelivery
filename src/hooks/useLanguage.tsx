@@ -25,12 +25,23 @@ function getInitialLanguage(): Language {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  // Start on "en" so the first client render matches the server render (the
+  // server cannot read localStorage). Apply the stored/preferred language in an
+  // effect to avoid a hydration mismatch.
+  const [language, setLanguage] = useState<Language>("en");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const initial = getInitialLanguage();
+    if (initial !== "en") setLanguage(initial);
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
     window.localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = HTML_LANG[language];
-  }, [language]);
+  }, [language, ready]);
 
   const value: LanguageValue = {
     language,

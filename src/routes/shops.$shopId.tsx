@@ -11,6 +11,7 @@ import { useSaved } from "@/lib/saved";
 import { ProductCard } from "@/components/ligo/Cards";
 import { ProductGridSkeleton } from "@/components/ligo/Skeletons";
 import { ProductModal } from "@/components/ligo/ProductModal";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/shops/$shopId")({
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/shops/$shopId")({
 });
 
 function ShopDetail() {
+  const { t } = useLanguage();
   const { shopId } = Route.useParams();
   const { data: shop, isLoading } = useQuery(shopQuery(shopId));
   const { data: products = [] } = useQuery(shopProductsQuery(shopId));
@@ -42,15 +44,16 @@ function ShopDetail() {
     const inStock = products.filter((p) => p.in_stock);
     const popular = products.filter((p) => p.is_popular);
     const groups: { key: string; label: string; items: Product[] }[] = [];
-    if (popular.length > 0) groups.push({ key: "popular", label: "⭐ Popular", items: popular });
-    groups.push({ key: "all", label: "Full menu", items: products });
+    if (popular.length > 0)
+      groups.push({ key: "popular", label: t("shop_section_popular"), items: popular });
+    groups.push({ key: "all", label: t("shop_section_full"), items: products });
     const rest = products.filter((p) => !p.is_popular);
     if (rest.length > 0 && popular.length > 0)
-      groups.push({ key: "more", label: "More", items: rest });
+      groups.push({ key: "more", label: t("shop_section_more"), items: rest });
     // collapse duplicate "all" when we have popular/more
     if (popular.length > 0) groups.splice(1, 1);
     return groups.filter((g) => g.items.length > 0 && (g.key !== "all" || inStock.length >= 0));
-  }, [products]);
+  }, [products, t]);
 
   useEffect(() => {
     if (!shop) return;
@@ -83,7 +86,7 @@ function ShopDetail() {
         </div>
       </div>
     );
-  if (!shop) return <div className="container-ligo py-16">Shop not found.</div>;
+  if (!shop) return <div className="container-ligo py-16">{t("shop_not_found")}</div>;
 
   const open = isShopOpenNow(shop, hours);
   const favorite = isFavoriteShop(shop.id);
@@ -94,8 +97,8 @@ function ShopDetail() {
   };
 
   return (
-    <div>
-      <div className="relative h-56 w-full overflow-hidden bg-surface">
+    <div className="isolate">
+      <div className="relative z-0 h-56 w-full overflow-hidden bg-surface">
         <StorageImage
           path={shop.cover_url ?? shop.image_url}
           alt={shop.name}
@@ -103,6 +106,9 @@ function ShopDetail() {
           priority
         />
       </div>
+      {/* The cover is a positioned layer (relative z-0). The card is pulled up
+          over it with a negative margin, so it must be positioned too, with a
+          higher z-index, or the photo paints over the shop name. */}
       <div className="container-ligo relative z-10 -mt-10 pb-12">
         <div className="rounded-xl border border-border bg-card p-5 shadow-pop">
           <div className="flex flex-wrap items-center gap-3">
@@ -110,12 +116,12 @@ function ShopDetail() {
             <span
               className={`rounded-full px-2 py-1 text-xs font-semibold ${open ? "bg-primary-soft text-accent-foreground" : "bg-muted text-muted-foreground"}`}
             >
-              {open ? "Open now" : "Closed"}
+              {open ? t("shop_open_now") : t("shop_closed")}
             </span>
             <button
               type="button"
               aria-pressed={favorite}
-              aria-label={favorite ? "Remove shop from favorites" : "Save shop to favorites"}
+              aria-label={favorite ? t("shop_remove_aria") : t("shop_save_aria")}
               className={`ml-auto flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                 favorite
                   ? "border-destructive/40 bg-destructive/10 text-destructive"
@@ -124,7 +130,7 @@ function ShopDetail() {
               onClick={() => void toggleShop(shop.id)}
             >
               <Heart className={`h-3.5 w-3.5 ${favorite ? "fill-destructive" : ""}`} />
-              {favorite ? "Saved" : "Save shop"}
+              {favorite ? t("shop_saved") : t("shop_save")}
             </button>
             <button
               type="button"
@@ -136,7 +142,7 @@ function ShopDetail() {
                 else void navigator.clipboard.writeText(url);
               }}
             >
-              Share shop link
+              {t("shop_share")}
             </button>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">{shop.description}</p>
@@ -147,7 +153,7 @@ function ShopDetail() {
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              {shop.delivery_time_min} min · {ETB(shop.delivery_fee)} delivery
+              {t("shop_delivery", { min: shop.delivery_time_min, fee: ETB(shop.delivery_fee) })}
             </span>
             {shop.address && (
               <span className="flex items-center gap-1">
@@ -188,13 +194,12 @@ function ShopDetail() {
 
         {!open && (
           <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
-            {closedReason(shop, hours)} You can browse the menu, but ordering is disabled until the
-            shop reopens.
+            {closedReason(shop, hours)} {t("shop_closed_note")}
           </div>
         )}
 
         {products.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">No items listed yet.</p>
+          <p className="mt-3 text-sm text-muted-foreground">{t("shop_no_items")}</p>
         ) : (
           sections.map((s) => (
             <section

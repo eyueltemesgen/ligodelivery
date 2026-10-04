@@ -7,6 +7,8 @@ import { ServiceCard, ServiceCategoryCard } from "@/components/special-moments/S
 import { Button } from "@/components/ui/button";
 import { GridSkeleton } from "@/components/account/States";
 import { siteContentQuery } from "@/lib/content";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/special-moments/")({
   head: () => ({
@@ -27,17 +29,14 @@ export const Route = createFileRoute("/special-moments/")({
   component: SpecialMomentsHub,
 });
 
-const HIGHLIGHTS = [
-  { icon: Gift, title: "Curated gifts", text: "Boxes, flowers, cakes and personalised keepsakes." },
-  {
-    icon: UtensilsCrossed,
-    title: "Catering & decoration",
-    text: "Fixed packages or a tailored quote for your event.",
-  },
-  { icon: Sparkles, title: "Surprises handled", text: "We coordinate the reveal, your way." },
+const HIGHLIGHTS: { icon: typeof Gift; titleKey: TranslationKey; textKey: TranslationKey }[] = [
+  { icon: Gift, titleKey: "smi_hl_gifts", textKey: "smi_hl_gifts_text" },
+  { icon: UtensilsCrossed, titleKey: "smi_hl_catering", textKey: "smi_hl_catering_text" },
+  { icon: Sparkles, titleKey: "smi_hl_surprises", textKey: "smi_hl_surprises_text" },
 ];
 
 function SpecialMomentsHub() {
+  const { t } = useLanguage();
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
   const { data: services = [], isLoading } = useQuery(servicesQuery());
   const { data: content } = useQuery(siteContentQuery);
@@ -61,38 +60,35 @@ function SpecialMomentsHub() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
               <Sparkles className="h-3.5 w-3.5" />
-              Special Moments
+              {t("smi_badge")}
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
-              Make the moment special.
+              {t("smi_headline")}
             </h1>
-            <p className="mt-4 max-w-xl text-muted-foreground">
-              From thoughtful gifts and memorable surprises to catering and beautiful event
-              decoration, የኔ Go helps you create special moments from one place.
-            </p>
+            <p className="mt-4 max-w-xl text-muted-foreground">{t("smi_intro")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {giftsCategory ? (
                 <Button asChild size="lg">
                   <Link to="/special-moments/category/$slug" params={{ slug: giftsCategory.slug }}>
-                    Explore gifts
+                    {t("smi_explore_gifts")}
                   </Link>
                 </Button>
               ) : (
                 <Button asChild size="lg">
-                  <Link to="/special-moments/search">Explore services</Link>
+                  <Link to="/special-moments/search">{t("smi_explore_services")}</Link>
                 </Button>
               )}
               <Button asChild size="lg" variant="outline">
-                <Link to="/special-moments/search">Find a service</Link>
+                <Link to="/special-moments/search">{t("smi_find_service")}</Link>
               </Button>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {HIGHLIGHTS.map((h) => (
-                <div key={h.title} className="flex gap-3">
+                <div key={h.titleKey} className="flex gap-3">
                   <h.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                   <div>
-                    <p className="text-sm font-semibold">{h.title}</p>
-                    <p className="text-xs text-muted-foreground">{h.text}</p>
+                    <p className="text-sm font-semibold">{t(h.titleKey)}</p>
+                    <p className="text-xs text-muted-foreground">{t(h.textKey)}</p>
                   </div>
                 </div>
               ))}
@@ -109,13 +105,11 @@ function SpecialMomentsHub() {
       <section className="container-ligo py-10">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 className="font-display text-2xl font-bold">Browse by category</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Five ways to celebrate, all managed by our team.
-            </p>
+            <h2 className="font-display text-2xl font-bold">{t("smi_browse_category")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("smi_browse_category_sub")}</p>
           </div>
           <Link to="/special-moments/search" className="text-sm font-medium text-primary">
-            Search all services
+            {t("smi_search_all")}
           </Link>
         </div>
         {categories.length === 0 ? (
@@ -131,9 +125,9 @@ function SpecialMomentsHub() {
 
       <section className="container-ligo pb-14">
         <div className="flex flex-wrap items-end justify-between gap-2">
-          <h2 className="font-display text-2xl font-bold">Featured services</h2>
+          <h2 className="font-display text-2xl font-bold">{t("smi_featured")}</h2>
           <Link to="/special-moments/search" className="text-sm font-medium text-primary">
-            See everything
+            {t("smi_see_everything")}
           </Link>
         </div>
         {isLoading ? (
@@ -155,15 +149,14 @@ function SpecialMomentsHub() {
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="max-w-xl">
-              <h2 className="font-display text-2xl font-bold">Need something bespoke?</h2>
+              <h2 className="font-display text-2xl font-bold">{t("smi_bespoke")}</h2>
               <p className="mt-2 text-sm opacity-90">
-                Tell us the occasion and our team will put together a tailored plan and quote,
-                delivered anywhere in {content?.city ?? "Bishoftu"}.
+                {t("smi_bespoke_text", { city: content?.city ?? "Bishoftu" })}
               </p>
             </div>
             <Button asChild size="lg" variant="secondary">
               <Link to="/special-moments/search">
-                Request a quote
+                {t("smi_request_quote")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -175,26 +168,23 @@ function SpecialMomentsHub() {
 }
 
 function EmptyCategoryState() {
+  const { t } = useLanguage();
   return (
     <div className="mt-5 rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center">
       <Compass className="mx-auto h-7 w-7 text-muted-foreground" />
-      <p className="mt-3 font-display font-bold">Special Moments is being set up</p>
-      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-        Our team is preparing services for this area. Please check back shortly.
-      </p>
+      <p className="mt-3 font-display font-bold">{t("smi_setup_title")}</p>
+      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{t("smi_setup_text")}</p>
     </div>
   );
 }
 
 function EmptyServiceState() {
+  const { t } = useLanguage();
   return (
     <div className="mt-5 rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center">
       <Sparkles className="mx-auto h-7 w-7 text-muted-foreground" />
-      <p className="mt-3 font-display font-bold">No services published yet</p>
-      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-        Services appear here as soon as they are published by our team. Nothing is shown until it is
-        real and available.
-      </p>
+      <p className="mt-3 font-display font-bold">{t("smi_empty_title")}</p>
+      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{t("smi_empty_text")}</p>
     </div>
   );
 }

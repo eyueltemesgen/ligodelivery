@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/reset-password")({
 });
 
 function ResetPasswordPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [invalid, setInvalid] = useState(false);
@@ -45,21 +47,21 @@ function ResetPasswordPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(t("rp_err_min"));
       return;
     }
     if (password !== confirm) {
-      toast.error("Passwords do not match");
+      toast.error(t("rp_err_match"));
       return;
     }
     setBusy(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success("Password updated — you're signed in");
+      toast.success(t("rp_updated"));
       await navigate({ to: "/" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not update password");
+      toast.error(err instanceof Error ? err.message : t("rp_err_failed"));
     } finally {
       setBusy(false);
     }
@@ -68,17 +70,15 @@ function ResetPasswordPage() {
   return (
     <div className="container-ligo flex justify-center py-12">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-pop">
-        <h1 className="font-display text-2xl font-extrabold">Choose a new password</h1>
+        <h1 className="font-display text-2xl font-extrabold">{t("rp_title")}</h1>
         {!ready ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            {invalid
-              ? "This reset link is invalid or has expired — request a new one from the sign-in page."
-              : "Verifying your reset link…"}
+            {invalid ? t("rp_invalid") : t("rp_verifying")}
           </p>
         ) : (
           <form onSubmit={submit} className="mt-5 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="np">New password</Label>
+              <Label htmlFor="np">{t("rp_new_password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -94,7 +94,7 @@ function ResetPasswordPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="cp">Confirm password</Label>
+              <Label htmlFor="cp">{t("rp_confirm_password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -110,7 +110,7 @@ function ResetPasswordPage() {
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
-              {busy ? "Updating…" : "Update password"}
+              {busy ? t("rp_updating") : t("rp_update")}
             </Button>
           </form>
         )}

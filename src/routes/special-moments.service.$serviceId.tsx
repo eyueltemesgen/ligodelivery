@@ -28,6 +28,8 @@ import { ServiceCard } from "@/components/special-moments/ServiceCards";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/account/States";
 import { ETB } from "@/lib/format";
+import { useLanguage } from "@/hooks/useLanguage";
+import { OPTION_LABEL_KEY } from "@/lib/special-moments";
 
 export const Route = createFileRoute("/special-moments/service/$serviceId")({
   head: () => ({
@@ -44,6 +46,7 @@ export const Route = createFileRoute("/special-moments/service/$serviceId")({
 });
 
 function ServiceDetailPage() {
+  const { t } = useLanguage();
   const { serviceId } = Route.useParams();
   const { data: service, isLoading } = useQuery(serviceQuery(serviceId));
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
@@ -83,7 +86,7 @@ function ServiceDetailPage() {
           className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
-          {category?.name ?? "Special Moments"}
+          {category?.name ?? t("smi_badge")}
         </Link>
       </div>
 
@@ -118,12 +121,12 @@ function ServiceDetailPage() {
             </span>
             {service.occasion && (
               <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
-                {service.occasion}
+                {t(OPTION_LABEL_KEY[service.occasion] ?? "sms_any_occasion")}
               </span>
             )}
             {isQuote && (
               <span className="rounded-full border border-primary/40 bg-primary-soft px-3 py-1 text-xs font-semibold text-accent-foreground">
-                Quote based
+                {t("smd_quote_based")}
               </span>
             )}
           </div>
@@ -137,11 +140,11 @@ function ServiceDetailPage() {
               {shop.address && <span>· {shop.address}</span>}
               {isShopOpenNow(shop) ? (
                 <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
-                  Open now
+                  {t("shop_open_now")}
                 </span>
               ) : (
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                  Outside opening hours
+                  {t("smd_outside_hours")}
                 </span>
               )}
             </p>
@@ -150,43 +153,39 @@ function ServiceDetailPage() {
           <p className="mt-4 font-display text-2xl font-extrabold text-primary">
             {pricingLabel(service.pricing_type, service.price, service.starting_price)}
           </p>
-          {isQuote && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              Send a request with your requirements — pricing is confirmed before you pay.
-            </p>
-          )}
+          {isQuote && <p className="mt-1 text-sm text-muted-foreground">{t("smd_quote_note")}</p>}
 
           <div className="mt-5 flex flex-wrap gap-3">
             <Button size="lg" onClick={() => setBookingOpen(true)}>
-              {isQuote ? "Request a quote" : "Book now"}
+              {isQuote ? t("smd_request_quote") : t("smd_book_now")}
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/special-moments/search">Browse similar</Link>
+              <Link to="/special-moments/search">{t("smd_browse_similar")}</Link>
             </Button>
           </div>
 
           <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
             {service.service_area && (
-              <InfoCell icon={MapPin} label="Service area" value={service.service_area} />
+              <InfoCell icon={MapPin} label={t("smd_service_area")} value={service.service_area} />
             )}
             {service.lead_time_hours > 0 && (
               <InfoCell
                 icon={Clock}
-                label="Notice required"
-                value={`${service.lead_time_hours} hours`}
+                label={t("smd_notice_required")}
+                value={t("smd_hours_value", { hours: service.lead_time_hours })}
               />
             )}
             {service.available_from && (
               <InfoCell
                 icon={CalendarDays}
-                label="Available from"
+                label={t("smd_available_from")}
                 value={new Date(service.available_from).toLocaleDateString("en-GB")}
               />
             )}
             {service.available_to && (
               <InfoCell
                 icon={CalendarDays}
-                label="Available until"
+                label={t("smd_available_until")}
                 value={new Date(service.available_to).toLocaleDateString("en-GB")}
               />
             )}
@@ -198,7 +197,7 @@ function ServiceDetailPage() {
         <div className="space-y-6">
           {service.description && (
             <div>
-              <h2 className="font-display text-xl font-bold">About this service</h2>
+              <h2 className="font-display text-xl font-bold">{t("smd_about")}</h2>
               <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
                 {service.description}
               </p>
@@ -207,7 +206,7 @@ function ServiceDetailPage() {
 
           {service.included_items.length > 0 && (
             <div>
-              <h2 className="font-display text-xl font-bold">What&apos;s included</h2>
+              <h2 className="font-display text-xl font-bold">{t("smd_included")}</h2>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                 {service.included_items.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm">
@@ -221,7 +220,7 @@ function ServiceDetailPage() {
 
           {addons.length > 0 && (
             <div>
-              <h2 className="font-display text-xl font-bold">Optional add-ons</h2>
+              <h2 className="font-display text-xl font-bold">{t("smd_addons")}</h2>
               <ul className="mt-3 space-y-2">
                 {addons.map((a) => (
                   <li
@@ -242,23 +241,19 @@ function ServiceDetailPage() {
           )}
 
           <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">How it works</h2>
+            <h2 className="font-display text-lg font-bold">{t("smd_how_it_works")}</h2>
             <ol className="mt-3 space-y-3 text-sm text-muted-foreground">
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                Share your occasion, date, location and any customisation.
+                {t("smd_step_1")}
               </li>
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                {isQuote
-                  ? "Our team confirms pricing and sends a quote you can accept."
-                  : "Confirm your details and continue to the secure payment step."}
+                {isQuote ? t("smd_step_2_quote") : t("smd_step_2_fixed")}
               </li>
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                {isQuote
-                  ? "Pay once you accept the quote, then we prepare your service."
-                  : "We prepare and deliver your service on the scheduled date."}
+                {isQuote ? t("smd_step_3_quote") : t("smd_step_3_fixed")}
               </li>
             </ol>
           </div>
@@ -271,28 +266,30 @@ function ServiceDetailPage() {
                 <meta.icon className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-display font-bold">{isQuote ? "Request a quote" : "Book now"}</p>
+                <p className="font-display font-bold">
+                  {isQuote ? t("smd_request_quote") : t("smd_book_now")}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {isQuote ? "Free to request" : "Pay after confirming details"}
+                  {isQuote ? t("smd_free_request") : t("smd_pay_after")}
                 </p>
               </div>
             </div>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                Tell us the occasion and guests
+                {t("smd_tell_occasion")}
               </li>
               <li className="flex items-center gap-2">
                 <Palette className="h-4 w-4 text-primary" />
-                Add customisation and a message
+                {t("smd_add_custom")}
               </li>
               <li className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                Pick your date and time
+                {t("smd_pick_date")}
               </li>
             </ul>
             <Button className="mt-4 w-full" size="lg" onClick={() => setBookingOpen(true)}>
-              {isQuote ? "Request a quote" : "Book now"}
+              {isQuote ? t("smd_request_quote") : t("smd_book_now")}
             </Button>
           </div>
         </aside>
@@ -300,7 +297,9 @@ function ServiceDetailPage() {
 
       {others.length > 0 && (
         <section className="container-ligo pb-16">
-          <h2 className="font-display text-xl font-bold">More in {category?.name ?? meta.noun}</h2>
+          <h2 className="font-display text-xl font-bold">
+            {t("smd_more_in", { category: category?.name ?? meta.noun })}
+          </h2>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {others.map((s) => (
               <ServiceCard key={s.id} service={s} />

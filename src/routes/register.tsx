@@ -7,50 +7,51 @@ import { uploadImage } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { TranslationKey } from "@/lib/i18n";
 
 type SignupRole = "customer" | "rider";
 
 const ROLE_CARDS: {
   id: SignupRole;
-  title: string;
-  description: string;
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
   icon: typeof ShoppingBag;
 }[] = [
   {
     id: "customer",
-    title: "Customer",
-    description: "Order food, groceries and essentials across Bishoftu.",
+    titleKey: "reg_customer",
+    descriptionKey: "reg_customer_desc",
     icon: ShoppingBag,
   },
   {
     id: "rider",
-    title: "Rider",
-    description: "Deliver on your own schedule and cash out instantly.",
+    titleKey: "reg_rider",
+    descriptionKey: "reg_rider_desc",
     icon: Bike,
   },
 ];
 
 const VEHICLE_TYPES = [
-  { value: "bicycle", label: "Bicycle" },
-  { value: "motorbike", label: "Motorbike" },
-  { value: "scooter", label: "Scooter" },
-  { value: "car", label: "Car" },
-];
+  { value: "bicycle", labelKey: "reg_vehicle_bicycle" },
+  { value: "motorbike", labelKey: "reg_vehicle_motorbike" },
+  { value: "scooter", labelKey: "reg_vehicle_scooter" },
+  { value: "car", labelKey: "reg_vehicle_car" },
+] as const;
 
 const PAYOUT_METHODS = [
-  { value: "telebirr", label: "Telebirr" },
-  { value: "bank_account", label: "Bank account" },
-];
+  { value: "telebirr", labelKey: "pay_telebirr" },
+  { value: "bank_account", labelKey: "reg_payout_bank" },
+] as const;
 
-function friendlyError(err: unknown): string {
+function friendlyError(t: (k: TranslationKey) => string, err: unknown): string {
   const msg = err instanceof Error ? err.message : "";
   const lower = msg.toLowerCase();
   if (lower.includes("already registered") || lower.includes("already been registered"))
-    return "That email is already registered — try signing in instead.";
-  if (lower.includes("password")) return "Password must be at least 6 characters.";
-  if (lower.includes("rate limit") || lower.includes("too many requests"))
-    return "Too many attempts — please wait a minute and try again.";
-  return msg || "Could not create your account";
+    return t("reg_err_email_registered");
+  if (lower.includes("password")) return t("reg_err_password");
+  if (lower.includes("rate limit") || lower.includes("too many requests")) return t("reg_err_rate");
+  return msg || t("reg_err_generic");
 }
 
 export const Route = createFileRoute("/register")({
@@ -74,6 +75,7 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
+  const { t } = useLanguage();
   const { role: initialRole } = Route.useSearch();
   const navigate = useNavigate();
   const [role, setRole] = useState<SignupRole>(initialRole ?? "customer");
@@ -130,7 +132,7 @@ function RegisterPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) {
-      toast.error("Please complete the required fields");
+      toast.error(t("reg_err_complete"));
       return;
     }
     setBusy(true);
@@ -144,23 +146,19 @@ function RegisterPage() {
         },
       });
       if (error) throw error;
-      if (!data.user) throw new Error("Signup failed — please try again");
+      if (!data.user) throw new Error(t("reg_err_signup"));
 
       if (!data.session) {
-        toast.success("Account created — check your email to confirm, then sign in.");
+        toast.success(t("reg_created_confirm"));
         await navigate({ to: "/login" });
         return;
       }
 
       if (role === "rider") await completeRiderOnboarding(data.user.id);
-      toast.success(
-        role === "rider"
-          ? "Rider application received — sit tight while we verify your documents."
-          : "Account created. Welcome to የኔ Go!",
-      );
+      toast.success(role === "rider" ? t("reg_rider_received") : t("reg_created_welcome"));
       await navigate({ to: role === "rider" ? "/rider" : "/" });
     } catch (err) {
-      toast.error(friendlyError(err));
+      toast.error(friendlyError(t, err));
     } finally {
       setBusy(false);
     }
@@ -169,8 +167,8 @@ function RegisterPage() {
   return (
     <div className="container-ligo flex justify-center py-12">
       <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-pop">
-        <h1 className="font-display text-2xl font-extrabold">Create your account</h1>
-        <p className="mt-1 text-sm text-muted-foreground">How will you use የኔ Go?</p>
+        <h1 className="font-display text-2xl font-extrabold">{t("reg_title")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("reg_sub")}</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           {ROLE_CARDS.map((r) => (
@@ -179,13 +177,15 @@ function RegisterPage() {
               type="button"
               onClick={() => setRole(r.id)}
               className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-100 active:scale-95 ${
-                role === r.id ? "border-primary bg-primary-soft" : "border-border hover:border-primary/50"
+                role === r.id
+                  ? "border-primary bg-primary-soft"
+                  : "border-border hover:border-primary/50"
               }`}
             >
               <r.icon className="h-5 w-5 shrink-0 text-primary" />
               <span>
-                <span className="block text-sm font-semibold">{r.title}</span>
-                <span className="block text-xs text-muted-foreground">{r.description}</span>
+                <span className="block text-sm font-semibold">{t(r.titleKey)}</span>
+                <span className="block text-xs text-muted-foreground">{t(r.descriptionKey)}</span>
               </span>
             </button>
           ))}
@@ -193,7 +193,7 @@ function RegisterPage() {
 
         <form onSubmit={submit} className="mt-5 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Full name</Label>
+            <Label htmlFor="name">{t("reg_full_name")}</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -206,7 +206,7 @@ function RegisterPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("reg_email")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -221,7 +221,7 @@ function RegisterPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("reg_password")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -229,7 +229,7 @@ function RegisterPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                placeholder={t("reg_password_placeholder")}
                 autoComplete="new-password"
                 className="pl-9"
                 required
@@ -238,7 +238,9 @@ function RegisterPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone {role === "rider" ? "" : "(optional)"}</Label>
+            <Label htmlFor="phone">
+              {role === "rider" ? t("reg_phone") : t("reg_phone_optional")}
+            </Label>
             <div className="relative">
               <Smartphone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -254,9 +256,9 @@ function RegisterPage() {
 
           {role === "rider" && (
             <div className="space-y-4 rounded-xl border border-border bg-surface p-4">
-              <p className="text-sm font-semibold">Rider verification</p>
+              <p className="text-sm font-semibold">{t("reg_rider_verification")}</p>
               <div className="space-y-1.5">
-                <Label htmlFor="v">Vehicle type</Label>
+                <Label htmlFor="v">{t("reg_vehicle_type")}</Label>
                 <select
                   id="v"
                   className="h-9 w-full rounded-md border border-input bg-input px-2 text-sm"
@@ -265,13 +267,13 @@ function RegisterPage() {
                 >
                   {VEHICLE_TYPES.map((v) => (
                     <option key={v.value} value={v.value}>
-                      {v.label}
+                      {t(v.labelKey)}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="nid">National ID number</Label>
+                <Label htmlFor="nid">{t("reg_national_id")}</Label>
                 <Input
                   id="nid"
                   value={nationalId}
@@ -280,7 +282,7 @@ function RegisterPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="iddoc">National ID photo</Label>
+                <Label htmlFor="iddoc">{t("reg_id_photo")}</Label>
                 <Input
                   id="iddoc"
                   type="file"
@@ -289,7 +291,7 @@ function RegisterPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="licdoc">Driver's license photo</Label>
+                <Label htmlFor="licdoc">{t("reg_license_photo")}</Label>
                 <Input
                   id="licdoc"
                   type="file"
@@ -298,9 +300,9 @@ function RegisterPage() {
                   onChange={(e) => setLicenseDoc(e.target.files?.[0] ?? null)}
                 />
               </div>
-              <p className="pt-1 text-sm font-semibold">Payout details</p>
+              <p className="pt-1 text-sm font-semibold">{t("reg_payout_details")}</p>
               <div className="space-y-1.5">
-                <Label htmlFor="pm">Payout method</Label>
+                <Label htmlFor="pm">{t("reg_payout_method")}</Label>
                 <select
                   id="pm"
                   className="h-9 w-full rounded-md border border-input bg-input px-2 text-sm"
@@ -309,14 +311,14 @@ function RegisterPage() {
                 >
                   {PAYOUT_METHODS.map((m) => (
                     <option key={m.value} value={m.value}>
-                      {m.label}
+                      {t(m.labelKey)}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="pa">
-                  {payoutMethod === "telebirr" ? "Telebirr phone number" : "Bank account number"}
+                  {payoutMethod === "telebirr" ? t("reg_telebirr_phone") : t("reg_bank_account")}
                 </Label>
                 <Input
                   id="pa"
@@ -326,7 +328,7 @@ function RegisterPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pn">Account holder name</Label>
+                <Label htmlFor="pn">{t("reg_account_holder")}</Label>
                 <Input
                   id="pn"
                   value={payoutName}
@@ -334,22 +336,19 @@ function RegisterPage() {
                   required
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                New rider accounts start as pending verification — an admin approves your documents
-                before you can go online.
-              </p>
+              <p className="text-xs text-muted-foreground">{t("reg_rider_note")}</p>
             </div>
           )}
 
           <Button type="submit" className="w-full" disabled={busy || !valid}>
-            {busy ? "Creating account…" : "Create account"}
+            {busy ? t("reg_creating") : t("reg_create")}
           </Button>
         </form>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          {t("reg_have_account")}{" "}
           <Link to="/login" className="font-semibold text-primary">
-            Sign in
+            {t("reg_sign_in")}
           </Link>
         </p>
       </div>
