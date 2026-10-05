@@ -94,13 +94,13 @@ function ProfilePage() {
       {/* Identity */}
       <section className="rounded-xl border border-border bg-card p-5 shadow-card">
         <SectionHeading title={t("prof_photo")} />
-        <div className="mt-4 flex items-center gap-4">
+        <div className="mt-4 flex flex-wrap items-center gap-4">
           <IdentityAvatar
             path={profile?.avatar_url}
             name={profile?.full_name}
             className="h-20 w-20 text-2xl"
           />
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <input
               ref={fileRef}
               type="file"
