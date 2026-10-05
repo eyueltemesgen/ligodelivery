@@ -1951,16 +1951,19 @@ export const en = {
   admin_meta_desc: "Operations control center for የኔ Go.",
   rd_notify_order_updated: "Order {code} updated",
   aop_notify_order_title: "Order {code}",
-  delivery_err_location: "We couldn't determine your delivery location. Please select your location manually.",
+  delivery_err_location:
+    "We couldn't determine your delivery location. Please select your location manually.",
   delivery_err_shop_location: "Delivery fee is temporarily unavailable. Please try again.",
   delivery_err_outside: "Sorry, this delivery location is outside our current service area.",
-  delivery_err_no_rule: "Delivery fee is currently unavailable for this distance. Please contact support.",
+  delivery_err_no_rule:
+    "Delivery fee is currently unavailable for this distance. Please contact support.",
   delivery_err_generic: "We couldn't calculate the delivery fee. Please try again.",
   delivery_calculating: "Calculating delivery fee…",
   delivery_flat_note: "Flat delivery fee",
   checkout_delivery_distance: "Delivery distance: {km}",
   checkout_promo_applied_toast: "Promo applied — you save {amount}",
-  checkout_pin_hint: "Add or select a saved address with a pinned map location to get an accurate delivery fee.",
+  checkout_pin_hint:
+    "Add or select a saved address with a pinned map location to get an accurate delivery fee.",
   loc_picked: "Delivery location set",
   loc_tap_hint: "Tap the map or use your current location",
   loc_use_my_location: "Use my location",
@@ -1974,7 +1977,8 @@ export const en = {
   aop_lat: "Latitude",
   aop_lng: "Longitude",
   dfe_title: "Delivery fee settings",
-  dfe_desc: "Choose how delivery is priced and set your service area. The fee is always calculated on the server at checkout.",
+  dfe_desc:
+    "Choose how delivery is priced and set your service area. The fee is always calculated on the server at checkout.",
   dfe_method: "Pricing method",
   dfe_method_brackets: "Distance brackets",
   dfe_method_base_km: "Base fee + per km",
@@ -2017,4 +2021,24 @@ export const en = {
   shop_cat_all: "All",
   shop_section_results: "Results",
   shop_no_results: "No items match “{term}”.",
+  // Home page content — admin-editable copy from site_content, with these
+  // translations as the localized fallback (see routes/index.tsx).
+  content_hero_badge: "Delivering across Bishoftu",
+  content_hero_title: "Everything you need, delivered in minutes",
+  content_hero_subtitle:
+    "Food, groceries, pharmacy and daily essentials from your favourite Bishoftu shops — with live tracking and Telebirr, CBE, BOA or cash payment.",
+  content_hero_primary_cta: "Order now",
+  content_hero_secondary_cta: "Become a rider",
+  content_categories_title: "Categories",
+  content_offers_title: "Today's offers",
+  content_shops_title: "Popular shops",
+  content_trending_title: "Trending items",
+  content_how_title: "How የኔ Go works",
+  content_how_step1_title: "1. Choose",
+  content_how_step1_text: "Browse Bishoftu shops and add items to your cart.",
+  content_how_step2_title: "2. Pay",
+  content_how_step2_text: "Cash on delivery or upload your Telebirr/bank receipt.",
+  content_how_step3_title: "3. Track",
+  content_how_step3_text: "Follow your rider live until the order arrives.",
+  content_brand_tagline: "Fast. Local. Delivered.",
 } as const;
