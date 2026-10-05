@@ -99,6 +99,9 @@ function OrderDetails() {
   const { data: rider } = useQuery({
     queryKey: ["order-rider", order?.rider_id],
     enabled: !!order?.rider_id,
+    // Poll as a fallback so the rider marker keeps moving even if the realtime
+    // channel is not established (e.g. RLS/replica settings still rolling out).
+    refetchInterval: order && isOrderOpen(order.status) ? 15000 : false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("riders")
@@ -117,6 +120,7 @@ function OrderDetails() {
   // Live status updates while the order is open.
   useEffect(() => {
     if (!orderId) return;
+    const riderId = order?.rider_id ?? null;
     const channel = supabase
       .channel(`account-order-${orderId}`)
       .on(
@@ -127,11 +131,18 @@ function OrderDetails() {
           void qc.invalidateQueries({ queryKey: ["account-orders"] });
         },
       )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "riders" }, (payload) => {
+        // Only react to the rider carrying this order; the RLS policy on
+        // `riders` still hides everyone else from the customer.
+        if (riderId && payload.new && (payload.new as { id?: string }).id === riderId) {
+          void qc.invalidateQueries({ queryKey: ["order-rider", riderId] });
+        }
+      })
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [orderId, qc]);
+  }, [orderId, qc, order?.rider_id]);
 
   if (isLoading) {
     return (
@@ -236,7 +247,11 @@ function OrderDetails() {
                 </Suspense>
               </ClientOnly>
               <p className="mt-2 text-xs text-muted-foreground">
-                {rider ? t("od_rider_live") : t("od_rider_soon")}
+                {order.rider_id
+                  ? rider?.lat != null && rider?.lng != null
+                    ? t("od_rider_live")
+                    : t("od_rider_waiting_location")
+                  : t("od_rider_soon")}
               </p>
             </section>
           )}
