@@ -283,6 +283,7 @@ export const or = {
   od_placed: "Galmeeffame {date}",
   od_progress: "Adeemsa geessuu",
   od_live_tracking: "Hordoffii kallattii",
+  od_tracking_locked: "Kaffaltiin kee erga mirkanaa'ee booda hordoffiin kallattii jalqaba.",
   od_rider_live: "Bakki rider kee kallattiin ni haaroma.",
   od_rider_soon: "Rideri dhiyootti ni ramadama.",
   od_rider_waiting_location: "Raayidarri ramadameera — bakka isaa eegaa jira.",

@@ -171,6 +171,10 @@ function OrderDetails() {
   const shop = order.shop_id ? shops[order.shop_id] : undefined;
   const payment = (settings[`payment_${order.payment_method}`] ?? {}) as Record<string, string>;
   const needsProof = order.payment_method !== "cash" && order.payment_status !== "paid";
+  // Cash on delivery settles in person, so it needs no up-front payment. Any
+  // other method must be paid before the order is fulfilled — and live
+  // tracking (which only matters once a rider is moving) waits for that too.
+  const paymentSettled = order.payment_method === "cash" || order.payment_status === "paid";
   const copy = (value: string, label: string) => {
     void navigator.clipboard.writeText(value);
     toast.success(t("od_copied", { label }));
@@ -232,81 +236,6 @@ function OrderDetails() {
             <h2 className="mb-4 font-display text-lg font-bold">{t("od_progress")}</h2>
             <OrderTimeline status={order.status} />
           </section>
-
-          {/* Live tracking */}
-          {isOrderOpen(order.status) && (
-            <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <h2 className="mb-3 font-display text-lg font-bold">{t("od_live_tracking")}</h2>
-              <ClientOnly fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
-                <Suspense fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
-                  <OrderMap
-                    lat={order.lat ?? BISHOFTU[0]}
-                    lng={order.lng ?? BISHOFTU[1]}
-                    riderLat={rider?.lat ?? null}
-                    riderLng={rider?.lng ?? null}
-                  />
-                </Suspense>
-              </ClientOnly>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {order.rider_id
-                  ? rider?.lat != null && rider?.lng != null
-                    ? t("od_rider_live")
-                    : t("od_rider_waiting_location")
-                  : t("od_rider_soon")}
-              </p>
-            </section>
-          )}
-
-          {/* Items */}
-          <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold">{t("od_items")}</h2>
-              {shop && (
-                <Link
-                  to="/shops/$shopId"
-                  params={{ shopId: shop.id }}
-                  className="flex items-center gap-1.5 text-sm font-medium text-primary"
-                >
-                  <Store className="h-4 w-4" />
-                  {shop.name}
-                </Link>
-              )}
-            </div>
-            <ul className="divide-y divide-border">
-              {items.map((it) => (
-                <li key={it.id} className="flex items-center gap-3 py-3">
-                  <StorageImage
-                    path={it.image_url}
-                    alt={it.product_name}
-                    width={160}
-                    height={160}
-                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{it.product_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {ETB(it.unit_price)} × {it.quantity}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold">
-                    {ETB(Number(it.unit_price) * it.quantity)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/* Rate your order — only after delivery (verified purchase) */}
-          {order.status === "delivered" && (
-            <OrderReviewSection
-              orderId={order.id}
-              shopId={order.shop_id}
-              shopName={shop?.name}
-              riderId={order.rider_id}
-              items={items}
-              userId={user?.id}
-            />
-          )}
 
           {/* Payment */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
@@ -412,6 +341,90 @@ function OrderDetails() {
               </div>
             )}
           </section>
+
+          {/* Live tracking — only after payment is settled (cash or verified) */}
+          {isOrderOpen(order.status) && (
+            <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+              <h2 className="mb-3 font-display text-lg font-bold">{t("od_live_tracking")}</h2>
+              {paymentSettled ? (
+                <>
+                  <ClientOnly fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
+                    <Suspense fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
+                      <OrderMap
+                        lat={order.lat ?? BISHOFTU[0]}
+                        lng={order.lng ?? BISHOFTU[1]}
+                        riderLat={rider?.lat ?? null}
+                        riderLng={rider?.lng ?? null}
+                      />
+                    </Suspense>
+                  </ClientOnly>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {order.rider_id
+                      ? rider?.lat != null && rider?.lng != null
+                        ? t("od_rider_live")
+                        : t("od_rider_waiting_location")
+                      : t("od_rider_soon")}
+                  </p>
+                </>
+              ) : (
+                <p className="flex items-center gap-2 rounded-lg bg-surface p-4 text-sm text-muted-foreground">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                  {t("od_tracking_locked")}
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* Items */}
+          <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="font-display text-lg font-bold">{t("od_items")}</h2>
+              {shop && (
+                <Link
+                  to="/shops/$shopId"
+                  params={{ shopId: shop.id }}
+                  className="flex items-center gap-1.5 text-sm font-medium text-primary"
+                >
+                  <Store className="h-4 w-4" />
+                  {shop.name}
+                </Link>
+              )}
+            </div>
+            <ul className="divide-y divide-border">
+              {items.map((it) => (
+                <li key={it.id} className="flex items-center gap-3 py-3">
+                  <StorageImage
+                    path={it.image_url}
+                    alt={it.product_name}
+                    width={160}
+                    height={160}
+                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{it.product_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {ETB(it.unit_price)} × {it.quantity}
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold">
+                    {ETB(Number(it.unit_price) * it.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Rate your order — only after delivery (verified purchase) */}
+          {order.status === "delivered" && (
+            <OrderReviewSection
+              orderId={order.id}
+              shopId={order.shop_id}
+              shopName={shop?.name}
+              riderId={order.rider_id}
+              items={items}
+              userId={user?.id}
+            />
+          )}
 
           {/* Rider */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">

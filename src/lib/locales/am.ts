@@ -279,6 +279,7 @@ export const am = {
   od_placed: "የተቀመጠበት {date}",
   od_progress: "የማድረስ ሂደት",
   od_live_tracking: "ቀጥታ ክትትል",
+  od_tracking_locked: "ክፍያዎ ከተረጋገጠ በኋላ ቀጥታ ክትትል ይጀምራል።",
   od_rider_live: "የራይደርዎ ቦታ በቀጥታ ይዘመናል።",
   od_rider_soon: "ራይደር በቅርቡ ይመደባል።",
   od_rider_waiting_location: "ራይደር ተመድቧል — አካባቢውን በመጠበቅ ላይ።",

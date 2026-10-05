@@ -282,6 +282,7 @@ export const en = {
   od_placed: "Placed {date}",
   od_progress: "Delivery progress",
   od_live_tracking: "Live tracking",
+  od_tracking_locked: "Live tracking starts once your payment is confirmed.",
   od_rider_live: "Your rider's location updates live.",
   od_rider_soon: "A rider will be assigned shortly.",
   od_rider_waiting_location: "Your rider has been assigned — waiting for their location.",
