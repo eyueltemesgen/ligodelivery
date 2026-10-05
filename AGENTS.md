@@ -59,6 +59,7 @@
 - UI copy is fully localized: JSX text, `aria-label`/`title`/`alt`/`placeholder`, toasts, and route `head` metadata all go through `t("key")` or `translations.en.<key>`. Keep the three blocks in `src/lib/i18n.ts` in exact key parity; `TranslationKey` is `keyof typeof translations.en`.
 - Reusable localization helpers: `mediaErrorKey(err)` (`src/lib/media.tsx`), `closedReason(shop, hours)` (`src/lib/hours.ts`), `paymentLabelKey`/`paymentStatusLabel` (`src/components/account/OrderCard.tsx`), `supabaseErrorText(t, err)` (`src/lib/supa-error.ts`, translate non-API errors). Prefer these over inline literals.
 - Static config maps (ad types/statuses, banner placements, service categories, merchant statuses) expose i18n keys rather than English labels.
+- Special Moments category rows are seeded with English `name`/`tagline`/`description`. Render them through `categoryDisplayName(t, category)` / `categoryDisplayTagline(t, category)` (`src/lib/service-catalog.ts`), which substitute the translated `smcat_*` copy for untouched seed values while leaving admin edits and custom categories verbatim. Rendering `category.name` directly leaves the hub/category/search pages in English for am/or visitors.
 
 ## Performance conventions
 
