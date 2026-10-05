@@ -1512,6 +1512,10 @@ export const or = {
   sma_instructions: "Qajeelfama:",
   sma_addons_label: "Dabalata:",
   sma_category_created: "Ramaddiin uumame",
+  sma_edit_category: "Ramaddii sirreessi",
+  sma_save_category: "Ramaddii olkaa'i",
+  sma_category_updated: "Ramaddiin haaromfame",
+  sma_change_image: "Suuraa jijjiiri",
   sma_delete_category_confirm:
     'Ramaddii "{name}" haqamuu? Tajaajiloonni daataa isaanii ni qabatu garuu ramaddii kana ni dhabu.',
   sma_category_deleted: "Ramaddiin haqame",

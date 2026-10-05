@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
-import { bannersQuery } from "@/lib/content";
-import { serviceCategoriesQuery } from "@/lib/special-moments";
+import { bannersQuery, type Banner } from "@/lib/content";
 import { StorageImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -12,19 +9,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 const ROTATE_MS = 3000;
 /** How long to hold after a manual swipe/tap before auto-rotation resumes. */
 const RESUME_MS = 8000;
-/** Stable id for the built-in Special Moments promo slide. */
-const SPECIAL_MOMENTS_SLIDE_ID = "__special-moments__";
-
-type AdSlide = {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  image_url: string | null;
-  link_url: string | null;
-  cta_label: string | null;
-  /** In-house promotion: branded badge + in-app navigation, not "Sponsored". */
-  house?: boolean;
-};
 
 function prefersReducedMotion() {
   return (
@@ -47,7 +31,6 @@ export function AdCarousel({
   width = 768,
   priority = false,
   aspect = "aspect-[16/6]",
-  includeSpecialMoments = false,
 }: {
   placement: string;
   className?: string | undefined;
@@ -61,39 +44,17 @@ export function AdCarousel({
   priority?: boolean;
   /** Tailwind class reserving the slot's height (aspect-ratio or fixed h-*). */
   aspect?: string;
-  /**
-   * Add the built-in Special Moments promo to the rotation. It is shown only
-   * when Special Moments has at least one active category, so the promo is
-   * never a dead end.
-   */
-  includeSpecialMoments?: boolean;
 }) {
   const { t } = useLanguage();
   const { data: banners = [] } = useQuery(bannersQuery(placement));
-  const { data: momentCategories = [] } = useQuery({
-    ...serviceCategoriesQuery,
-    enabled: includeSpecialMoments,
-  });
 
-  const ads = useMemo<AdSlide[]>(() => {
-    // Stable order: the query already sorts by sort_order; guard against ties so
-    // the rotation never reshuffles between renders.
-    const list: AdSlide[] = [...banners].sort(
-      (a, b) => a.sort_order - b.sort_order || a.title.localeCompare(b.title),
-    );
-    if (includeSpecialMoments && momentCategories.length > 0) {
-      list.unshift({
-        id: SPECIAL_MOMENTS_SLIDE_ID,
-        title: t("smi_badge"),
-        subtitle: t("home_moments_subtitle"),
-        image_url: null,
-        link_url: "/special-moments",
-        cta_label: null,
-        house: true,
-      });
-    }
-    return list;
-  }, [banners, includeSpecialMoments, momentCategories.length, t]);
+  // Stable order: the query already sorts by sort_order; guard against ties so
+  // the rotation never reshuffles between renders.
+  const ads = useMemo(
+    () =>
+      [...banners].sort((a, b) => a.sort_order - b.sort_order || a.title.localeCompare(b.title)),
+    [banners],
+  );
 
   if (ads.length === 0) return null;
 
@@ -119,7 +80,7 @@ function Carousel({
   chrome,
   wrapperClassName,
 }: {
-  ads: AdSlide[];
+  ads: Banner[];
   width: number;
   priority: boolean;
   aspect: string;
@@ -223,7 +184,7 @@ function Slide({
   priority,
   hidden,
 }: {
-  ad: AdSlide;
+  ad: Banner;
   width: number;
   active: boolean;
   priority: boolean;
@@ -245,11 +206,6 @@ function Slide({
           priority={priority}
           className="absolute inset-0 h-full w-full"
         />
-      ) : ad.house ? (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/85 to-accent">
-          <Sparkles className="absolute -right-6 -top-6 h-40 w-40 text-white/10" aria-hidden />
-          <Sparkles className="absolute bottom-4 right-1/3 h-16 w-16 text-white/10" aria-hidden />
-        </div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-primary/25 to-accent/25" />
       )}
@@ -261,14 +217,8 @@ function Slide({
           <p className="line-clamp-1 text-xs text-white/85 sm:text-sm">{ad.subtitle}</p>
         )}
       </div>
-      <span
-        className={cn(
-          "absolute left-2 top-2 inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-          ad.house ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground",
-        )}
-      >
-        {ad.house && <Sparkles className="h-3 w-3" aria-hidden />}
-        {ad.house ? t("ads_featured") : t("ads_sponsored")}
+      <span className="absolute left-2 top-2 rounded bg-background/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground">
+        {t("ads_sponsored")}
       </span>
       {ad.cta_label && href && (
         <span className="absolute right-2 top-2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
@@ -279,22 +229,6 @@ function Slide({
   );
 
   const base = "absolute inset-0 block transition-opacity duration-700 ease-in-out";
-  const state = active ? "opacity-100" : "pointer-events-none opacity-0";
-
-  // In-app house promo (Special Moments) — client-side navigation.
-  if (ad.house && href) {
-    return (
-      <Link
-        to={href}
-        tabIndex={hidden ? -1 : 0}
-        aria-hidden={hidden}
-        aria-label={ad.title}
-        className={cn(base, state)}
-      >
-        {body}
-      </Link>
-    );
-  }
 
   if (href) {
     return (
@@ -302,7 +236,7 @@ function Slide({
         href={href}
         tabIndex={hidden ? -1 : 0}
         aria-hidden={hidden}
-        className={cn(base, state)}
+        className={cn(base, active ? "opacity-100" : "pointer-events-none opacity-0")}
         {...(external ? { target: "_blank", rel: "noopener noreferrer sponsored" } : {})}
       >
         {body}
@@ -310,7 +244,10 @@ function Slide({
     );
   }
   return (
-    <div aria-hidden={hidden} className={cn(base, state)}>
+    <div
+      aria-hidden={hidden}
+      className={cn(base, active ? "opacity-100" : "pointer-events-none opacity-0")}
+    >
       {body}
     </div>
   );
