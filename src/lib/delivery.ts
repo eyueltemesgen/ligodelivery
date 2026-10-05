@@ -62,7 +62,7 @@ export async function quoteDeliveryFee(
       p_lng: (lng ?? null) as number,
       p_road_distance_km: (roadDistanceKm ?? null) as number,
     });
-    if (error && roadDistanceKm != null) {
+    if (error) {
       // Road-routing migration not applied yet: retry against the original
       // 3-argument signature so distance pricing keeps working with the
       // straight-line distance instead of dropping to the flat fee.
