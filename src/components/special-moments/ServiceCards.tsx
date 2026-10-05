@@ -1,7 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, MapPin, Star, Wallet } from "lucide-react";
 import type { Service, ServiceCategory } from "@/lib/special-moments";
-import { categoryMeta, pricingLabel } from "@/lib/service-catalog";
+import {
+  categoryMeta,
+  pricingLabel,
+  useCategoryName,
+  useCategoryTagline,
+} from "@/lib/service-catalog";
 import { StorageImage } from "@/lib/media";
 import { useLanguage } from "@/hooks/useLanguage";
 import { OPTION_LABEL_KEY } from "@/lib/special-moments";
@@ -19,6 +24,8 @@ export function ServiceCategoryCard({
 }) {
   const { t } = useLanguage();
   const meta = categoryMeta(category.slug);
+  const name = useCategoryName(category);
+  const tagline = useCategoryTagline(category);
   const Icon = meta.icon;
   return (
     <Link
@@ -31,7 +38,7 @@ export function ServiceCategoryCard({
     >
       <StorageImage
         path={category.image_url}
-        alt={category.name}
+        alt={name}
         fallback={<Icon className="h-8 w-8 text-primary/70" />}
         width={720}
         height={240}
@@ -42,11 +49,9 @@ export function ServiceCategoryCard({
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary-soft text-primary">
             <Icon className="h-4 w-4" />
           </span>
-          <h3 className="font-display text-base font-bold">{category.name}</h3>
+          <h3 className="font-display text-base font-bold">{name}</h3>
         </div>
-        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-          {category.tagline || t(meta.blurbKey)}
-        </p>
+        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{tagline}</p>
         {count != null && (
           <p className="mt-3 text-xs font-semibold text-primary">
             {count > 0 ? t("sc_available", { count }) : t("sc_coming_soon")}
@@ -60,6 +65,7 @@ export function ServiceCategoryCard({
 /** Compact link tile used in navigation strips where imagery is not needed. */
 export function ServiceCategoryPill({ category }: { category: ServiceCategory }) {
   const Icon = categoryMeta(category.slug).icon;
+  const name = useCategoryName(category);
   return (
     <Link
       to="/special-moments/category/$slug"
@@ -67,7 +73,7 @@ export function ServiceCategoryPill({ category }: { category: ServiceCategory })
       className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
     >
       <Icon className="h-4 w-4 text-primary" />
-      {category.name}
+      {name}
     </Link>
   );
 }
