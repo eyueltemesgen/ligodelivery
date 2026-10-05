@@ -1020,6 +1020,8 @@ export type Database = {
           customer_phone: string | null
           delivery_address: string | null
           delivery_distance: number | null
+          delivery_duration_s: number | null
+          delivery_source: string | null
           delivery_fee: number
           delivery_instructions: string | null
           delivery_pin: string | null
@@ -1060,6 +1062,8 @@ export type Database = {
           customer_phone?: string | null
           delivery_address?: string | null
           delivery_distance?: number | null
+          delivery_duration_s?: number | null
+          delivery_source?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null
@@ -1100,6 +1104,8 @@ export type Database = {
           customer_phone?: string | null
           delivery_address?: string | null
           delivery_distance?: number | null
+          delivery_duration_s?: number | null
+          delivery_source?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null

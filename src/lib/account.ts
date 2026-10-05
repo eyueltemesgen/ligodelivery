@@ -31,6 +31,8 @@ export type OrderRow = {
   // Delivery fee engine snapshot (present once the migration is applied).
   delivery_distance?: number | null;
   delivery_rule?: string | null;
+  delivery_duration_s?: number | null;
+  delivery_source?: string | null;
   shop_lat?: number | null;
   shop_lng?: number | null;
   customer_lat?: number | null;
@@ -129,7 +131,7 @@ export const ORDER_PAGE_SIZE = 25;
  * callers fall back to the legacy columns instead of failing to load orders.
  */
 const ORDER_COLUMNS_FULL =
-  "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,delivery_distance,delivery_rule,shop_lat,shop_lng,customer_lat,customer_lng,created_at,updated_at";
+  "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,delivery_distance,delivery_rule,delivery_duration_s,delivery_source,shop_lat,shop_lng,customer_lat,customer_lng,created_at,updated_at";
 const ORDER_COLUMNS_LEGACY =
   "id,order_code,status,payment_status,payment_method,subtotal,delivery_fee,discount,tip,total,customer_name,customer_phone,delivery_address,delivery_instructions,delivery_pin,shop_id,rider_id,lat,lng,created_at,updated_at";
 

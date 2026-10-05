@@ -1982,6 +1982,10 @@ export const or = {
   delivery_calculating: "Kaffaltii geejjibaa shallagaa jira…",
   delivery_flat_note: "Kaffaltii geejjibaa walqixa",
   checkout_delivery_distance: "Fageenya geejjibaa: {km}",
+  delivery_distance_road: "Fageenya karaa: {km}",
+  delivery_distance_estimated: "Fageenya tilmaamaa: {km} (daandii karaa hin argamne)",
+  delivery_time: "Karaadhaan gara {time}",
+  od_distance_estimated: "Fageenya (tilmaamaa)",
   checkout_promo_applied_toast: "Piroomoon hojiirra oole — {amount} qusattan",
   checkout_pin_hint:
     "Kaffaltii geejjibaa sirrii argachuuf teessoo kaartaa irratti mallattoo qabu dabalaa ykn filadhaa.",
@@ -2039,6 +2043,7 @@ export const or = {
   po_option_name: "Maqaa filannoo",
   po_add_option: "Filannoo dabali",
   od_distance: "Fageenya",
+  od_delivery_time: "Yeroo karaa",
   shop_search_placeholder: "Menu kana barbaadi…",
   shop_cat_all: "Hunda",
   shop_section_results: "Bu'aawwan",

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ETB, formatDate } from "@/lib/format";
+import { formatDuration } from "@/lib/routing";
 import {
   ORDER_STATUSES,
   STATUS_LABEL_KEY,
@@ -631,7 +632,8 @@ function OrdersAdmin() {
                 {ETB(o.delivery_fee)}
                 {o.delivery_distance != null && Number(o.delivery_distance) > 0 && (
                   <span className="ml-1 text-muted-foreground">
-                    ({Number(o.delivery_distance).toFixed(1)} km)
+                    ({Number(o.delivery_distance).toFixed(1)} km
+                    {o.delivery_source !== "road" ? ", est." : ""})
                   </span>
                 )}
               </dd>
@@ -640,6 +642,12 @@ function OrdersAdmin() {
               <dt className="text-muted-foreground">{t("dfe_label")}</dt>
               <dd>{o.delivery_rule ?? "—"}</dd>
             </div>
+            {o.delivery_duration_s != null && o.delivery_duration_s > 0 && (
+              <div>
+                <dt className="text-muted-foreground">{t("od_delivery_time")}</dt>
+                <dd>{formatDuration(o.delivery_duration_s)}</dd>
+              </div>
+            )}
             <div>
               <dt className="text-muted-foreground">{t("checkout_total")}</dt>
               <dd className="font-semibold">{ETB(o.total)}</dd>

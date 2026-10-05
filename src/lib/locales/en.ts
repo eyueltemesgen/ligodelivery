@@ -1961,6 +1961,10 @@ export const en = {
   delivery_calculating: "Calculating delivery fee…",
   delivery_flat_note: "Flat delivery fee",
   checkout_delivery_distance: "Delivery distance: {km}",
+  delivery_distance_road: "Driving distance: {km}",
+  delivery_distance_estimated: "Estimated distance: {km} (road route unavailable)",
+  delivery_time: "About {time} by road",
+  od_distance_estimated: "Distance (estimated)",
   checkout_promo_applied_toast: "Promo applied — you save {amount}",
   checkout_pin_hint:
     "Add or select a saved address with a pinned map location to get an accurate delivery fee.",
@@ -2017,6 +2021,7 @@ export const en = {
   po_option_name: "Option name",
   po_add_option: "Add option",
   od_distance: "Distance",
+  od_delivery_time: "Driving time",
   shop_search_placeholder: "Search this menu…",
   shop_cat_all: "All",
   shop_section_results: "Results",
