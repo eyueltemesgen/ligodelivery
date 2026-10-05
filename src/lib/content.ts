@@ -21,6 +21,7 @@ export const BANNER_PLACEMENTS = [
   { value: "shops", labelKey: "bp_shops" },
   { value: "offers", labelKey: "bp_offers" },
   { value: "categories", labelKey: "bp_categories" },
+  { value: "special_moments", labelKey: "bp_special_moments" },
 ] as const satisfies readonly { value: string; labelKey: TranslationKey }[];
 
 export const DEFAULT_CONTENT = {

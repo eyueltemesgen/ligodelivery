@@ -9,9 +9,19 @@ import { AdCarousel } from "@/components/ligo/AdCarousel";
 export function BannerSlot({
   placement,
   className,
+  includeSpecialMoments = false,
 }: {
   placement: string;
   className?: string | undefined;
+  /** Also rotate the built-in Special Moments promo (when it has content). */
+  includeSpecialMoments?: boolean;
 }) {
-  return <AdCarousel placement={placement} className={className} priority />;
+  return (
+    <AdCarousel
+      placement={placement}
+      className={className}
+      priority
+      includeSpecialMoments={includeSpecialMoments}
+    />
+  );
 }
