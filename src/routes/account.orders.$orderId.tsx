@@ -38,6 +38,7 @@ import {
   paymentStatusLabelKey,
 } from "@/components/account/OrderCard";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
+import { OrderReviewSection } from "@/components/account/OrderReviewSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -294,6 +295,18 @@ function OrderDetails() {
               ))}
             </ul>
           </section>
+
+          {/* Rate your order — only after delivery (verified purchase) */}
+          {order.status === "delivered" && (
+            <OrderReviewSection
+              orderId={order.id}
+              shopId={order.shop_id}
+              shopName={shop?.name}
+              riderId={order.rider_id}
+              items={items}
+              userId={user?.id}
+            />
+          )}
 
           {/* Payment */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">

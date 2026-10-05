@@ -1351,6 +1351,8 @@ export type Database = {
           is_popular: boolean
           name: string
           price: number
+          rating: number
+          rating_count: number
           shop_id: string
           updated_at: string
         }
@@ -1367,6 +1369,8 @@ export type Database = {
           is_popular?: boolean
           name: string
           price?: number
+          rating?: number
+          rating_count?: number
           shop_id: string
           updated_at?: string
         }
@@ -1383,6 +1387,8 @@ export type Database = {
           is_popular?: boolean
           name?: string
           price?: number
+          rating?: number
+          rating_count?: number
           shop_id?: string
           updated_at?: string
         }
@@ -1571,6 +1577,77 @@ export type Database = {
             columns: ["rider_id"]
             isOneToOne: false
             referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          is_hidden: boolean
+          order_id: string
+          order_item_id: string | null
+          product_id: string | null
+          rating: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_hidden?: boolean
+          order_id: string
+          order_item_id?: string | null
+          product_id?: string | null
+          rating: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_hidden?: boolean
+          order_id?: string
+          order_item_id?: string | null
+          product_id?: string | null
+          rating?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -2089,6 +2166,7 @@ export type Database = {
           owner_id: string | null
           phone: string | null
           rating: number
+          rating_count: number
           updated_at: string
         }
         Insert: {
@@ -2112,6 +2190,7 @@ export type Database = {
           owner_id?: string | null
           phone?: string | null
           rating?: number
+          rating_count?: number
           updated_at?: string
         }
         Update: {
@@ -2135,6 +2214,7 @@ export type Database = {
           owner_id?: string | null
           phone?: string | null
           rating?: number
+          rating_count?: number
           updated_at?: string
         }
         Relationships: [
@@ -2367,6 +2447,43 @@ export type Database = {
       set_merchant_commission: {
         Args: { _merchant: string; _percent: number }
         Returns: undefined
+      }
+      set_review_hidden: {
+        Args: { _review_id: string; _hidden: boolean }
+        Returns: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          is_hidden: boolean
+          order_id: string
+          order_item_id: string | null
+          product_id: string | null
+          rating: number
+          shop_id: string
+          updated_at: string
+        }
+      }
+      submit_review: {
+        Args: {
+          _order_id: string
+          _rating: number
+          _comment?: string | null
+          _product_id?: string | null
+        }
+        Returns: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          is_hidden: boolean
+          order_id: string
+          order_item_id: string | null
+          product_id: string | null
+          rating: number
+          shop_id: string
+          updated_at: string
+        }
       }
       submit_merchant_application: {
         Args: {

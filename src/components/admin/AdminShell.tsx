@@ -17,6 +17,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  Star,
   Store,
   Tags,
   Users,
@@ -64,6 +65,7 @@ const NAV_GROUPS: { key: TranslationKey; items: NavItem[] }[] = [
       { to: "/admin/ops?tab=products", key: "shell_products", icon: Package },
       { to: "/admin/ops?tab=categories", key: "shell_categories", icon: Tags },
       { to: "/admin/ops?tab=special-moments", key: "shell_special_moments", icon: Sparkles },
+      { to: "/admin/ops?tab=reviews", key: "shell_reviews", icon: Star },
     ],
   },
   {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Star } from "lucide-react";
 import { toast } from "@/lib/toast";
 import type { Product, ProductOptionGroup } from "@/lib/queries";
 import { productOptionsQuery } from "@/lib/queries";
@@ -143,6 +143,15 @@ export function ProductModal({
             <span>{product.name}</span>
             <span className="shrink-0 font-display text-lg">{ETB(price)}</span>
           </DialogTitle>
+          {Number(product.rating_count) > 0 && (
+            <p className="flex items-center gap-1 text-sm font-semibold text-warning-foreground">
+              <Star className="h-4 w-4 fill-warning text-warning" />
+              {Number(product.rating).toFixed(1)}
+              <span className="font-normal text-muted-foreground">
+                {t("rev_count", { count: Number(product.rating_count) })}
+              </span>
+            </p>
+          )}
           {product.description && (
             <p className="text-sm text-muted-foreground">{product.description}</p>
           )}

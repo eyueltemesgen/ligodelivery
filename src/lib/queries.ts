@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isMissingColumn } from "@/lib/supa-error";
 import type { ShopHoursRow } from "@/lib/hours";
 
 export type Category = {
@@ -22,6 +23,7 @@ export type Shop = {
   delivery_fee: number;
   delivery_time_min: number;
   rating: number;
+  rating_count: number;
   is_featured: boolean;
   is_online: boolean;
   is_active: boolean;
@@ -41,6 +43,9 @@ export type Product = {
   in_stock: boolean;
   is_featured: boolean;
   is_popular: boolean;
+  /** Aggregate rating; absent on DBs where the reviews migration is not applied. */
+  rating?: number | null;
+  rating_count?: number | null;
   /** Present on search results so a product can name the shop it belongs to. */
   shop_name?: string | null;
 };
@@ -64,13 +69,39 @@ const unwrap = <T>(res: { data: T | null; error: unknown }) => {
 
 /** Columns the storefront actually renders, so responses stay small. */
 const SHOP_COLUMNS =
-  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_featured,is_online,is_active,owner_id,lat,lng";
+  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,rating_count,is_featured,is_online,is_active,owner_id,lat,lng";
 const PRODUCT_COLUMNS =
-  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular";
+  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular,rating,rating_count";
 // `shops!inner` both names the shop (so duplicate product names are unambiguous)
 // and drops products whose shop was deleted, which would otherwise be dead links.
 const SEARCH_PRODUCT_COLUMNS =
+  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular,rating,rating_count,shops!inner(name)";
+
+/**
+ * The reviews migration adds `rating`/`rating_count` to shops and products.
+ * Until it is applied those columns are absent from the live schema cache, so
+ * fall back to the pre-reviews column list instead of blanking the catalogue.
+ */
+const SHOP_COLUMNS_LEGACY =
+  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_featured,is_online,is_active,owner_id,lat,lng";
+const PRODUCT_COLUMNS_LEGACY =
+  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular";
+const SEARCH_PRODUCT_COLUMNS_LEGACY =
   "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular,shops!inner(name)";
+
+/** Re-run a PostgREST select without the new rating columns if they are missing. */
+async function withRatingFallback<T>(
+  build: (columns: string) => PromiseLike<{ data: unknown; error: unknown }>,
+  columns: string,
+  legacyColumns: string,
+): Promise<T[]> {
+  const res = await build(columns);
+  if (!res.error) return (res.data ?? []) as T[];
+  if (!isMissingColumn(res.error, "rating")) throw res.error;
+  const retry = await build(legacyColumns);
+  if (retry.error) throw retry.error;
+  return (retry.data ?? []) as T[];
+}
 const OFFER_COLUMNS =
   "id,title,description,image_url,discount_type,discount_value,shop_id,product_id,starts_at,ends_at";
 
@@ -100,15 +131,22 @@ export const shopsQuery = (categoryId?: string | null, limit = SHOP_PAGE_SIZE) =
   queryKey: ["shops", categoryId ?? "all", limit],
   staleTime: 3 * 60_000,
   queryFn: async () => {
-    let q = supabase
-      .from("shops")
-      .select(SHOP_COLUMNS)
-      .eq("is_active", true)
-      .order("is_featured", { ascending: false })
-      .order("rating", { ascending: false })
-      .limit(limit);
-    if (categoryId) q = q.eq("category_id", categoryId);
-    return unwrap<Shop[]>(await q);
+    const rows = await withRatingFallback<Shop>(
+      (columns) => {
+        let q = supabase
+          .from("shops")
+          .select(columns)
+          .eq("is_active", true)
+          .order("is_featured", { ascending: false })
+          .order("rating", { ascending: false })
+          .limit(limit);
+        if (categoryId) q = q.eq("category_id", categoryId);
+        return q;
+      },
+      SHOP_COLUMNS,
+      SHOP_COLUMNS_LEGACY,
+    );
+    return rows;
   },
 });
 
@@ -116,13 +154,14 @@ export const shopQuery = (id: string) => ({
   queryKey: ["shop", id],
   staleTime: 3 * 60_000,
   queryFn: async () => {
-    const { data, error } = await supabase
-      .from("shops")
-      .select(SHOP_COLUMNS)
-      .eq("id", id)
-      .maybeSingle();
-    if (error) throw error;
-    return data as unknown as Shop | null;
+    const run = (columns: string) =>
+      supabase.from("shops").select(columns).eq("id", id).maybeSingle();
+    const first = await run(SHOP_COLUMNS);
+    if (!first.error) return first.data as unknown as Shop | null;
+    if (!isMissingColumn(first.error, "rating")) throw first.error;
+    const retry = await run(SHOP_COLUMNS_LEGACY);
+    if (retry.error) throw retry.error;
+    return retry.data as unknown as Shop | null;
   },
 });
 
@@ -154,15 +193,18 @@ export const shopProductsQuery = (shopId: string, limit = PRODUCT_PAGE_SIZE) => 
   queryKey: ["products", shopId, limit],
   staleTime: 3 * 60_000,
   queryFn: async () =>
-    unwrap<Product[]>(
-      await supabase
-        .from("products")
-        .select(PRODUCT_COLUMNS)
-        .eq("shop_id", shopId)
-        .eq("is_active", true)
-        .order("is_popular", { ascending: false })
-        .order("name")
-        .limit(limit),
+    withRatingFallback<Product>(
+      (columns) =>
+        supabase
+          .from("products")
+          .select(columns)
+          .eq("shop_id", shopId)
+          .eq("is_active", true)
+          .order("is_popular", { ascending: false })
+          .order("name")
+          .limit(limit),
+      PRODUCT_COLUMNS,
+      PRODUCT_COLUMNS_LEGACY,
     ),
 });
 
@@ -170,13 +212,16 @@ export const featuredProductsQuery = {
   queryKey: ["products", "featured"],
   staleTime: 5 * 60_000,
   queryFn: async () =>
-    unwrap<Product[]>(
-      await supabase
-        .from("products")
-        .select(PRODUCT_COLUMNS)
-        .eq("is_active", true)
-        .eq("is_popular", true)
-        .limit(8),
+    withRatingFallback<Product>(
+      (columns) =>
+        supabase
+          .from("products")
+          .select(columns)
+          .eq("is_active", true)
+          .eq("is_popular", true)
+          .limit(8),
+      PRODUCT_COLUMNS,
+      PRODUCT_COLUMNS_LEGACY,
     ),
 };
 
@@ -195,33 +240,36 @@ export const searchQuery = (term: string) => ({
   queryFn: async () => {
     if (!term.trim()) return { shops: [] as Shop[], products: [] as Product[] };
     const like = `%${term.trim()}%`;
-    const [s, p] = await Promise.all([
-      supabase
-        .from("shops")
-        .select(SHOP_COLUMNS)
-        .eq("is_active", true)
-        .ilike("name", like)
-        .limit(12),
-      supabase
-        .from("products")
-        .select(SEARCH_PRODUCT_COLUMNS)
-        .eq("is_active", true)
-        .ilike("name", like)
-        .limit(24),
+    const [shops, rawProducts] = await Promise.all([
+      withRatingFallback<Shop>(
+        (columns) =>
+          supabase
+            .from("shops")
+            .select(columns)
+            .eq("is_active", true)
+            .ilike("name", like)
+            .limit(12),
+        SHOP_COLUMNS,
+        SHOP_COLUMNS_LEGACY,
+      ),
+      withRatingFallback<Product & { shops: { name: string } | { name: string }[] | null }>(
+        (columns) =>
+          supabase
+            .from("products")
+            .select(columns)
+            .eq("is_active", true)
+            .ilike("name", like)
+            .limit(24),
+        SEARCH_PRODUCT_COLUMNS,
+        SEARCH_PRODUCT_COLUMNS_LEGACY,
+      ),
     ]);
     // Flatten the embedded shop name onto the product for display.
-    const products = (
-      (p.data ?? []) as unknown as Array<
-        Product & { shops: { name: string } | { name: string }[] | null }
-      >
-    ).map(({ shops, ...rest }) => {
-      const shop = Array.isArray(shops) ? shops[0] : shops;
+    const products = rawProducts.map(({ shops: embedded, ...rest }) => {
+      const shop = Array.isArray(embedded) ? embedded[0] : embedded;
       return { ...rest, shop_name: shop?.name ?? null } as Product;
     });
-    return {
-      shops: (s.data ?? []) as unknown as Shop[],
-      products,
-    };
+    return { shops, products };
   },
 });
 

@@ -137,7 +137,15 @@ export function ProductCard({
         </button>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
-        <h4 className="line-clamp-1 text-sm font-semibold">{product.name}</h4>
+        <div className="flex items-start justify-between gap-2">
+          <h4 className="line-clamp-1 text-sm font-semibold">{product.name}</h4>
+          {Number(product.rating_count) > 0 && (
+            <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-warning-foreground">
+              <Star className="h-3 w-3 fill-warning text-warning" />
+              {Number(product.rating).toFixed(1)}
+            </span>
+          )}
+        </div>
         {product.shop_name && (
           <p className="line-clamp-1 text-xs font-medium text-primary">
             {t("cd_from_shop", { shop: product.shop_name })}
