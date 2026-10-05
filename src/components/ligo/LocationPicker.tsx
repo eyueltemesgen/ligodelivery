@@ -8,6 +8,16 @@ import { useLanguage } from "@/hooks/useLanguage";
 /** Bishoftu city centre — the marketplace's home market. */
 export const BISHOFTU_CENTER: [number, number] = [8.7522, 38.9784];
 
+// Leaflet's default marker points at marker-icon.png, which Vite does not emit,
+// so a plain `L.marker` renders a broken 404 image. A divIcon is drawn from
+// inline HTML and needs no asset.
+const PIN_ICON = L.divIcon({
+  className: "ligo-marker",
+  html: '<div style="background:#2563eb;width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></div>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+
 /**
  * Leaflet/OpenStreetMap delivery location picker. The customer taps the map (or
  * uses device GPS) and the component reports the latitude/longitude to the
@@ -39,7 +49,7 @@ export function LocationPicker({
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
     if (lat != null && lng != null) {
-      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
+      markerRef.current = L.marker([lat, lng], { icon: PIN_ICON, draggable: true }).addTo(map);
       markerRef.current.on("dragend", () => {
         const p = markerRef.current!.getLatLng();
         onChangeRef.current(p.lat, p.lng);
@@ -49,7 +59,7 @@ export function LocationPicker({
       const { lat: la, lng: lo } = e.latlng;
       if (markerRef.current) markerRef.current.setLatLng([la, lo]);
       else {
-        markerRef.current = L.marker([la, lo], { draggable: true }).addTo(map);
+        markerRef.current = L.marker([la, lo], { icon: PIN_ICON, draggable: true }).addTo(map);
         markerRef.current.on("dragend", () => {
           const p = markerRef.current!.getLatLng();
           onChangeRef.current(p.lat, p.lng);
@@ -76,7 +86,8 @@ export function LocationPicker({
         if (map) {
           map.setView([la, lo], 16);
           if (markerRef.current) markerRef.current.setLatLng([la, lo]);
-          else markerRef.current = L.marker([la, lo], { draggable: true }).addTo(map);
+          else
+            markerRef.current = L.marker([la, lo], { icon: PIN_ICON, draggable: true }).addTo(map);
         }
         onChangeRef.current(la, lo);
       },

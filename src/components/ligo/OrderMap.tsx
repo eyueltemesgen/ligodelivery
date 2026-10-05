@@ -4,6 +4,18 @@ import "leaflet/dist/leaflet.css";
 import { useLanguage } from "@/hooks/useLanguage";
 import { getRoute } from "@/lib/routing";
 
+// Leaflet's default icon points at marker-icon.png, which Vite does not emit,
+// so `L.marker` with no icon renders a broken 404 image. A divIcon is drawn
+// from inline HTML and needs no asset, matching RiderTrackingMap/LiveMap.
+function makeIcon(color: string) {
+  return L.divIcon({
+    className: "ligo-marker",
+    html: `<div style="background:${color};width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
+
 export default function OrderMap({
   lat,
   lng,
@@ -41,7 +53,7 @@ export default function OrderMap({
     const map = mapRef.current;
     if (!map || riderLat == null || riderLng == null) return;
     if (!riderMarker.current) {
-      riderMarker.current = L.marker([riderLat, riderLng])
+      riderMarker.current = L.marker([riderLat, riderLng], { icon: makeIcon("#2563eb") })
         .addTo(map)
         .bindPopup(t("map_your_rider"));
     } else {
