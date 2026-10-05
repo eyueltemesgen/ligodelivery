@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getRoute } from "@/lib/routing";
 
 export type RiderTrackingProps = {
   shopLat?: number | null;
@@ -101,18 +102,42 @@ export default function RiderTrackingMap({
     if (shopLat != null && shopLng != null) points.push([shopLat, shopLng]);
     points.push([destLat, destLng]);
     if (points.length >= 2) {
-      routeLine.current = L.polyline(points, {
-        color: "#2563eb",
-        weight: 3,
-        opacity: 0.6,
-        dashArray: "8 8",
-      }).addTo(map);
-    }
-    if (points.length >= 2) {
       map.fitBounds(L.latLngBounds(points).pad(0.3));
     } else {
       map.setView(points[0] ?? BISHOFTU, 14);
     }
+  }, [shopLat, shopLng, riderLat, riderLng, destLat, destLng]);
+
+  // Draw the real driving route to the next stop: rider → destination once the
+  // rider is assigned, otherwise shop → destination. Routing failures simply
+  // draw nothing (the markers still show where everyone is).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const from: [number, number] | null =
+      riderLat != null && riderLng != null
+        ? [riderLat, riderLng]
+        : shopLat != null && shopLng != null
+          ? [shopLat, shopLng]
+          : null;
+    if (!from) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void getRoute(from[0], from[1], destLat, destLng).then((route) => {
+        if (cancelled || !mapRef.current) return;
+        routeLine.current?.remove();
+        routeLine.current = null;
+        if (route.source !== "road" || route.geometry.length < 2) return;
+        routeLine.current = L.polyline(
+          route.geometry.map(([lngPt, latPt]) => [latPt, lngPt] as [number, number]),
+          { color: "#2563eb", weight: 4, opacity: 0.8 },
+        ).addTo(map);
+      });
+    }, 1200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [shopLat, shopLng, riderLat, riderLng, destLat, destLng]);
 
   return <div ref={ref} className="h-80 w-full rounded-xl border border-border" />;

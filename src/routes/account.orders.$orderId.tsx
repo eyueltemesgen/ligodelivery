@@ -28,6 +28,7 @@ import { canCancelOrder, isOrderOpen } from "@/lib/orders";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
 import { publicSettingsQuery } from "@/lib/queries";
 import { useCart } from "@/lib/cart";
+import { formatDuration } from "@/lib/routing";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
 import {
@@ -454,8 +455,18 @@ function OrderDetails() {
               </div>
               {order.delivery_distance != null && Number(order.delivery_distance) > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <dt>{t("od_distance")}</dt>
+                  <dt>
+                    {order.delivery_source === "road"
+                      ? t("od_distance")
+                      : t("od_distance_estimated")}
+                  </dt>
                   <dd>{Number(order.delivery_distance).toFixed(1)} km</dd>
+                </div>
+              )}
+              {order.delivery_duration_s != null && order.delivery_duration_s > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <dt>{t("od_delivery_time")}</dt>
+                  <dd>{formatDuration(order.delivery_duration_s)}</dd>
                 </div>
               )}
               {Number(order.tip) > 0 && (
