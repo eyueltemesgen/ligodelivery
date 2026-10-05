@@ -10,6 +10,7 @@ import { translations, type TranslationKey } from "@/lib/i18n";
 import { categoriesQuery } from "@/lib/queries";
 import { mediaErrorKey, uploadImage } from "@/lib/media";
 import { merchantProfileQuery, MERCHANT_STATUS_LABEL } from "@/lib/merchant";
+import { DEFAULT_CLOSE_HOUR, DEFAULT_OPEN_HOUR } from "@/lib/hours";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,8 +78,8 @@ function MerchantJoin() {
   const [city, setCity] = useState("Bishoftu");
   const [lat, setLat] = useState<string>("");
   const [lng, setLng] = useState<string>("");
-  const [opensAt, setOpensAt] = useState("08:00");
-  const [closesAt, setClosesAt] = useState("21:00");
+  const [opensAt, setOpensAt] = useState(DEFAULT_OPEN_HOUR);
+  const [closesAt, setClosesAt] = useState(DEFAULT_CLOSE_HOUR);
 
   // Step 3 — images
   const [logo, setLogo] = useState<File | null>(null);

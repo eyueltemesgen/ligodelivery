@@ -1,4 +1,5 @@
 import type { Category, Offer, Product, Shop } from "@/lib/queries";
+import { DEFAULT_CLOSE_HOUR, DEFAULT_OPEN_HOUR } from "@/lib/hours";
 
 /**
  * Built-in mock data used as a graceful fallback when Supabase tables are
@@ -25,8 +26,8 @@ export const FALLBACK_SHOPS: Shop[] = [
     address: "Kebele 03, Bishoftu",
     image_url: null,
     cover_url: null,
-    opens_at: "08:00",
-    closes_at: "21:00",
+    opens_at: DEFAULT_OPEN_HOUR,
+    closes_at: DEFAULT_CLOSE_HOUR,
     delivery_fee: 40,
     delivery_time_min: 18,
     rating: 4.8,
@@ -46,8 +47,8 @@ export const FALLBACK_SHOPS: Shop[] = [
     address: "Kebele 01, Bishoftu",
     image_url: null,
     cover_url: null,
-    opens_at: "08:00",
-    closes_at: "21:00",
+    opens_at: DEFAULT_OPEN_HOUR,
+    closes_at: DEFAULT_CLOSE_HOUR,
     delivery_fee: 30,
     delivery_time_min: 22,
     rating: 4.6,
@@ -67,8 +68,8 @@ export const FALLBACK_SHOPS: Shop[] = [
     address: "Kebele 05, Bishoftu",
     image_url: null,
     cover_url: null,
-    opens_at: "08:00",
-    closes_at: "21:00",
+    opens_at: DEFAULT_OPEN_HOUR,
+    closes_at: DEFAULT_CLOSE_HOUR,
     delivery_fee: 50,
     delivery_time_min: 15,
     rating: 4.9,
