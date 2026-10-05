@@ -61,6 +61,10 @@
 - Static config maps (ad types/statuses, banner placements, service categories, merchant statuses) expose i18n keys rather than English labels.
 - Special Moments category rows are seeded with English `name`/`tagline`/`description`. Render them through `categoryDisplayName(t, category)` / `categoryDisplayTagline(t, category)` (`src/lib/service-catalog.ts`), which substitute the translated `smcat_*` copy for untouched seed values while leaving admin edits and custom categories verbatim. Rendering `category.name` directly leaves the hub/category/search pages in English for am/or visitors.
 
+## Search
+
+- `searchQuery` (`src/lib/queries.ts`) embeds the shop with `shops!inner(name)` so a product card can name the shop it belongs to (two shops can legitimately sell the same product name at different prices) and so products whose shop was deleted are excluded instead of linking to a dead shop page. `ProductCard` renders `cd_from_shop` when `product.shop_name` is set. Other product lists keep the lean `PRODUCT_COLUMNS`; only search pays for the extra embed.
+
 ## Performance conventions
 
 - Images: render through `StorageImage` (`src/lib/media.tsx`) with a `width` prop so the signed URL hits Supabase's image renderer. Signed URLs are cached per (bucket, path, width) and untransformed images are batch-signed; do not add per-image `createSignedUrl` calls elsewhere. `createSignedUrls` cannot carry transforms, so sized images sign individually by design.
