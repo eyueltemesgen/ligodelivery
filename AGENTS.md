@@ -109,6 +109,8 @@
 - Available orders are polled every 10 s as a fallback: a rider stops receiving realtime events for an order the moment another rider accepts it (RLS hides the row).
 - `RiderTrackingMap` draws the real OSRM route via `getRoute` and is lazily imported on the rider portal; it is not rendered during SSR.
 - Rider-facing copy uses `rd_*` keys; `rd_earnings` labels the wallet tab, and `md_tab_earnings` is the shorter "Earnings" tab label. Keep en/am/or key parity (verified with a script that diffs `^  key:` lines across the three files).
+- `accept_order` writes `orders.accepted_at`. That column was missing on the live DB (its sibling `dispatched_at`/`rider_payout`/`tip` from the same migration were present), so every claim failed with `42703` and no order could be accepted. Fixed by `supabase/migrations/20261005140000_fix_accept_order_and_rider_self_approval.sql`; apply it before riders can take orders.
+- Rider approval is enforced by a BEFORE INSERT and BEFORE UPDATE trigger pair (`riders_guard_insert` / `riders_guard_update`, both `SECURITY DEFINER`). The UPDATE guard alone was not enough: `riders_insert_self` only checks `id = auth.uid()`, so without the INSERT guard a new account could insert its own row with `is_approved = true` and reach the dispatch pool. Any new rider-writable column that affects approval must be covered by both triggers.
 
 ## Payment gate & order tracking
 
