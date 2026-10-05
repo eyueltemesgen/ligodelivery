@@ -76,3 +76,7 @@
 - Shops without lat/lng fall back to their flat `shops.delivery_fee`; checkout also falls back to the flat fee if the RPC is missing.
 - Product options live in `product_option_groups` + `product_options`; cart lines are keyed by `productId + option ids` (`lineId` in `src/lib/cart.tsx`).
 - Admin: Delivery Fees tab, shop map location picker, product option editor. All new UI is translated in en/am/or.
+
+## Account layout
+
+- `AccountShell` (`src/components/account/AccountShell.tsx`) is a grid whose first column is the `<aside>` holding the profile card and the mobile pill nav. The `<aside>` must keep `min-w-0`: grid items default to `min-width:auto`, and the non-shrinkable pill row would otherwise force the column to ~891px and make every `/account/*` page scroll sideways on phones (measured 923px scrollWidth at a 500px viewport). Verify fixes with `document.documentElement.scrollWidth === clientWidth` at a narrow viewport.
