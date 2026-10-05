@@ -84,3 +84,11 @@
 ## Account layout
 
 - `AccountShell` (`src/components/account/AccountShell.tsx`) is a grid whose first column is the `<aside>` holding the profile card and the mobile pill nav. The `<aside>` must keep `min-w-0`: grid items default to `min-width:auto`, and the non-shrinkable pill row would otherwise force the column to ~891px and make every `/account/*` page scroll sideways on phones (measured 923px scrollWidth at a 500px viewport). Verify fixes with `document.documentElement.scrollWidth === clientWidth` at a narrow viewport.
+
+## Rider portal
+
+- `/rider` is a self-contained app shell: it renders its own sticky header and 5-tab bottom bar, and `src/routes/__root.tsx` hides `SiteHeader`/`SiteFooter`/`MobileTabBar` for that exact path only. `/rider/join` and `/rider/login` keep the storefront chrome so riders can navigate back. Do not widen the bare-path check to `startsWith("/rider")`.
+- Rider queries, realtime channels, the throttled 5 s GPS writer, `accept_order` and `complete_delivery` RPCs, and the `rider_offer_events` decline upsert all live in `RiderPortal` (`src/routes/rider.index.tsx`). Components are presentational and receive data/handlers as props — keep DB access in the orchestrator.
+- Available orders are polled every 10 s as a fallback: a rider stops receiving realtime events for an order the moment another rider accepts it (RLS hides the row).
+- `RiderTrackingMap` draws the real OSRM route via `getRoute` and is lazily imported on the rider portal; it is not rendered during SSR.
+- Rider-facing copy uses `rd_*` keys; `rd_earnings` labels the wallet tab, and `md_tab_earnings` is the shorter "Earnings" tab label. Keep en/am/or key parity (verified with a script that diffs `^  key:` lines across the three files).
