@@ -654,14 +654,23 @@ function OrdersAdmin() {
             </div>
           </dl>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {DISPATCHABLE_STATUSES.includes(o.status) && (
-              <Button
-                size="sm"
-                onClick={() => void approveDispatch(o.id, o.customer_id, o.order_code)}
-              >
-                {t("aop_approve_dispatch")}
-              </Button>
-            )}
+            {DISPATCHABLE_STATUSES.includes(o.status) &&
+              (() => {
+                // Non-cash orders must be verified ("Mark payment as verified")
+                // before dispatch; the RPC enforces this, so keep the button
+                // disabled rather than letting the admin hit an error.
+                const needsPayment = o.payment_method !== "cash" && o.payment_status !== "paid";
+                return (
+                  <Button
+                    size="sm"
+                    disabled={needsPayment}
+                    title={needsPayment ? t("aop_verify_payment_first") : undefined}
+                    onClick={() => void approveDispatch(o.id, o.customer_id, o.order_code)}
+                  >
+                    {t("aop_approve_dispatch")}
+                  </Button>
+                );
+              })()}
             <select
               className="h-9 rounded-md border border-input bg-background px-2 text-sm"
               value={o.status}
@@ -722,7 +731,7 @@ function OrdersAdmin() {
                 )
               }
             >
-              Mark paid
+              {t("aop_mark_paid")}
             </Button>
           </div>
         </div>
@@ -734,19 +743,22 @@ function OrdersAdmin() {
 const DISPATCHABLE_STATUSES = ["pending_payment", "pending", "payment_verification"];
 
 /**
- * Dispatch via the approve_and_dispatch RPC; if the function is missing from
- * the live project (404/PGRST202), fall back to a direct status update so
- * admin dispatch never blocks.
+ * Dispatch via the approve_and_dispatch RPC. This is the single payment gate:
+ * for non-cash orders the RPC refuses to dispatch until payment is verified, so
+ * we must never fall back to a raw status update — that would deliver an unpaid
+ * order. If the RPC is missing we surface the error and ask the admin to apply
+ * the migration instead.
  */
 async function dispatchOrder(orderId: string) {
   const { error } = await supabase.rpc("approve_and_dispatch", { _order_id: orderId });
   if (!error) return { error: null };
   if (isMissingRpc(error)) {
-    const { error: fallbackError } = await supabase
-      .from("orders")
-      .update({ status: "dispatched", dispatched_at: new Date().toISOString(), rider_id: null })
-      .eq("id", orderId);
-    return { error: fallbackError };
+    return {
+      error: {
+        message:
+          "Dispatch is unavailable: the payment gate function is missing. Apply the latest database migration.",
+      },
+    };
   }
   return { error };
 }

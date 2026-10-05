@@ -285,6 +285,7 @@ export const or = {
   od_live_tracking: "Hordoffii kallattii",
   od_rider_live: "Bakki rider kee kallattiin ni haaroma.",
   od_rider_soon: "Rideri dhiyootti ni ramadama.",
+  od_rider_waiting_location: "Raayidarri ramadameera — bakka isaa eegaa jira.",
   od_items: "Wantaalee",
   od_payment: "Kaffaltii",
   od_method: "Mala",
@@ -1023,6 +1024,7 @@ export const or = {
   md_no_active_orders:
     "Amma ajajni socho'aa hin jiru. Ajajoonni haaraan battalumatti asitti mul'atu.",
   md_waiting_team: "Raayidarii / garee Yene Go eegaa jira",
+  md_awaiting_payment: "Kaffaltiin mirkanaa'uun dura qophaa'uu eegaa jira.",
   md_no_shop: "Amma herrega kee waliin dukkaan hin hidhamne.",
   md_no_shop_products:
     "Amma dukkaan hin hidhamne — dukkaan kee yeroo hojjettutti oomishaaleen mul'atu.",
@@ -1355,6 +1357,8 @@ export const or = {
   aop_online_suffix: " (sarara irra)",
   aop_notify_rider_assigned: "Raayidarri ajaja keetiif ramadame.",
   aop_notify_payment_confirmed: "Kaffaltiin mirkanaa'e.",
+  aop_mark_paid: "Kaffaltii akka mirkanaa'e mallattoo godhi",
+  aop_verify_payment_first: "Ajaja kana raabsuu kee dura kaffaltii mirkaneessi.",
   aop_no_receipts: "Nagaheen hin galchine.",
   aop_receipt: "Nagahee",
   aop_ref: "Wabii:",
