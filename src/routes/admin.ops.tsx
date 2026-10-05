@@ -1916,6 +1916,22 @@ function BannersAdmin() {
             </option>
           ))}
         </select>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() =>
+            setForm({
+              ...form,
+              link_url: "/special-moments",
+              title: form.title || t("smi_badge"),
+              cta_label: form.cta_label || t("home_explore_moments"),
+              placement: "special_moments",
+            })
+          }
+        >
+          {t("aop_promote_special_moments")}
+        </Button>
         <Input
           placeholder={t("aop_link_placeholder")}
           value={form.link_url}
