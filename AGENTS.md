@@ -85,6 +85,12 @@
 
 - `AccountShell` (`src/components/account/AccountShell.tsx`) is a grid whose first column is the `<aside>` holding the profile card and the mobile pill nav. The `<aside>` must keep `min-w-0`: grid items default to `min-width:auto`, and the non-shrinkable pill row would otherwise force the column to ~891px and make every `/account/*` page scroll sideways on phones (measured 923px scrollWidth at a 500px viewport). Verify fixes with `document.documentElement.scrollWidth === clientWidth` at a narrow viewport.
 
+## Advertisements
+
+- The live storefront ad system is **`banners`** (`bannersQuery` in `src/lib/content.ts`), rendered by `AdCarousel` (`src/components/ligo/AdCarousel.tsx`) through the `BannerSlot` wrapper. It auto-rotates active banners for a placement in one fixed-size slot: 4s per ad, crossfade, dots, swipe, hover-pause, reduced-motion off, and 0/1/N handling (0 hides the slot). Admin CRUD is `BannersAdmin` in `admin.ops.tsx` (Banners tab).
+- There is a **second, dead ad system**: `src/lib/ads.ts` + `src/components/ligo/AdSlot.tsx` + `src/components/admin/AdvertisingHub.tsx`. `AdvertisingHub` is not imported by any route and `adsQuery` queries columns (`placement`, `destination_url`, `cta_label`, …) that do not exist on the live `ads` table (it actually has `placement_key`, `link_value`, `link_type`, …). This is the source of the only `tsc` errors in the repo — do not wire it up without fixing the schema mapping first.
+- Banner image sizing: `StorageImage` uses Supabase's render transform via the signed URL, so different `width` props produce differently-sized signed URLs. The homepage hero passes `width={1080}`, slot placements default to `768`.
+
 ## Shop hours
 
 - Canonical default window lives in `src/lib/hours.ts` (`DEFAULT_OPEN_HOUR = "07:00"`, `DEFAULT_CLOSE_HOUR = "22:00"`). Use those constants, never literals, for the fallback window in editors, merchant onboarding and fallback shop data.
