@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { DAY_NAMES, type ShopHoursRow } from "@/lib/hours";
+import { DAY_NAMES, DEFAULT_CLOSE_HOUR, DEFAULT_OPEN_HOUR, type ShopHoursRow } from "@/lib/hours";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -37,8 +37,8 @@ const buildDraft = (
 
 export function ShopHoursEditor({
   shopId,
-  fallbackOpen = "08:00",
-  fallbackClose = "21:00",
+  fallbackOpen = DEFAULT_OPEN_HOUR,
+  fallbackClose = DEFAULT_CLOSE_HOUR,
 }: {
   shopId: string;
   fallbackOpen?: string;
