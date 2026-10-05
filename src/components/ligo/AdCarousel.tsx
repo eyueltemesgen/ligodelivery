@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 
 /** Milliseconds each advertisement stays on screen before the next one. */
-const ROTATE_MS = 4000;
+const ROTATE_MS = 3000;
 /** How long to hold after a manual swipe/tap before auto-rotation resumes. */
 const RESUME_MS = 8000;
 /** Stable id for the built-in Special Moments promo slide. */
