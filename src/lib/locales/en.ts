@@ -1499,6 +1499,10 @@ export const en = {
   sma_instructions: "Instructions:",
   sma_addons_label: "Add-ons:",
   sma_category_created: "Category created",
+  sma_edit_category: "Edit category",
+  sma_save_category: "Save category",
+  sma_category_updated: "Category updated",
+  sma_change_image: "Change image",
   sma_delete_category_confirm:
     'Delete category "{name}"? Services keep their data but lose this category.',
   sma_category_deleted: "Category deleted",

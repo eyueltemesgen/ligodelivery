@@ -119,7 +119,7 @@ function Home() {
               ))}
             </div>
           </div>
-          {heroBanners.length > 0 || serviceCategories.length > 0 ? (
+          {heroBanners.length > 0 ? (
             <AdCarousel
               placement="home_hero"
               className=""
@@ -128,7 +128,6 @@ function Home() {
               width={1080}
               aspect="aspect-[16/9] lg:aspect-auto lg:h-96"
               wrapperClassName="rounded-2xl shadow-pop"
-              includeSpecialMoments
             />
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
