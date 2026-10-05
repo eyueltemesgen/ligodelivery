@@ -104,13 +104,22 @@ function OrderDetails() {
     // channel is not established (e.g. RLS/replica settings still rolling out).
     refetchInterval: order && isOrderOpen(order.status) ? 15000 : false,
     queryFn: async () => {
-      const { data, error } = await supabase
+      // `riders.avatar_url` is added by a migration that may not be applied yet;
+      // fall back to the older column set so tracking never breaks.
+      const withAvatar = await supabase
+        .from("riders")
+        .select("id,vehicle_type,lat,lng,is_online,avatar_url")
+        .eq("id", order!.rider_id!)
+        .maybeSingle();
+      if (!withAvatar.error) return withAvatar.data;
+      if (withAvatar.error.code !== "42703") throw withAvatar.error;
+      const fallback = await supabase
         .from("riders")
         .select("id,vehicle_type,lat,lng,is_online")
         .eq("id", order!.rider_id!)
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (fallback.error) throw fallback.error;
+      return fallback.data ? { ...fallback.data, avatar_url: null } : null;
     },
   });
   const { data: settings = {} } = useQuery(publicSettingsQuery);
@@ -355,6 +364,7 @@ function OrderDetails() {
                         lng={order.lng ?? BISHOFTU[1]}
                         riderLat={rider?.lat ?? null}
                         riderLng={rider?.lng ?? null}
+                        riderAvatar={rider?.avatar_url ?? null}
                       />
                     </Suspense>
                   </ClientOnly>

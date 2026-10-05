@@ -17,6 +17,7 @@ import { ProductModal } from "@/components/ligo/ProductModal";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BackButton } from "@/components/layout/BackButton";
 
 export const Route = createFileRoute("/shops/$shopId")({
   head: () => ({
@@ -130,6 +131,9 @@ function ShopDetail() {
 
   return (
     <div className="isolate">
+      <div className="container-ligo pt-4">
+        <BackButton fallback="/shops" label={t("shop_all_shops")} />
+      </div>
       <div className="relative z-0 h-56 w-full overflow-hidden bg-surface">
         <StorageImage
           path={shop.cover_url ?? shop.image_url}

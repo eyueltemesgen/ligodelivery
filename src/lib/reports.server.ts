@@ -13,6 +13,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import type { Language } from "@/lib/i18n";
 import {
   buildBuckets,
   deliveryStatusLabel,
@@ -40,6 +41,8 @@ export type GenerateReportInput = {
   period: ReportPeriod;
   /** Admin display name, recorded on the report. */
   generatedBy?: string | null;
+  /** Language for server-rendered export labels (dashboard localizes itself). */
+  language?: Language | undefined;
 };
 
 /** Supabase caps a single response; page through so large periods stay exact. */
@@ -237,6 +240,7 @@ export async function generateReport(
       customer: o.customer_name?.trim() || "Customer",
       shop: o.shop_id ? (shopName.get(o.shop_id) ?? "—") : "—",
       total: num(o.total),
+      paymentMethodId: o.payment_method,
       paymentMethod: paymentMethodLabel(o.payment_method),
       paymentStatus: o.payment_status,
       status: o.status,

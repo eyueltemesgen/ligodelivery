@@ -3,12 +3,14 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useLanguage } from "@/hooks/useLanguage";
 import { getRoute } from "@/lib/routing";
+import { makePinIcon, riderIcon } from "@/components/ligo/rider-marker";
 
 export type RiderTrackingProps = {
   shopLat?: number | null;
   shopLng?: number | null;
   riderLat?: number | null;
   riderLng?: number | null;
+  riderAvatar?: string | null;
   destLat: number;
   destLng: number;
   status?: string;
@@ -16,20 +18,12 @@ export type RiderTrackingProps = {
 
 const BISHOFTU: [number, number] = [8.7522, 38.9969];
 
-function makeIcon(color: string) {
-  return L.divIcon({
-    className: "ligo-marker",
-    html: `<div style="background:${color};width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
-  });
-}
-
 export default function RiderTrackingMap({
   shopLat,
   shopLng,
   riderLat,
   riderLng,
+  riderAvatar,
   destLat,
   destLng,
 }: RiderTrackingProps) {
@@ -58,7 +52,7 @@ export default function RiderTrackingMap({
     const map = mapRef.current;
     if (!map) return;
     if (!destMarker.current) {
-      destMarker.current = L.marker([destLat, destLng], { icon: makeIcon("#16a34a") })
+      destMarker.current = L.marker([destLat, destLng], { icon: makePinIcon("#16a34a") })
         .addTo(map)
         .bindPopup(t("map_delivery_address"));
     } else {
@@ -70,7 +64,7 @@ export default function RiderTrackingMap({
     const map = mapRef.current;
     if (!map || shopLat == null || shopLng == null) return;
     if (!shopMarker.current) {
-      shopMarker.current = L.marker([shopLat, shopLng], { icon: makeIcon("#f59e0b") })
+      shopMarker.current = L.marker([shopLat, shopLng], { icon: makePinIcon("#f59e0b") })
         .addTo(map)
         .bindPopup(t("map_pickup_shop"));
     } else {
@@ -81,14 +75,22 @@ export default function RiderTrackingMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || riderLat == null || riderLng == null) return;
-    if (!riderMarker.current) {
-      riderMarker.current = L.marker([riderLat, riderLng], { icon: makeIcon("#2563eb") })
-        .addTo(map)
-        .bindPopup(t("map_your_rider"));
-    } else {
-      riderMarker.current.setLatLng([riderLat, riderLng]);
-    }
-  }, [riderLat, riderLng]);
+    let cancelled = false;
+    void riderIcon("#2563eb", riderAvatar).then((icon) => {
+      if (cancelled) return;
+      if (!riderMarker.current) {
+        riderMarker.current = L.marker([riderLat, riderLng], { icon })
+          .addTo(map)
+          .bindPopup(t("map_your_rider"));
+      } else {
+        riderMarker.current.setLatLng([riderLat, riderLng]);
+        riderMarker.current.setIcon(icon);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [riderLat, riderLng, riderAvatar, t]);
 
   useEffect(() => {
     const map = mapRef.current;

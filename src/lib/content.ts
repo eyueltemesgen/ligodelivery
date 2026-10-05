@@ -30,7 +30,7 @@ export const DEFAULT_CONTENT = {
   brand_tagline: "Fast. Local. Delivered.",
   logo_url: "",
   city: "Bishoftu",
-  hero_badge: "Delivering across Bishoftu",
+  hero_badge: "",
   hero_title: "Everything you need, delivered in minutes",
   hero_subtitle:
     "Food, groceries, pharmacy and daily essentials from your favourite Bishoftu shops — with live tracking and Telebirr, CBE, BOA or cash payment.",

@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
@@ -32,6 +39,9 @@ const METHODS: { id: string; labelKey: TranslationKey }[] = [
 ];
 
 const TIP_PRESETS = [0, 10, 20, 30, 50];
+
+// Cash is offered on its own; every other method is an online/prepaid option.
+const ONLINE_METHODS = METHODS.filter((m) => m.id !== "cash");
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -78,6 +88,7 @@ function CheckoutPage() {
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [method, setMethod] = useState("cash");
+  const isCash = method === "cash";
   const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
   const [fee, setFee] = useState<FeeState>({ status: "loading" });
@@ -444,19 +455,44 @@ function CheckoutPage() {
             <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
               <h2 className="font-display text-lg font-bold">{t("checkout_payment_method")}</h2>
               <div className="grid gap-2 sm:grid-cols-2">
-                {METHODS.map((m) => (
-                  <button
-                    type="button"
-                    key={m.id}
-                    onClick={() => setMethod(m.id)}
-                    className={`rounded-lg border px-4 py-3 text-left text-sm font-medium ${method === m.id ? "border-primary bg-primary-soft" : "border-border"}`}
-                  >
-                    {t(m.labelKey)}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={() => setMethod("cash")}
+                  className={`rounded-lg border px-4 py-3 text-left text-sm font-medium ${isCash ? "border-primary bg-primary-soft" : "border-border"}`}
+                >
+                  <span className="block font-semibold">{t("pay_cash")}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {t("checkout_pay_cash_hint")}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMethod(ONLINE_METHODS[0]?.id ?? "telebirr")}
+                  className={`rounded-lg border px-4 py-3 text-left text-sm font-medium ${!isCash ? "border-primary bg-primary-soft" : "border-border"}`}
+                >
+                  <span className="block font-semibold">{t("checkout_pay_online")}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {t("checkout_pay_online_hint")}
+                  </span>
+                </button>
               </div>
-              {method !== "cash" && (
-                <p className="text-xs text-muted-foreground">{t("checkout_payment_note")}</p>
+              {!isCash && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="online-method">{t("checkout_pay_online_choose")}</Label>
+                  <Select value={method} onValueChange={setMethod}>
+                    <SelectTrigger id="online-method">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ONLINE_METHODS.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {t(m.labelKey)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">{t("checkout_payment_note")}</p>
+                </div>
               )}
             </section>
 

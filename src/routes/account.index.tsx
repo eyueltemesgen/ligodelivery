@@ -146,6 +146,25 @@ function AccountOverview() {
         />
       )}
 
+      {/* Address recommendation — new accounts have no saved address yet */}
+      {!isLoading && summary?.addressCount === 0 && (
+        <section className="flex flex-wrap items-center gap-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-5 shadow-card">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+            <MapPin className="h-5 w-5" />
+          </span>
+          <div className="min-w-[12rem] flex-1">
+            <p className="font-display font-bold">{t("acct_addr_prompt_title")}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{t("acct_addr_prompt_desc")}</p>
+          </div>
+          <Button asChild>
+            <Link to="/account/addresses">
+              <Plus className="mr-1.5 h-4 w-4" />
+              {t("acct_addr_prompt_cta")}
+            </Link>
+          </Button>
+        </section>
+      )}
+
       {/* Quick stats */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (

@@ -1699,6 +1699,7 @@ export type Database = {
       }
       riders: {
         Row: {
+          avatar_url: string | null
           battery: number | null
           commission_tier: string
           created_at: string
@@ -1722,6 +1723,7 @@ export type Database = {
           verification_status: string
         }
         Insert: {
+          avatar_url?: string | null
           battery?: number | null
           commission_tier?: string
           created_at?: string
@@ -1745,6 +1747,7 @@ export type Database = {
           verification_status?: string
         }
         Update: {
+          avatar_url?: string | null
           battery?: number | null
           commission_tier?: string
           created_at?: string

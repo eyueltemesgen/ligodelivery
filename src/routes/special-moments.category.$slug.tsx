@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ImageOff } from "lucide-react";
+import { ImageOff } from "lucide-react";
 import { serviceCategoriesQuery, servicesQuery, type ServiceFilters } from "@/lib/special-moments";
 import { ServiceCard } from "@/components/special-moments/ServiceCards";
 import { categoryMeta, useCategoryName, useCategoryTagline } from "@/lib/service-catalog";
@@ -8,6 +8,7 @@ import { StorageImage } from "@/lib/media";
 import { GridSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
+import { BackButton } from "@/components/layout/BackButton";
 
 export const Route = createFileRoute("/special-moments/category/$slug")({
   head: ({ params }) => ({
@@ -46,13 +47,7 @@ function CategoryPage() {
     <div>
       <section className="border-b border-border bg-surface">
         <div className="container-ligo py-8">
-          <Link
-            to="/special-moments"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t("smi_badge")}
-          </Link>
+          <BackButton fallback="/special-moments" label={t("smi_badge")} />
           <div className="mt-4 flex flex-wrap items-start gap-4">
             <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary">
               <Icon className="h-6 w-6" />

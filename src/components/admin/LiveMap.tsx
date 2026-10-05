@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useLanguage } from "@/hooks/useLanguage";
+import { riderIcon } from "@/components/ligo/rider-marker";
 
 export type LiveMapRider = {
   id: string;
@@ -9,6 +10,7 @@ export type LiveMapRider = {
   lat: number;
   lng: number;
   state: "idle" | "delivering" | "offline";
+  avatarUrl?: string | null;
 };
 
 export type LiveMapShop = {
@@ -90,13 +92,18 @@ export default function LiveMap({
       const existing = riderMarkers.current.get(r.id);
       if (existing) {
         existing.setLatLng([r.lat, r.lng]);
-        existing.setIcon(divIcon(COLORS[r.state]));
+        void riderIcon(COLORS[r.state], r.avatarUrl).then((icon) => {
+          if (riderMarkers.current.get(r.id) === existing) existing.setIcon(icon);
+        });
       } else {
         const marker = L.marker([r.lat, r.lng], { icon: divIcon(COLORS[r.state]) })
           .addTo(map)
           .bindTooltip(r.name, { direction: "top" });
         marker.on("click", () => selectRef.current(r.id));
         riderMarkers.current.set(r.id, marker);
+        void riderIcon(COLORS[r.state], r.avatarUrl).then((icon) => {
+          if (riderMarkers.current.get(r.id) === marker) marker.setIcon(icon);
+        });
       }
     }
     for (const [id, m] of riderMarkers.current) {

@@ -78,6 +78,11 @@ function Home() {
   const copy = (key: keyof SiteContent, fallback: TranslationKey) =>
     c && c[key] && c[key] !== DEFAULT_CONTENT[key] ? String(c[key]) : t(fallback);
 
+  // The hero badge is opt-in: only show it when an admin has set a custom,
+  // non-empty value. Default/empty renders nothing instead of placeholder copy.
+  const heroBadge =
+    c?.hero_badge && c.hero_badge !== DEFAULT_CONTENT.hero_badge ? String(c.hero_badge) : "";
+
   return (
     <div>
       <div className="container-ligo pt-4">
@@ -87,9 +92,11 @@ function Home() {
       <section className="border-b border-border bg-surface">
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
           <div>
-            <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
-              {copy("hero_badge", "content_hero_badge")}
-            </span>
+            {heroBadge && (
+              <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
+                {heroBadge}
+              </span>
+            )}
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
               {copy("hero_title", "content_hero_title")}
             </h1>

@@ -13,11 +13,16 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { resolvePeriod, type ReportRequest } from "@/lib/reports";
 import type { ReportPayload } from "@/lib/reports";
+import type { Language } from "@/lib/i18n";
+import { REPORT_COPY } from "@/lib/report-copy";
 
-type ReportInput = ReportRequest & { record?: boolean };
+type ReportInput = ReportRequest & { record?: boolean; language?: Language };
 
 /** The context injected by `requireSupabaseAuth`. */
 type ReportContext = { supabase: SupabaseClient<Database>; userId: string };
+
+/** Report history is recorded in English so the stored record is stable. */
+const HISTORY_REPORT_TYPE = REPORT_COPY.en.businessReport;
 
 /** Reject anyone who is not an admin. `is_admin()` is SECURITY DEFINER. */
 async function assertAdmin(context: ReportContext) {
@@ -84,11 +89,15 @@ export const generateReportFn = createServerFn({ method: "POST" })
     const { generateReport } = await import("@/lib/reports.server");
     const generatedBy = await loadGeneratedBy(ctx);
 
-    const payload = await generateReport(ctx.supabase, { period, generatedBy });
+    const payload = await generateReport(ctx.supabase, {
+      period,
+      generatedBy,
+      language: data.language,
+    });
 
     if (data.record) {
       await recordHistory(ctx, {
-        reportType: "Business Report",
+        reportType: HISTORY_REPORT_TYPE,
         rangeLabel: period.label,
         startDate: period.startDate,
         endDate: period.endDateInclusive,
@@ -153,7 +162,7 @@ export type ExportResult = {
 /** Generate a report and render it as an .xlsx or .pdf, recording history. */
 export const exportReportFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: ReportRequest & { kind: "excel" | "pdf" }) => input)
+  .validator((input: ReportRequest & { kind: "excel" | "pdf"; language?: Language }) => input)
   .handler(async ({ data, context }): Promise<ExportResult> => {
     const ctx = context as ReportContext;
     await assertAdmin(ctx);
@@ -161,21 +170,25 @@ export const exportReportFn = createServerFn({ method: "POST" })
     const { generateReport } = await import("@/lib/reports.server");
     const generatedBy = await loadGeneratedBy(ctx);
 
-    const payload = await generateReport(ctx.supabase, { period, generatedBy });
+    const payload = await generateReport(ctx.supabase, {
+      period,
+      generatedBy,
+      language: data.language,
+    });
 
     try {
       if (data.kind === "excel") {
         const { buildReportWorkbook } = await import("@/lib/report-excel");
-        return await buildReportWorkbook(payload);
+        return await buildReportWorkbook(payload, data.language);
       }
       const { buildReportPdf } = await import("@/lib/report-pdf");
-      return await buildReportPdf(payload, ctx.supabase);
+      return await buildReportPdf(payload, ctx.supabase, data.language);
     } catch (err) {
       console.error("[reports] export failed", err);
       throw new Error("Could not build the export file. Please try again.");
     } finally {
       await recordHistory(ctx, {
-        reportType: "Business Report",
+        reportType: HISTORY_REPORT_TYPE,
         rangeLabel: period.label,
         startDate: period.startDate,
         endDate: period.endDateInclusive,

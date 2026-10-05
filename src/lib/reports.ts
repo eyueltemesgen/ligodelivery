@@ -5,7 +5,8 @@
  * the browser (Reports dashboard, exports) and the server aggregation layer.
  * All status labels come from the app's single status system in `lib/orders`.
  */
-import { ORDER_STATUSES, STATUS_LABEL, type OrderStatus } from "@/lib/orders";
+import { ORDER_STATUSES, STATUS_LABEL, STATUS_LABEL_KEY, type OrderStatus } from "@/lib/orders";
+import type { TranslationKey } from "@/lib/i18n";
 import { ETB } from "@/lib/format";
 
 /**
@@ -101,6 +102,9 @@ export type ReportOrderRow = {
   customer: string;
   shop: string;
   total: number;
+  /** Raw payment method id (e.g. "telebirr"); use for localized display. */
+  paymentMethodId: string;
+  /** English payment method label; fallback when the id is unknown. */
   paymentMethod: string;
   paymentStatus: string;
   status: string;
@@ -230,6 +234,47 @@ export function deliveryStatusLabel(status: string): string {
     return "In transit";
   return "Awaiting payment";
 }
+
+/** Delivery-stage buckets derived from an order status. */
+export type DeliveryBucket =
+  | "delivered"
+  | "cancelled"
+  | "preparing"
+  | "in_transit"
+  | "awaiting_payment";
+
+export function deliveryStatusBucket(status: string): DeliveryBucket {
+  if (status === "delivered") return "delivered";
+  if (status === "cancelled") return "cancelled";
+  if (["confirmed", "preparing", "ready_for_pickup"].includes(status)) return "preparing";
+  if (
+    [
+      "dispatched",
+      "accepted",
+      "rider_assigned",
+      "arrived_at_merchant",
+      "picked_up",
+      "on_the_way",
+    ].includes(status)
+  )
+    return "in_transit";
+  return "awaiting_payment";
+}
+
+const DELIVERY_BUCKET_KEY: Record<DeliveryBucket, TranslationKey> = {
+  delivered: "rp_delivery_delivered",
+  cancelled: "rp_delivery_cancelled",
+  preparing: "rp_delivery_processing",
+  in_transit: "rp_delivery_in_transit",
+  awaiting_payment: "rp_delivery_awaiting_payment",
+};
+
+/** Localized delivery-stage label key. */
+export function deliveryStatusKey(status: string): TranslationKey {
+  return DELIVERY_BUCKET_KEY[deliveryStatusBucket(status)];
+}
+
+export { STATUS_LABEL_KEY };
 
 // ---------------------------------------------------------------------------
 // Date helpers (local platform time)

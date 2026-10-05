@@ -3,7 +3,6 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
-  ArrowLeft,
   BadgeCheck,
   CalendarDays,
   Check,
@@ -31,6 +30,7 @@ import { CardSkeleton } from "@/components/account/States";
 import { ETB } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
 import { OPTION_LABEL_KEY } from "@/lib/special-moments";
+import { BackButton } from "@/components/layout/BackButton";
 
 export const Route = createFileRoute("/special-moments/service/$serviceId")({
   head: () => ({
@@ -80,14 +80,10 @@ function ServiceDetailPage() {
   return (
     <div>
       <div className="container-ligo pt-6">
-        <Link
-          to={slug ? "/special-moments/category/$slug" : "/special-moments"}
-          params={slug ? { slug } : {}}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {category?.name ?? t("smi_badge")}
-        </Link>
+        <BackButton
+          fallback={slug ? `/special-moments/category/${slug}` : "/special-moments"}
+          label={category?.name ?? t("smi_badge")}
+        />
       </div>
 
       <section className="container-ligo grid gap-8 py-6 lg:grid-cols-[1.15fr_1fr]">

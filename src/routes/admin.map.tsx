@@ -49,12 +49,13 @@ function LiveMapPage() {
         .select("id,is_online,is_approved,lat,lng,speed,battery,location_updated_at");
       const ids = (data ?? []).map((r) => r.id);
       const { data: profiles } = ids.length
-        ? await supabase.from("profiles").select("id,full_name,phone").in("id", ids)
+        ? await supabase.from("profiles").select("id,full_name,phone,avatar_url").in("id", ids)
         : { data: [] };
       return (data ?? []).map((r) => ({
         ...r,
         name: profiles?.find((p) => p.id === r.id)?.full_name || t("rd_rider"),
         phone: profiles?.find((p) => p.id === r.id)?.phone ?? "",
+        avatarUrl: profiles?.find((p) => p.id === r.id)?.avatar_url ?? null,
       }));
     },
   });
