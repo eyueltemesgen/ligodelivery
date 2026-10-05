@@ -85,6 +85,12 @@
 
 - `AccountShell` (`src/components/account/AccountShell.tsx`) is a grid whose first column is the `<aside>` holding the profile card and the mobile pill nav. The `<aside>` must keep `min-w-0`: grid items default to `min-width:auto`, and the non-shrinkable pill row would otherwise force the column to ~891px and make every `/account/*` page scroll sideways on phones (measured 923px scrollWidth at a 500px viewport). Verify fixes with `document.documentElement.scrollWidth === clientWidth` at a narrow viewport.
 
+## Shop hours
+
+- Canonical default window lives in `src/lib/hours.ts` (`DEFAULT_OPEN_HOUR = "07:00"`, `DEFAULT_CLOSE_HOUR = "22:00"`). Use those constants, never literals, for the fallback window in editors, merchant onboarding and fallback shop data.
+- The DB column defaults for `shops`/`merchant_profiles`/`shop_hours` and the `submit_merchant_application` RPC fallback are set by `supabase/migrations/20261004210000_comfortable_bishoftu_hours.sql` (additive/idempotent; only rewrites rows still on the untouched 08:00–21:00 default). It must be applied through the Lovable/Supabase pipeline — a code deploy alone does not update existing rows.
+- `isShopOpenNow` (`src/lib/hours.ts`) prefers per-day `shop_hours` rows, then falls back to the shop-level `opens_at`/`closes_at`. `isShopOpen` in `src/lib/format.ts` is the simpler card-level check.
+
 ## Rider portal
 
 - `/rider` is a self-contained app shell: it renders its own sticky header and 5-tab bottom bar, and `src/routes/__root.tsx` hides `SiteHeader`/`SiteFooter`/`MobileTabBar` for that exact path only. `/rider/join` and `/rider/login` keep the storefront chrome so riders can navigate back. Do not widen the bare-path check to `startsWith("/rider")`.
