@@ -41,6 +41,8 @@ export type Product = {
   in_stock: boolean;
   is_featured: boolean;
   is_popular: boolean;
+  /** Present on search results so a product can name the shop it belongs to. */
+  shop_name?: string | null;
 };
 export type Offer = {
   id: string;
@@ -65,6 +67,10 @@ const SHOP_COLUMNS =
   "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_featured,is_online,is_active,owner_id,lat,lng";
 const PRODUCT_COLUMNS =
   "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular";
+// `shops!inner` both names the shop (so duplicate product names are unambiguous)
+// and drops products whose shop was deleted, which would otherwise be dead links.
+const SEARCH_PRODUCT_COLUMNS =
+  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular,shops!inner(name)";
 const OFFER_COLUMNS =
   "id,title,description,image_url,discount_type,discount_value,shop_id,product_id,starts_at,ends_at";
 
@@ -198,14 +204,23 @@ export const searchQuery = (term: string) => ({
         .limit(12),
       supabase
         .from("products")
-        .select(PRODUCT_COLUMNS)
+        .select(SEARCH_PRODUCT_COLUMNS)
         .eq("is_active", true)
         .ilike("name", like)
         .limit(24),
     ]);
+    // Flatten the embedded shop name onto the product for display.
+    const products = (
+      (p.data ?? []) as unknown as Array<
+        Product & { shops: { name: string } | { name: string }[] | null }
+      >
+    ).map(({ shops, ...rest }) => {
+      const shop = Array.isArray(shops) ? shops[0] : shops;
+      return { ...rest, shop_name: shop?.name ?? null } as Product;
+    });
     return {
       shops: (s.data ?? []) as unknown as Shop[],
-      products: (p.data ?? []) as Product[],
+      products,
     };
   },
 });

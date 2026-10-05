@@ -92,7 +92,7 @@ export function ProductCard({
   onSelect,
 }: {
   product: Product;
-  shopName?: string;
+  shopName?: string | undefined;
   orderingDisabled?: boolean;
   onSelect?: (product: Product) => void;
 }) {
@@ -138,6 +138,11 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
         <h4 className="line-clamp-1 text-sm font-semibold">{product.name}</h4>
+        {product.shop_name && (
+          <p className="line-clamp-1 text-xs font-medium text-primary">
+            {t("cd_from_shop", { shop: product.shop_name })}
+          </p>
+        )}
         <p className="line-clamp-2 text-xs text-muted-foreground">{product.description}</p>
         <div className="mt-auto flex items-center justify-between gap-2">
           <div>
