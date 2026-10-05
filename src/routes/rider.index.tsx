@@ -1947,6 +1947,9 @@ function RiderPortal() {
   const [pinOpen, setPinOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [gps, setGps] = useState<"unknown" | "ok" | "denied">("unknown");
+  // Local mirror of the device fix so the map marker moves immediately; the DB
+  // write stays throttled to ~5s to avoid hammering the riders table.
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [networkUp, setNetworkUp] = useState(true);
   const seenOfferIds = useRef(new Set<string>());
 
@@ -2165,6 +2168,9 @@ function RiderPortal() {
         const now = Date.now();
         if (now - lastWrite < 5000) return;
         lastWrite = now;
+        // Throttle together with the DB write so the route effect (which depends
+        // on these coords) does not re-request OSRM on every GPS tick.
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         void supabase
           .from("riders")
           .update({
@@ -2194,7 +2200,10 @@ function RiderPortal() {
 
   const retryLocation = () => {
     navigator.geolocation?.getCurrentPosition(
-      () => setGps("ok"),
+      (pos) => {
+        setGps("ok");
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
       () => setGps("denied"),
       { enableHighAccuracy: true },
     );
@@ -2314,8 +2323,8 @@ function RiderPortal() {
               {activeOrder ? (
                 <ActiveDeliveryCard
                   order={activeOrder}
-                  riderLat={rider?.lat ?? null}
-                  riderLng={rider?.lng ?? null}
+                  riderLat={coords?.lat ?? rider?.lat ?? null}
+                  riderLng={coords?.lng ?? rider?.lng ?? null}
                   onStatus={(s) => void setStatus(activeOrder, s)}
                   onView={() => setFlowOpen(true)}
                   onDeliver={() => setPinOpen(true)}
