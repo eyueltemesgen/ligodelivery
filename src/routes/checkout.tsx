@@ -57,7 +57,6 @@ function CheckoutPage() {
   const { data: hours = [] } = useQuery({ ...shopHoursQuery(shopId ?? ""), enabled: !!shopId });
   const { data: publicSettings } = useQuery(publicSettingsQuery);
   const { data: savedAddresses = [] } = useQuery(addressesQuery(user?.id));
-  const [step, setStep] = useState<1 | 2>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [name, setName] = useState(profile?.full_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
