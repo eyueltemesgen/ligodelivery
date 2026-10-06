@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { ArrowRight, Compass, Gift, Sparkles, UtensilsCrossed } from "lucide-react";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
 import { ServiceCard, ServiceCategoryCard } from "@/components/special-moments/ServiceCards";
-import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { Button } from "@/components/ui/button";
 import { GridSkeleton } from "@/components/account/States";
 import { siteContentQuery } from "@/lib/content";
@@ -101,8 +100,6 @@ function SpecialMomentsHub() {
           </div>
         </div>
       </section>
-
-      <BannerSlot placement="special_moments" className="px-0 py-4" />
 
       <section className="container-ligo py-10">
         <div className="flex flex-wrap items-end justify-between gap-2">

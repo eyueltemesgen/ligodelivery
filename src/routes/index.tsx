@@ -1,4 +1,4 @@
-import { translations, type TranslationKey } from "@/lib/i18n";
+import { translations } from "@/lib/i18n";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -12,9 +12,8 @@ import {
   FALLBACK_SHOPS,
   withFallback,
 } from "@/lib/fallbacks";
-import { bannersQuery, DEFAULT_CONTENT, siteContentQuery, type SiteContent } from "@/lib/content";
+import { bannersQuery, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
-import { AdCarousel } from "@/components/ligo/AdCarousel";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
   CategoryCardSkeleton,
@@ -63,6 +62,7 @@ function Home() {
   const { data: offers = [] } = useQuery(offersQuery);
   const { data: c } = useQuery(siteContentQuery);
   const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
+  const heroBanner = heroBanners[0];
   const { data: serviceCategories = [] } = useQuery(serviceCategoriesQuery);
   const { data: momentServices = [] } = useQuery({
     ...servicesQuery(),
@@ -72,11 +72,6 @@ function Home() {
   const featuredShops = (
     quickCategory ? shops.filter((s) => s.category_id === quickCategory) : shops
   ).slice(0, 6);
-
-  // Admin-customized copy from the database wins; otherwise show the localized
-  // default so the storefront is never stuck in English for am/or visitors.
-  const copy = (key: keyof SiteContent, fallback: TranslationKey) =>
-    c && c[key] && c[key] !== DEFAULT_CONTENT[key] ? String(c[key]) : t(fallback);
 
   return (
     <div>
@@ -88,22 +83,18 @@ function Home() {
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
           <div>
             <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
-              {copy("hero_badge", "content_hero_badge")}
+              {c?.hero_badge}
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
-              {copy("hero_title", "content_hero_title")}
+              {c?.hero_title}
             </h1>
-            <p className="mt-4 max-w-lg text-muted-foreground">
-              {copy("hero_subtitle", "content_hero_subtitle")}
-            </p>
+            <p className="mt-4 max-w-lg text-muted-foreground">{c?.hero_subtitle}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <Link to="/shops">{copy("hero_primary_cta", "content_hero_primary_cta")}</Link>
+                <Link to="/shops">{c?.hero_primary_cta}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/rider/join">
-                  {copy("hero_secondary_cta", "content_hero_secondary_cta")}
-                </Link>
+                <Link to="/rider/join">{c?.hero_secondary_cta}</Link>
               </Button>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -119,15 +110,14 @@ function Home() {
               ))}
             </div>
           </div>
-          {heroBanners.length > 0 ? (
-            <AdCarousel
-              placement="home_hero"
-              className=""
-              chrome={false}
+          {heroBanner?.image_url ? (
+            <StorageImage
+              path={heroBanner.image_url}
+              alt={heroBanner.title || "የኔ Go hero banner"}
               priority
               width={1080}
-              aspect="aspect-[16/9] lg:aspect-auto lg:h-96"
-              wrapperClassName="rounded-2xl shadow-pop"
+              height={540}
+              className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
             />
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
@@ -139,9 +129,7 @@ function Home() {
 
       <section className="container-ligo py-10">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">
-            {copy("categories_title", "content_categories_title")}
-          </h2>
+          <h2 className="font-display text-2xl font-bold">{c?.categories_title}</h2>
           <Link to="/categories" className="text-sm font-medium text-primary">
             {t("home_see_all")}
           </Link>
@@ -242,9 +230,7 @@ function Home() {
       {offers.length > 0 && (
         <section className="container-ligo py-4">
           <div className="flex items-end justify-between">
-            <h2 className="font-display text-2xl font-bold">
-              {copy("offers_title", "content_offers_title")}
-            </h2>
+            <h2 className="font-display text-2xl font-bold">{c?.offers_title}</h2>
             <Link to="/offers" className="text-sm font-medium text-primary">
               {t("home_see_all")}
             </Link>
@@ -274,9 +260,7 @@ function Home() {
 
       <section className="container-ligo py-10">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold">
-            {copy("shops_title", "content_shops_title")}
-          </h2>
+          <h2 className="font-display text-2xl font-bold">{c?.shops_title}</h2>
           <Link to="/shops" className="text-sm font-medium text-primary">
             {t("home_see_all")}
           </Link>
@@ -299,9 +283,7 @@ function Home() {
 
       {popularLoading ? (
         <section className="container-ligo pb-12">
-          <h2 className="font-display text-2xl font-bold">
-            {copy("trending_title", "content_trending_title")}
-          </h2>
+          <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
           <div className="mt-5">
             <ProductGridSkeleton count={4} />
           </div>
@@ -309,9 +291,7 @@ function Home() {
       ) : (
         popular.length > 0 && (
           <section className="container-ligo pb-12">
-            <h2 className="font-display text-2xl font-bold">
-              {copy("trending_title", "content_trending_title")}
-            </h2>
+            <h2 className="font-display text-2xl font-bold">{c?.trending_title}</h2>
             <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {popular.map((p) => (
                 <ProductCard key={p.id} product={p} />
@@ -325,26 +305,12 @@ function Home() {
 
       <section className="container-ligo pb-16">
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
-          <h2 className="font-display text-2xl font-bold">
-            {copy("how_title", "content_how_title")}
-          </h2>
+          <h2 className="font-display text-2xl font-bold">{c?.how_title}</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
             {[
-              {
-                icon: Search,
-                t: copy("how_step1_title", "content_how_step1_title"),
-                d: copy("how_step1_text", "content_how_step1_text"),
-              },
-              {
-                icon: ShieldCheck,
-                t: copy("how_step2_title", "content_how_step2_title"),
-                d: copy("how_step2_text", "content_how_step2_text"),
-              },
-              {
-                icon: Bike,
-                t: copy("how_step3_title", "content_how_step3_title"),
-                d: copy("how_step3_text", "content_how_step3_text"),
-              },
+              { icon: Search, t: c?.how_step1_title, d: c?.how_step1_text },
+              { icon: ShieldCheck, t: c?.how_step2_title, d: c?.how_step2_text },
+              { icon: Bike, t: c?.how_step3_title, d: c?.how_step3_text },
             ].map((s) => (
               <div key={s.t}>
                 <s.icon className="h-6 w-6" />

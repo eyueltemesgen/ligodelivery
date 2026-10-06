@@ -7,16 +7,8 @@ import type { TranslationKey } from "@/lib/i18n";
  * displays the number it returns and never computes a fee locally.
  */
 
-export type DistanceSource = "road" | "straight_line";
-
 export type DeliveryQuote =
-  | {
-      ok: true;
-      distance: number;
-      deliveryFee: number;
-      pricingRule: string;
-      distanceSource: DistanceSource;
-    }
+  | { ok: true; distance: number; deliveryFee: number; pricingRule: string }
   | {
       ok: false;
       reason: DeliveryFailureReason;
@@ -36,44 +28,25 @@ type RawQuote = {
   ok?: boolean;
   reason?: string;
   distance?: number;
-  distance_source?: string;
   delivery_fee?: number;
   pricing_rule?: string;
 };
 
-/**
- * Calls the fee engine for a shop + customer coordinates. Never throws.
- *
- * `roadDistanceKm` is the OSRM road distance when a route was found. The server
- * treats it as a hint and re-validates it against the straight-line distance,
- * so the fee always stays authoritative.
- */
+/** Calls the fee engine for a shop + customer coordinates. Never throws. */
 export async function quoteDeliveryFee(
   shopId: string,
   lat: number | null | undefined,
   lng: number | null | undefined,
-  roadDistanceKm?: number | null,
 ): Promise<DeliveryQuote> {
   if (!shopId) return { ok: false, reason: "error" };
   try {
-    let { data, error } = await supabase.rpc("calculate_delivery_fee", {
+    const { data, error } = await supabase.rpc("calculate_delivery_fee", {
       p_shop_id: shopId,
       p_lat: (lat ?? null) as number,
       p_lng: (lng ?? null) as number,
-      p_road_distance_km: (roadDistanceKm ?? null) as number,
     });
     if (error) {
-      // Road-routing migration not applied yet: retry against the original
-      // 3-argument signature so distance pricing keeps working with the
-      // straight-line distance instead of dropping to the flat fee.
-      ({ data, error } = await supabase.rpc("calculate_delivery_fee", {
-        p_shop_id: shopId,
-        p_lat: (lat ?? null) as number,
-        p_lng: (lng ?? null) as number,
-      }));
-    }
-    if (error) {
-      // Engine/RPC not deployed yet → fall back to the shop's flat fee.
+      // Migration not applied yet → fall back to the shop's flat fee.
       return { ok: false, reason: "error" };
     }
     const raw = (data ?? {}) as RawQuote;
@@ -83,7 +56,6 @@ export async function quoteDeliveryFee(
         distance: Number(raw.distance ?? 0),
         deliveryFee: Number(raw.delivery_fee ?? 0),
         pricingRule: raw.pricing_rule ?? "",
-        distanceSource: raw.distance_source === "road" ? "road" : "straight_line",
       };
     }
     return {

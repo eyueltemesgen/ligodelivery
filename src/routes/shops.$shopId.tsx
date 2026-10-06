@@ -5,8 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Clock, Heart, MapPin, Phone, Search, Star } from "lucide-react";
 import { categoriesQuery, shopHoursQuery, shopProductsQuery, shopQuery } from "@/lib/queries";
 import type { Product } from "@/lib/queries";
-import { shopReviewsQuery } from "@/lib/reviews";
-import { ReviewList, Stars } from "@/components/ligo/Reviews";
 import { StorageImage } from "@/lib/media";
 import { ETB, discounted } from "@/lib/format";
 import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
@@ -40,7 +38,6 @@ function ShopDetail() {
   const { data: products = [] } = useQuery(shopProductsQuery(shopId));
   const { data: hours = [] } = useQuery(shopHoursQuery(shopId));
   const { data: allCategories = [] } = useQuery(categoriesQuery);
-  const { data: reviews = [] } = useQuery(shopReviewsQuery(shopId));
   const { isFavoriteShop, toggleShop } = useSaved();
   const [selected, setSelected] = useState<Product | null>(null);
   const [term, setTerm] = useState("");
@@ -183,12 +180,7 @@ function ShopDetail() {
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-              {Number(shop.rating) > 0 ? Number(shop.rating).toFixed(1) : t("common_new")}
-              {Number(shop.rating_count) > 0 && (
-                <span className="text-muted-foreground">
-                  ({t("rev_count", { count: Number(shop.rating_count) })})
-                </span>
-              )}
+              {shop.rating}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
@@ -297,23 +289,6 @@ function ShopDetail() {
             </section>
           ))
         )}
-
-        {/* Verified reviews — one per delivered order */}
-        <section className="mt-10 border-t border-border pt-6">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-display text-xl font-bold">{t("rev_shop_title")}</h2>
-            {Number(shop.rating_count) > 0 && (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Stars value={Number(shop.rating)} />
-                {Number(shop.rating).toFixed(1)}
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">{t("rev_verified_hint")}</p>
-          <div className="mt-3">
-            <ReviewList reviews={reviews} />
-          </div>
-        </section>
       </div>
 
       <ProductModal

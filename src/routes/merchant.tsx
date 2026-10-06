@@ -380,9 +380,6 @@ function MerchantDashboard() {
           ) : (
             activeOrders.map((o) => {
               const next = MERCHANT_NEXT_STATUS[o.status];
-              // Fulfilment must not start before a non-cash order is paid; the
-              // DB guard enforces this, so keep the action disabled and explain.
-              const needsPayment = o.payment_method !== "cash" && o.payment_status !== "paid";
               return (
                 <article
                   key={o.id}
@@ -422,12 +419,7 @@ function MerchantDashboard() {
                     <div className="flex flex-col items-end gap-2">
                       <span className="font-display text-lg font-bold">{ETB(o.total)}</span>
                       {next ? (
-                        <Button
-                          size="sm"
-                          disabled={needsPayment}
-                          title={needsPayment ? t("md_awaiting_payment") : undefined}
-                          onClick={() => void advance(o.id, next.to)}
-                        >
+                        <Button size="sm" onClick={() => void advance(o.id, next.to)}>
                           {t(NEXT_LABEL_KEY[next.to] ?? "md_accept_prepare")}
                         </Button>
                       ) : (

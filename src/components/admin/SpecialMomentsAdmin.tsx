@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isMissingTable, supabaseErrorText } from "@/lib/supa-error";
-import { mediaErrorKey, StorageImage, uploadImage } from "@/lib/media";
+import { mediaErrorKey, uploadImage } from "@/lib/media";
 import { ETB, formatDate } from "@/lib/format";
 import {
   OCCASIONS,
@@ -422,54 +422,6 @@ function CategoriesAdmin() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const [editing, setEditing] = useState<ServiceCategory | null>(null);
-  const [editFile, setEditFile] = useState<File | null>(null);
-  const [editPreview, setEditPreview] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  const openEdit = (c: ServiceCategory) => {
-    setEditFile(null);
-    setEditPreview(null);
-    setEditing(c);
-  };
-
-  const pickEditFile = (f: File | null) => {
-    if (editPreview) URL.revokeObjectURL(editPreview);
-    setEditFile(f);
-    setEditPreview(f ? URL.createObjectURL(f) : null);
-  };
-
-  const saveEdit = async () => {
-    if (!editing) return;
-    setSaving(true);
-    try {
-      let imageUrl = editing.image_url;
-      if (editFile) imageUrl = await uploadImage(editFile, "services/categories");
-      const { error } = await supabase
-        .from("service_categories")
-        .update({
-          name: editing.name.trim(),
-          slug: editing.slug.trim() || slugify(editing.name),
-          tagline: editing.tagline?.trim() || null,
-          description: editing.description?.trim() || null,
-          image_url: imageUrl,
-          sort_order: editing.sort_order,
-          is_active: editing.is_active,
-        } as never)
-        .eq("id", editing.id);
-      if (error) throw error;
-      setEditing(null);
-      setEditFile(null);
-      void qc.invalidateQueries({ queryKey: ["admin-service-categories"] });
-      void qc.invalidateQueries({ queryKey: ["service-categories"] });
-      toast.success(t("sma_category_updated"));
-    } catch (err) {
-      const mediaKey = mediaErrorKey(err);
-      toast.error(mediaKey ? t(mediaKey) : supabaseErrorText(t, err));
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -568,32 +520,15 @@ function CategoriesAdmin() {
         {rows.map((c) => (
           <li key={c.id} className="rounded-xl border border-border bg-card p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="h-12 w-16 shrink-0 overflow-hidden rounded-md bg-muted">
-                  {c.image_url ? (
-                    <StorageImage
-                      path={c.image_url}
-                      alt={c.name}
-                      width={160}
-                      height={120}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-full w-full place-items-center text-muted-foreground">
-                      <ImageOff className="h-4 w-4" />
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <Input
-                    defaultValue={c.name}
-                    className="h-9 max-w-xs"
-                    onBlur={(e) =>
-                      e.target.value !== c.name && void patch(c.id, { name: e.target.value })
-                    }
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">/{c.slug}</p>
-                </div>
+              <div className="min-w-0">
+                <Input
+                  defaultValue={c.name}
+                  className="h-9 max-w-xs"
+                  onBlur={(e) =>
+                    e.target.value !== c.name && void patch(c.id, { name: e.target.value })
+                  }
+                />
+                <p className="mt-1 text-xs text-muted-foreground">/{c.slug}</p>
               </div>
               <div className="flex items-center gap-3">
                 <Input
@@ -615,14 +550,6 @@ function CategoriesAdmin() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  aria-label={t("sma_edit_named", { name: c.name })}
-                  onClick={() => openEdit(c)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
                   className="text-destructive hover:text-destructive"
                   aria-label={t("sma_delete_named", { name: c.name })}
                   onClick={() => void remove(c.id, c.name)}
@@ -634,112 +561,6 @@ function CategoriesAdmin() {
           </li>
         ))}
       </ul>
-
-      <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t("sma_edit_category")}</DialogTitle>
-          </DialogHeader>
-          {editing && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
-                  {editPreview ? (
-                    <img
-                      src={editPreview}
-                      alt={editing.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : editing.image_url ? (
-                    <StorageImage
-                      path={editing.image_url}
-                      alt={editing.name}
-                      width={240}
-                      height={160}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-full w-full place-items-center text-muted-foreground">
-                      <ImageOff className="h-5 w-5" />
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{t("sma_main_image")}</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => pickEditFile(e.target.files?.[0] ?? null)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>{t("sma_name")}</Label>
-                <Input
-                  value={editing.name}
-                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>{t("sma_slug")}</Label>
-                <Input
-                  value={editing.slug}
-                  onChange={(e) => setEditing({ ...editing, slug: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>{t("sma_tagline")}</Label>
-                <Input
-                  value={editing.tagline ?? ""}
-                  onChange={(e) => setEditing({ ...editing, tagline: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>{t("sma_description")}</Label>
-                <Textarea
-                  value={editing.description ?? ""}
-                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex flex-wrap items-center gap-6">
-                <div className="space-y-1.5">
-                  <Label>{t("sma_sort_order")}</Label>
-                  <Input
-                    type="number"
-                    className="w-28"
-                    value={editing.sort_order}
-                    onChange={(e) =>
-                      setEditing({ ...editing, sort_order: Number(e.target.value) || 0 })
-                    }
-                  />
-                </div>
-                <label className="mt-5 flex items-center gap-2 text-sm">
-                  {t("sma_active")}
-                  <Switch
-                    checked={editing.is_active}
-                    onCheckedChange={(v) => setEditing({ ...editing, is_active: v })}
-                  />
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
-                  {t("sma_cancel")}
-                </Button>
-                <Button onClick={() => void saveEdit()} disabled={saving}>
-                  {saving ? t("sma_creating") : t("sma_save_category")}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -245,7 +245,6 @@ function FavoriteShopCard({ row }: { row: FavoriteRow }) {
           opens_at: "00:00",
           closes_at: "23:59",
           rating: 0,
-          rating_count: 0,
           is_featured: false,
           is_active: true,
           owner_id: null,

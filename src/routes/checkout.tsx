@@ -12,8 +12,6 @@ import { supabaseErrorText } from "@/lib/supa-error";
 import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
 import { addressesQuery, type AddressRow } from "@/lib/account";
 import { quoteDeliveryFee, DELIVERY_FAILURE_KEY, formatDistance } from "@/lib/delivery";
-import type { DistanceSource } from "@/lib/delivery";
-import { getRoute, formatDuration } from "@/lib/routing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,14 +48,7 @@ export const Route = createFileRoute("/checkout")({
 
 type FeeState =
   | { status: "loading" }
-  | {
-      status: "ready";
-      distance: number;
-      fee: number;
-      rule: string;
-      source: DistanceSource;
-      durationS: number;
-    }
+  | { status: "ready"; distance: number; fee: number; rule: string }
   | { status: "error"; reason: TranslationKey };
 
 function CheckoutPage() {
@@ -114,76 +105,31 @@ function CheckoutPage() {
     Number(shop?.delivery_fee ?? platform.base_delivery_fee ?? 50) * surge,
   );
 
-  // Recalculate the delivery fee whenever the destination changes.
-  //
-  // 1. Resolve the driving route shop → customer with OSRM (server function).
-  // 2. Price by the real road distance; the server re-validates it.
-  // 3. If routing is unavailable, fall back to the straight-line distance and
-  //    tag the quote as an estimate so the UI never claims it is exact.
-  // The fee itself always comes from the server; the client never invents one.
+  // Recalculate the delivery fee whenever the destination changes. The number
+  // always comes from the server; the client never invents a fee.
   useEffect(() => {
     let cancelled = false;
     if (!shopId) return;
     setFee({ status: "loading" });
-
-    const shopLat = shop?.lat;
-    const shopLng = shop?.lng;
-
-    const run = async () => {
-      let roadDistance: number | null = null;
-      let durationS = 0;
-
-      if (shopLat != null && shopLng != null && lat != null && lng != null) {
-        // Origin is resolved server-side from the shop id, not from the client.
-        const route = await getRoute(shopLat, shopLng, lat, lng, shopId);
-        durationS = route.durationS;
-        if (route.source === "road") roadDistance = route.distanceKm;
-      }
+    void quoteDeliveryFee(shopId, lat, lng).then((q) => {
       if (cancelled) return;
-
-      const q = await quoteDeliveryFee(shopId, lat, lng, roadDistance);
-      if (cancelled) return;
-
       if (q.ok) {
-        setFee({
-          status: "ready",
-          distance: q.distance,
-          fee: q.deliveryFee,
-          rule: q.pricingRule,
-          source: q.distanceSource,
-          durationS,
-        });
+        setFee({ status: "ready", distance: q.distance, fee: q.deliveryFee, rule: q.pricingRule });
       } else if (q.flatFee != null && q.reason !== "outside_service_area") {
         // Shop not geolocated yet → keep the legacy flat fee, but never for an
         // explicitly out-of-area location.
-        setFee({
-          status: "ready",
-          distance: 0,
-          fee: q.flatFee,
-          rule: "flat",
-          source: "straight_line",
-          durationS: 0,
-        });
+        setFee({ status: "ready", distance: 0, fee: q.flatFee, rule: "flat" });
       } else if (q.reason === "error") {
         // Engine/RPC not deployed yet: preserve the previous flat-fee checkout.
-        setFee({
-          status: "ready",
-          distance: 0,
-          fee: flatFallback,
-          rule: "flat",
-          source: "straight_line",
-          durationS: 0,
-        });
+        setFee({ status: "ready", distance: 0, fee: flatFallback, rule: "flat" });
       } else {
         setFee({ status: "error", reason: DELIVERY_FAILURE_KEY[q.reason] });
       }
-    };
-
-    void run();
+    });
     return () => {
       cancelled = true;
     };
-  }, [shopId, lat, lng, flatFallback, shop?.lat, shop?.lng]);
+  }, [shopId, lat, lng, flatFallback]);
 
   const deliveryFee = fee.status === "ready" ? fee.fee : 0;
   const feeUnavailable = fee.status === "error";
@@ -268,7 +214,7 @@ function CheckoutPage() {
     try {
       // Server-side placement: prices, options, distance, fee and totals are
       // recomputed in the database. Coordinates are only a hint, not a fee.
-      const baseArgs = {
+      const { data: orderId, error } = await supabase.rpc("place_order", {
         p_shop_id: shopId!,
         p_items: items.map((i) => ({
           product_id: i.productId,
@@ -284,24 +230,7 @@ function CheckoutPage() {
         p_lat: lat as number,
         p_lng: lng as number,
         ...(promo ? { p_coupon_code: promo.code } : {}),
-      };
-      // Road distance is a hint; the server re-validates it before pricing.
-      const roadArgs =
-        fee.status === "ready" && fee.source === "road"
-          ? {
-              p_road_distance_km: fee.distance,
-              p_delivery_duration_s: fee.durationS > 0 ? Math.round(fee.durationS) : null,
-            }
-          : {};
-      let { data: orderId, error } = await supabase.rpc("place_order", {
-        ...baseArgs,
-        ...roadArgs,
       });
-      if (error && Object.keys(roadArgs).length > 0) {
-        // Road-routing migration not applied yet: retry with the previous
-        // signature so the order still goes through (straight-line distance).
-        ({ data: orderId, error } = await supabase.rpc("place_order", baseArgs));
-      }
       if (error) throw error;
 
       clear();
@@ -516,14 +445,7 @@ function CheckoutPage() {
           </div>
           {fee.status === "ready" && fee.distance > 0 && (
             <p className="text-xs text-muted-foreground">
-              {fee.source === "road"
-                ? t("delivery_distance_road", { km: formatDistance(fee.distance) })
-                : t("delivery_distance_estimated", { km: formatDistance(fee.distance) })}
-            </p>
-          )}
-          {fee.status === "ready" && fee.source === "road" && fee.durationS > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {t("delivery_time", { time: formatDuration(fee.durationS) })}
+              {t("checkout_delivery_distance", { km: formatDistance(fee.distance) })}
             </p>
           )}
           {tip > 0 && (
@@ -604,9 +526,7 @@ function DeliveryStatus({ fee, flatFallback }: { fee: FeeState; flatFallback: nu
     <p className="flex items-center justify-between rounded-lg bg-primary-soft p-3 text-xs font-medium text-accent-foreground">
       <span>
         {fee.distance > 0
-          ? fee.source === "road"
-            ? t("delivery_distance_road", { km: formatDistance(fee.distance) })
-            : t("delivery_distance_estimated", { km: formatDistance(fee.distance) })
+          ? t("checkout_delivery_distance", { km: formatDistance(fee.distance) })
           : t("delivery_flat_note")}
       </span>
       <span className="font-bold">{ETB(fee.fee || flatFallback)}</span>
