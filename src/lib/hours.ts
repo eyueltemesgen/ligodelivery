@@ -18,16 +18,6 @@ export const DAY_NAMES = [
   "Saturday",
 ] as const;
 
-/**
- * Default daily opening window used whenever a shop/merchant has no explicit
- * hours. Bishoftu shops typically start early and stay open through the
- * evening, so 07:00–22:00 keeps delivery available across the full day instead
- * of a narrow 08:00–21:00 window. Keep these in sync with the DB column
- * defaults (see the shop_hours migration).
- */
-export const DEFAULT_OPEN_HOUR = "07:00";
-export const DEFAULT_CLOSE_HOUR = "22:00";
-
 const toMinutes = (t: string) => {
   const [h, m] = t.split(":");
   return Number(h) * 60 + Number(m ?? 0);

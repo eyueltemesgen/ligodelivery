@@ -173,6 +173,7 @@ export const or = {
   checkout_promo_placeholder: "KOODII GALCHI",
   checkout_apply: "Hojiirra oolchi",
   checkout_total: "Waliigala",
+  checkout_pay_before_fulfilment: "Suuqi ajaja kee qopheessuu fi erguu irra dura kaffaltii kee mirkaneessina.",
   checkout_place_order: "Ajaja galchi",
   checkout_placing: "Ajaja galchaa jira…",
   checkout_pay_cash_hint: "Ajajni kee yeroo gahu ogeessaaf maallaqa harkaa kenni.",

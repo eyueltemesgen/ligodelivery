@@ -2,27 +2,34 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useLanguage } from "@/hooks/useLanguage";
-import { getRoute } from "@/lib/routing";
-import { makePinIcon, riderIcon } from "@/components/ligo/rider-marker";
+
+// Leaflet's default icon resolves to marker-icon.png, which Vite does not emit,
+// so `L.marker` with no icon renders a broken 404 image. A divIcon is inline
+// HTML and needs no asset.
+function makeIcon(color: string) {
+  return L.divIcon({
+    className: "ligo-marker",
+    html: `<div style="background:${color};width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
 
 export default function OrderMap({
   lat,
   lng,
   riderLat,
   riderLng,
-  riderAvatar,
 }: {
   lat: number;
   lng: number;
   riderLat?: number | null;
   riderLng?: number | null;
-  riderAvatar?: string | null;
 }) {
   const { t } = useLanguage();
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const riderMarker = useRef<L.Marker | null>(null);
-  const routeLine = useRef<L.Polyline | null>(null);
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return;
@@ -43,54 +50,20 @@ export default function OrderMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || riderLat == null || riderLng == null) return;
-    let cancelled = false;
-    void riderIcon("#2563eb", riderAvatar).then((icon) => {
-      if (cancelled) return;
-      if (!riderMarker.current) {
-        riderMarker.current = L.marker([riderLat, riderLng], { icon })
-          .addTo(map)
-          .bindPopup(t("map_your_rider"));
-      } else {
-        riderMarker.current.setLatLng([riderLat, riderLng]);
-        riderMarker.current.setIcon(icon);
-      }
-    });
+    if (!riderMarker.current) {
+      riderMarker.current = L.marker([riderLat, riderLng], { icon: makeIcon("#2563eb") })
+        .addTo(map)
+        .bindPopup(t("map_your_rider"));
+    } else {
+      riderMarker.current.setLatLng([riderLat, riderLng]);
+    }
     map.fitBounds(
       L.latLngBounds([
         [lat, lng],
         [riderLat, riderLng],
       ]).pad(0.3),
     );
-    return () => {
-      cancelled = true;
-    };
-  }, [riderLat, riderLng, lat, lng, t, riderAvatar]);
-
-  // Draw the rider's actual driving route to the delivery address. The rider's
-  // position updates in real time, so the request is debounced and de-duplicated
-  // by `getRoute`; if routing is unavailable we draw nothing rather than
-  // pretending a straight line is the road.
-  useEffect(() => {
-    if (riderLat == null || riderLng == null) return;
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      void getRoute(riderLat, riderLng, lat, lng).then((route) => {
-        const map = mapRef.current;
-        if (cancelled || !map) return;
-        routeLine.current?.remove();
-        routeLine.current = null;
-        if (route.source !== "road" || route.geometry.length < 2) return;
-        routeLine.current = L.polyline(
-          route.geometry.map(([lngPt, latPt]) => [latPt, lngPt] as [number, number]),
-          { color: "#2563eb", weight: 4, opacity: 0.75 },
-        ).addTo(map);
-      });
-    }, 1500);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [riderLat, riderLng, lat, lng]);
+  }, [riderLat, riderLng, lat, lng, t]);
 
   return <div ref={ref} className="h-72 w-full rounded-xl border border-border" />;
 }

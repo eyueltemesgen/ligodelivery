@@ -18,7 +18,6 @@ import { GridSkeleton } from "@/components/account/States";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 import { OPTION_LABEL_KEY } from "@/lib/special-moments";
-import { categoryDisplayName } from "@/lib/service-catalog";
 
 type SearchState = {
   q?: string | undefined;
@@ -178,7 +177,7 @@ function SpecialMomentsSearch() {
                     : "border-border bg-card",
                 )}
               >
-                {categoryDisplayName(t, c)}
+                {c.name}
               </button>
             ))}
           </div>

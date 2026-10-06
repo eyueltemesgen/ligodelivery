@@ -170,6 +170,7 @@ export const am = {
   checkout_promo_placeholder: "ኮድ ያስገቡ",
   checkout_apply: "ተግብር",
   checkout_total: "ጠቅላላ",
+  checkout_pay_before_fulfilment: "ሱቁ ትዕዛዝዎን ከማዘጋጀቱና ከመላኩ በፊት ክፍያዎን እናረጋግጣለን።",
   checkout_place_order: "ትዕዛዝ ያስቀምጡ",
   checkout_placing: "ትዕዛዝ በማስቀመጥ ላይ…",
   checkout_pay_cash_hint: "ትዕዛዝዎ ሲደርስ ለሯስ ጥሬ ገንዘብ ይክፈሉ።",

@@ -56,7 +56,7 @@ function SearchPage() {
               <h2 className="font-display text-xl font-bold">{t("common_products")}</h2>
               <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {data.products.map((p) => (
-                  <ProductCard key={p.id} product={p} shopName={p.shop_name ?? undefined} />
+                  <ProductCard key={p.id} product={p} />
                 ))}
               </div>
             </section>

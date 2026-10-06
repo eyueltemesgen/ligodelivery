@@ -172,6 +172,7 @@ export const en = {
   checkout_promo_placeholder: "ENTER CODE",
   checkout_apply: "Apply",
   checkout_total: "Total",
+  checkout_pay_before_fulfilment: "We verify your payment before the shop prepares and dispatches your order.",
   checkout_place_order: "Place order",
   checkout_placing: "Placing order…",
   checkout_pay_cash_hint: "Pay the rider in cash when your order arrives.",

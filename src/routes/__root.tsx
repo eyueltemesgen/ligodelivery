@@ -5,7 +5,6 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -142,11 +141,6 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // The rider portal renders its own app chrome (header + bottom tab bar). Keep
-  // the storefront chrome off it so it reads as a focused rider app. Join/login
-  // pages under /rider keep the normal chrome so riders can navigate back.
-  const bare = pathname === "/rider" || pathname === "/rider/";
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -155,14 +149,14 @@ function RootComponent() {
           <LanguageProvider>
             <CartProvider>
               <SavedProvider>
-                <div className={`flex min-h-screen flex-col ${bare ? "" : "pb-16 md:pb-0"}`}>
-                  {!bare && <SiteHeader />}
+                <div className="flex min-h-screen flex-col pb-16 md:pb-0">
+                  <SiteHeader />
                   <main className="flex-1">
                     {/* Required: nested routes render here. */}
                     <Outlet />
                   </main>
-                  {!bare && <SiteFooter />}
-                  {!bare && <MobileTabBar />}
+                  <SiteFooter />
+                  <MobileTabBar />
                 </div>
                 <ToastHost position="top-center" richColors />
               </SavedProvider>

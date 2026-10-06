@@ -28,7 +28,6 @@ import { canCancelOrder, isOrderOpen } from "@/lib/orders";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
 import { publicSettingsQuery } from "@/lib/queries";
 import { useCart } from "@/lib/cart";
-import { formatDuration } from "@/lib/routing";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
 import {
@@ -38,7 +37,6 @@ import {
   paymentStatusLabelKey,
 } from "@/components/account/OrderCard";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
-import { OrderReviewSection } from "@/components/account/OrderReviewSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,26 +98,14 @@ function OrderDetails() {
   const { data: rider } = useQuery({
     queryKey: ["order-rider", order?.rider_id],
     enabled: !!order?.rider_id,
-    // Poll as a fallback so the rider marker keeps moving even if the realtime
-    // channel is not established (e.g. RLS/replica settings still rolling out).
-    refetchInterval: order && isOrderOpen(order.status) ? 15000 : false,
     queryFn: async () => {
-      // `riders.avatar_url` is added by a migration that may not be applied yet;
-      // fall back to the older column set so tracking never breaks.
-      const withAvatar = await supabase
-        .from("riders")
-        .select("id,vehicle_type,lat,lng,is_online,avatar_url")
-        .eq("id", order!.rider_id!)
-        .maybeSingle();
-      if (!withAvatar.error) return withAvatar.data;
-      if (withAvatar.error.code !== "42703") throw withAvatar.error;
-      const fallback = await supabase
+      const { data, error } = await supabase
         .from("riders")
         .select("id,vehicle_type,lat,lng,is_online")
         .eq("id", order!.rider_id!)
         .maybeSingle();
-      if (fallback.error) throw fallback.error;
-      return fallback.data ? { ...fallback.data, avatar_url: null } : null;
+      if (error) throw error;
+      return data;
     },
   });
   const { data: settings = {} } = useQuery(publicSettingsQuery);
@@ -130,7 +116,6 @@ function OrderDetails() {
   // Live status updates while the order is open.
   useEffect(() => {
     if (!orderId) return;
-    const riderId = order?.rider_id ?? null;
     const channel = supabase
       .channel(`account-order-${orderId}`)
       .on(
@@ -141,18 +126,11 @@ function OrderDetails() {
           void qc.invalidateQueries({ queryKey: ["account-orders"] });
         },
       )
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "riders" }, (payload) => {
-        // Only react to the rider carrying this order; the RLS policy on
-        // `riders` still hides everyone else from the customer.
-        if (riderId && payload.new && (payload.new as { id?: string }).id === riderId) {
-          void qc.invalidateQueries({ queryKey: ["order-rider", riderId] });
-        }
-      })
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [orderId, qc, order?.rider_id]);
+  }, [orderId, qc]);
 
   if (isLoading) {
     return (
@@ -180,9 +158,9 @@ function OrderDetails() {
   const shop = order.shop_id ? shops[order.shop_id] : undefined;
   const payment = (settings[`payment_${order.payment_method}`] ?? {}) as Record<string, string>;
   const needsProof = order.payment_method !== "cash" && order.payment_status !== "paid";
-  // Cash on delivery settles in person, so it needs no up-front payment. Any
-  // other method must be paid before the order is fulfilled — and live
-  // tracking (which only matters once a rider is moving) waits for that too.
+  // Cash on delivery settles in person; every other method must be paid before
+  // the order is fulfilled — and live tracking (which only matters once a rider
+  // is moving) waits for that too.
   const paymentSettled = order.payment_method === "cash" || order.payment_status === "paid";
   const copy = (value: string, label: string) => {
     void navigator.clipboard.writeText(value);
@@ -244,6 +222,78 @@ function OrderDetails() {
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
             <h2 className="mb-4 font-display text-lg font-bold">{t("od_progress")}</h2>
             <OrderTimeline status={order.status} />
+          </section>
+
+          {/* Live tracking — only after payment is settled (cash or verified) */}
+          {isOrderOpen(order.status) && (
+            <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+              <h2 className="mb-3 font-display text-lg font-bold">{t("od_live_tracking")}</h2>
+              {paymentSettled ? (
+                <>
+                  <ClientOnly fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
+                    <Suspense fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
+                      <OrderMap
+                        lat={order.lat ?? BISHOFTU[0]}
+                        lng={order.lng ?? BISHOFTU[1]}
+                        riderLat={rider?.lat ?? null}
+                        riderLng={rider?.lng ?? null}
+                      />
+                    </Suspense>
+                  </ClientOnly>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {order.rider_id
+                      ? rider?.lat != null && rider?.lng != null
+                        ? t("od_rider_live")
+                        : t("od_rider_waiting_location")
+                      : t("od_rider_soon")}
+                  </p>
+                </>
+              ) : (
+                <p className="flex items-center gap-2 rounded-lg bg-surface p-4 text-sm text-muted-foreground">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                  {t("od_tracking_locked")}
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* Items */}
+          <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="font-display text-lg font-bold">{t("od_items")}</h2>
+              {shop && (
+                <Link
+                  to="/shops/$shopId"
+                  params={{ shopId: shop.id }}
+                  className="flex items-center gap-1.5 text-sm font-medium text-primary"
+                >
+                  <Store className="h-4 w-4" />
+                  {shop.name}
+                </Link>
+              )}
+            </div>
+            <ul className="divide-y divide-border">
+              {items.map((it) => (
+                <li key={it.id} className="flex items-center gap-3 py-3">
+                  <StorageImage
+                    path={it.image_url}
+                    alt={it.product_name}
+                    width={160}
+                    height={160}
+                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{it.product_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {ETB(it.unit_price)} × {it.quantity}
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold">
+                    {ETB(Number(it.unit_price) * it.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </section>
 
           {/* Payment */}
@@ -351,91 +401,6 @@ function OrderDetails() {
             )}
           </section>
 
-          {/* Live tracking — only after payment is settled (cash or verified) */}
-          {isOrderOpen(order.status) && (
-            <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <h2 className="mb-3 font-display text-lg font-bold">{t("od_live_tracking")}</h2>
-              {paymentSettled ? (
-                <>
-                  <ClientOnly fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
-                    <Suspense fallback={<div className="h-64 w-full rounded-xl bg-surface" />}>
-                      <OrderMap
-                        lat={order.lat ?? BISHOFTU[0]}
-                        lng={order.lng ?? BISHOFTU[1]}
-                        riderLat={rider?.lat ?? null}
-                        riderLng={rider?.lng ?? null}
-                        riderAvatar={rider?.avatar_url ?? null}
-                      />
-                    </Suspense>
-                  </ClientOnly>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {order.rider_id
-                      ? rider?.lat != null && rider?.lng != null
-                        ? t("od_rider_live")
-                        : t("od_rider_waiting_location")
-                      : t("od_rider_soon")}
-                  </p>
-                </>
-              ) : (
-                <p className="flex items-center gap-2 rounded-lg bg-surface p-4 text-sm text-muted-foreground">
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
-                  {t("od_tracking_locked")}
-                </p>
-              )}
-            </section>
-          )}
-
-          {/* Items */}
-          <section className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold">{t("od_items")}</h2>
-              {shop && (
-                <Link
-                  to="/shops/$shopId"
-                  params={{ shopId: shop.id }}
-                  className="flex items-center gap-1.5 text-sm font-medium text-primary"
-                >
-                  <Store className="h-4 w-4" />
-                  {shop.name}
-                </Link>
-              )}
-            </div>
-            <ul className="divide-y divide-border">
-              {items.map((it) => (
-                <li key={it.id} className="flex items-center gap-3 py-3">
-                  <StorageImage
-                    path={it.image_url}
-                    alt={it.product_name}
-                    width={160}
-                    height={160}
-                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{it.product_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {ETB(it.unit_price)} × {it.quantity}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold">
-                    {ETB(Number(it.unit_price) * it.quantity)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/* Rate your order — only after delivery (verified purchase) */}
-          {order.status === "delivered" && (
-            <OrderReviewSection
-              orderId={order.id}
-              shopId={order.shop_id}
-              shopName={shop?.name}
-              riderId={order.rider_id}
-              items={items}
-              userId={user?.id}
-            />
-          )}
-
           {/* Rider */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
             <h2 className="mb-3 font-display text-lg font-bold">{t("od_delivery")}</h2>
@@ -506,18 +471,8 @@ function OrderDetails() {
               </div>
               {order.delivery_distance != null && Number(order.delivery_distance) > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <dt>
-                    {order.delivery_source === "road"
-                      ? t("od_distance")
-                      : t("od_distance_estimated")}
-                  </dt>
+                  <dt>{t("od_distance")}</dt>
                   <dd>{Number(order.delivery_distance).toFixed(1)} km</dd>
-                </div>
-              )}
-              {order.delivery_duration_s != null && order.delivery_duration_s > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <dt>{t("od_delivery_time")}</dt>
-                  <dd>{formatDuration(order.delivery_duration_s)}</dd>
                 </div>
               )}
               {Number(order.tip) > 0 && (

@@ -1008,6 +1008,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          accepted_at: string | null
           commission_amount: number
           commission_percent: number
           coupon_code: string | null
@@ -1021,11 +1022,11 @@ export type Database = {
           delivery_address: string | null
           delivery_distance: number | null
           delivery_duration_s: number | null
-          delivery_source: string | null
           delivery_fee: number
           delivery_instructions: string | null
           delivery_pin: string | null
           delivery_rule: string | null
+          delivery_source: string | null
           discount: number
           dispatched_at: string | null
           id: string
@@ -1050,6 +1051,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           commission_amount?: number
           commission_percent?: number
           coupon_code?: string | null
@@ -1063,11 +1065,11 @@ export type Database = {
           delivery_address?: string | null
           delivery_distance?: number | null
           delivery_duration_s?: number | null
-          delivery_source?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null
           delivery_rule?: string | null
+          delivery_source?: string | null
           discount?: number
           dispatched_at?: string | null
           id?: string
@@ -1092,6 +1094,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           commission_amount?: number
           commission_percent?: number
           coupon_code?: string | null
@@ -1105,11 +1108,11 @@ export type Database = {
           delivery_address?: string | null
           delivery_distance?: number | null
           delivery_duration_s?: number | null
-          delivery_source?: string | null
           delivery_fee?: number
           delivery_instructions?: string | null
           delivery_pin?: string | null
           delivery_rule?: string | null
+          delivery_source?: string | null
           discount?: number
           dispatched_at?: string | null
           id?: string
@@ -1472,6 +1475,77 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          is_hidden: boolean
+          order_id: string
+          order_item_id: string | null
+          product_id: string | null
+          rating: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_hidden?: boolean
+          order_id: string
+          order_item_id?: string | null
+          product_id?: string | null
+          rating: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_hidden?: boolean
+          order_id?: string
+          order_item_id?: string | null
+          product_id?: string | null
+          rating?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rider_earnings: {
         Row: {
           amount: number
@@ -1577,77 +1651,6 @@ export type Database = {
             columns: ["rider_id"]
             isOneToOne: false
             referencedRelation: "riders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      reviews: {
-        Row: {
-          comment: string | null
-          created_at: string
-          customer_id: string
-          id: string
-          is_hidden: boolean
-          order_id: string
-          order_item_id: string | null
-          product_id: string | null
-          rating: number
-          shop_id: string
-          updated_at: string
-        }
-        Insert: {
-          comment?: string | null
-          created_at?: string
-          customer_id: string
-          id?: string
-          is_hidden?: boolean
-          order_id: string
-          order_item_id?: string | null
-          product_id?: string | null
-          rating: number
-          shop_id: string
-          updated_at?: string
-        }
-        Update: {
-          comment?: string | null
-          created_at?: string
-          customer_id?: string
-          id?: string
-          is_hidden?: boolean
-          order_id?: string
-          order_item_id?: string | null
-          product_id?: string | null
-          rating?: number
-          shop_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reviews_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_order_item_id_fkey"
-            columns: ["order_item_id"]
-            isOneToOne: false
-            referencedRelation: "order_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -2285,7 +2288,58 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      accept_order: { Args: { _order_id: string }; Returns: undefined }
+      accept_order: {
+        Args: { _order_id: string }
+        Returns: {
+          accepted_at: string | null
+          commission_amount: number
+          commission_percent: number
+          coupon_code: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_id: string
+          customer_lat: number | null
+          customer_lng: number | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_address: string | null
+          delivery_distance: number | null
+          delivery_duration_s: number | null
+          delivery_fee: number
+          delivery_instructions: string | null
+          delivery_pin: string | null
+          delivery_rule: string | null
+          delivery_source: string | null
+          discount: number
+          dispatched_at: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          merchant_net: number
+          order_code: string
+          order_type: string
+          payment_method: string
+          payment_status: string
+          rider_id: string | null
+          rider_payout: number
+          scheduled_for: string | null
+          service_request_id: string | null
+          shop_id: string | null
+          shop_lat: number | null
+          shop_lng: number | null
+          status: string
+          subtotal: number
+          tip: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       accept_service_quote: { Args: { p_request: string }; Returns: undefined }
       ad_stats: {
         Args: never
@@ -2310,9 +2364,65 @@ export type Database = {
           status: string
         }[]
       }
-      approve_and_dispatch: { Args: { _order_id: string }; Returns: undefined }
+      approve_and_dispatch: {
+        Args: { _order_id: string }
+        Returns: {
+          accepted_at: string | null
+          commission_amount: number
+          commission_percent: number
+          coupon_code: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_id: string
+          customer_lat: number | null
+          customer_lng: number | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_address: string | null
+          delivery_distance: number | null
+          delivery_duration_s: number | null
+          delivery_fee: number
+          delivery_instructions: string | null
+          delivery_pin: string | null
+          delivery_rule: string | null
+          delivery_source: string | null
+          discount: number
+          dispatched_at: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          merchant_net: number
+          order_code: string
+          order_type: string
+          payment_method: string
+          payment_status: string
+          rider_id: string | null
+          rider_payout: number
+          scheduled_for: string | null
+          service_request_id: string | null
+          shop_id: string | null
+          shop_lat: number | null
+          shop_lng: number | null
+          status: string
+          subtotal: number
+          tip: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       calculate_delivery_fee: {
-        Args: { p_lat: number; p_lng: number; p_shop_id: string }
+        Args: {
+          p_lat: number
+          p_lng: number
+          p_road_distance_km?: number
+          p_shop_id: string
+        }
         Returns: Json
       }
       check_coupon: {
@@ -2321,8 +2431,57 @@ export type Database = {
       }
       complete_delivery: {
         Args: { _order_id: string; _pin: string }
-        Returns: undefined
+        Returns: {
+          accepted_at: string | null
+          commission_amount: number
+          commission_percent: number
+          coupon_code: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_id: string
+          customer_lat: number | null
+          customer_lng: number | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_address: string | null
+          delivery_distance: number | null
+          delivery_duration_s: number | null
+          delivery_fee: number
+          delivery_instructions: string | null
+          delivery_pin: string | null
+          delivery_rule: string | null
+          delivery_source: string | null
+          discount: number
+          dispatched_at: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          merchant_net: number
+          order_code: string
+          order_type: string
+          payment_method: string
+          payment_status: string
+          rider_id: string | null
+          rider_payout: number
+          scheduled_for: string | null
+          service_request_id: string | null
+          shop_id: string | null
+          shop_lat: number | null
+          shop_lng: number | null
+          status: string
+          subtotal: number
+          tip: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
+      customer_can_see_rider: { Args: { _rider_id: string }; Returns: boolean }
       eligible_ads: {
         Args: {
           p_category?: string
@@ -2393,11 +2552,13 @@ export type Database = {
           p_customer_name?: string
           p_customer_phone?: string
           p_delivery_address?: string
+          p_delivery_duration_s?: number
           p_delivery_instructions?: string
           p_items: Json
           p_lat?: number
           p_lng?: number
           p_payment_method: string
+          p_road_distance_km?: number
           p_shop_id: string
           p_tip?: number
         }
@@ -2452,7 +2613,7 @@ export type Database = {
         Returns: undefined
       }
       set_review_hidden: {
-        Args: { _review_id: string; _hidden: boolean }
+        Args: { _hidden: boolean; _review_id: string }
         Returns: {
           comment: string | null
           created_at: string
@@ -2466,26 +2627,11 @@ export type Database = {
           shop_id: string
           updated_at: string
         }
-      }
-      submit_review: {
-        Args: {
-          _order_id: string
-          _rating: number
-          _comment?: string | null
-          _product_id?: string | null
-        }
-        Returns: {
-          comment: string | null
-          created_at: string
-          customer_id: string
-          id: string
-          is_hidden: boolean
-          order_id: string
-          order_item_id: string | null
-          product_id: string | null
-          rating: number
-          shop_id: string
-          updated_at: string
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       submit_merchant_application: {
@@ -2506,6 +2652,33 @@ export type Database = {
           _owner_name: string
         }
         Returns: string
+      }
+      submit_review: {
+        Args: {
+          _comment?: string
+          _order_id: string
+          _product_id?: string
+          _rating: number
+        }
+        Returns: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          is_hidden: boolean
+          order_id: string
+          order_item_id: string | null
+          product_id: string | null
+          rating: number
+          shop_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       track_ad_event: {
         Args: { _ad_id: string; _device?: string; _kind: string }
