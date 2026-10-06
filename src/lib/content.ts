@@ -29,7 +29,6 @@ export const DEFAULT_CONTENT = {
   brand_tagline: "Fast. Local. Delivered.",
   logo_url: "",
   city: "Bishoftu",
-  hero_badge: "",
   hero_title: "Everything you need, delivered in minutes",
   hero_subtitle:
     "Food, groceries, pharmacy and daily essentials from your favourite Bishoftu shops — with live tracking and Telebirr, CBE, BOA or cash payment.",
@@ -66,7 +65,6 @@ export const CONTENT_FIELDS: {
   { key: "brand_short_name", labelKey: "cf_brand_short_name" },
   { key: "brand_tagline", labelKey: "cf_brand_tagline" },
   { key: "city", labelKey: "cf_city" },
-  { key: "hero_badge", labelKey: "cf_hero_badge" },
   { key: "hero_title", labelKey: "cf_hero_title", long: true },
   { key: "hero_subtitle", labelKey: "cf_hero_subtitle", long: true },
   { key: "hero_primary_cta", labelKey: "cf_hero_primary_cta" },

@@ -1880,7 +1880,6 @@ export const en = {
   cf_brand_short_name: "Short name (header logo)",
   cf_brand_tagline: "Logo tagline",
   cf_city: "City",
-  cf_hero_badge: "Hero badge",
   cf_hero_title: "Hero title",
   cf_hero_subtitle: "Hero subtitle",
   cf_hero_primary_cta: "Hero primary button",
@@ -2109,7 +2108,6 @@ export const en = {
   shop_no_results: "No items match “{term}”.",
   // Home page content — admin-editable copy from site_content, with these
   // translations as the localized fallback (see routes/index.tsx).
-  content_hero_badge: "Delivering across Bishoftu",
   content_hero_title: "Everything you need, delivered in minutes",
   content_hero_subtitle:
     "Food, groceries, pharmacy and daily essentials from your favourite Bishoftu shops — with live tracking and Telebirr, CBE, BOA or cash payment.",

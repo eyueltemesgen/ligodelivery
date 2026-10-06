@@ -1896,7 +1896,6 @@ export const or = {
   cf_brand_short_name: "Maqaa gabaabaa (mallattoo mataa)",
   cf_brand_tagline: "Jecha mallattoo",
   cf_city: "Magaalaa",
-  cf_hero_badge: "Bajii hero",
   cf_hero_title: "Mata duree hero",
   cf_hero_subtitle: "Mata duree xiqqaa hero",
   cf_hero_primary_cta: "Uffata jalqabaa hero",
@@ -2129,7 +2128,6 @@ export const or = {
   shop_cat_all: "Hunda",
   shop_section_results: "Bu'aawwan",
   shop_no_results: "“{term}” waliin kan walsimu hin jiru.",
-  content_hero_badge: "Bishooftuu guutuutti ni geessina",
   content_hero_title: "Wanti barbaaddu hundi daqiiqaadhaan sitti dhufa",
   content_hero_subtitle:
     "Suuqota Bishooftuu jaallattuu irraa nyaata, gosa gurgurtaa, farmaasii fi wantoota guyyaa guyyaa — hordoffii kallattii fi Telebirr, CBE, BOA yookiin maallaqa harkaa.",

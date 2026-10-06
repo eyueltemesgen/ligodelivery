@@ -12,7 +12,7 @@ import {
   FALLBACK_SHOPS,
   withFallback,
 } from "@/lib/fallbacks";
-import { bannersQuery, DEFAULT_CONTENT, siteContentQuery } from "@/lib/content";
+import { bannersQuery, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
@@ -73,10 +73,6 @@ function Home() {
     quickCategory ? shops.filter((s) => s.category_id === quickCategory) : shops
   ).slice(0, 6);
 
-  // The hero badge is opt-in: only show it when an admin has set a custom,
-  // non-empty value. Default/empty renders nothing instead of placeholder copy.
-  const heroBadge =
-    c?.hero_badge && c.hero_badge !== DEFAULT_CONTENT.hero_badge ? String(c.hero_badge) : "";
   return (
     <div>
       <div className="container-ligo pt-4">
@@ -86,12 +82,7 @@ function Home() {
       <section className="border-b border-border bg-surface">
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
           <div>
-            {heroBadge && (
-              <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
-                {heroBadge}
-              </span>
-            )}
-            <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
+            <h1 className="font-display text-4xl font-extrabold leading-tight md:text-5xl">
               {c?.hero_title}
             </h1>
             <p className="mt-4 max-w-lg text-muted-foreground">{c?.hero_subtitle}</p>

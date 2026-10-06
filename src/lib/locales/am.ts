@@ -1847,7 +1847,6 @@ export const am = {
   cf_brand_short_name: "አጭር ስም (የራስጌ አርማ)",
   cf_brand_tagline: "የአርማ መሪ ቃል",
   cf_city: "ከተማ",
-  cf_hero_badge: "የሂሮ ባጅ",
   cf_hero_title: "የሂሮ ርዕስ",
   cf_hero_subtitle: "የሂሮ ንዑስ ርዕስ",
   cf_hero_primary_cta: "የሂሮ ዋና ቁልፍ",
@@ -2059,7 +2058,6 @@ export const am = {
   shop_cat_all: "ሁሉም",
   shop_section_results: "ውጤቶች",
   shop_no_results: "ከ“{term}” ጋር የሚዛመድ ንጥል የለም።",
-  content_hero_badge: "በቢሾፍቱ ሁሉ የሚደርስ",
   content_hero_title: "የሚፈልጉት ሁሉ በደቂቃዎች ውስጥ ይደርሳል",
   content_hero_subtitle:
     "ከሚወዱት የቢሾፍቱ ሱቅ ምግብ፣ የግሮሰሪ፣ ፋርማሲ እና የዕለት ተዕለት እቃዎች — በቀጥታ ክትትል እና በቴሌብር፣ CBE፣ BOA ወይም ጥሬ ገንዘብ ክፍያ።",
