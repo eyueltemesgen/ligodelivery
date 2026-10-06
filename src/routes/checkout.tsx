@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
-import { AlertTriangle, Lock, MapPin } from "lucide-react";
+import { AlertTriangle, Copy, Lock, MapPin } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,13 +20,10 @@ import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
 
-const METHODS: { id: string; labelKey: TranslationKey }[] = [
-  { id: "cash", labelKey: "pay_cash" },
-  { id: "mobile_money", labelKey: "pay_mobile_money" },
-  { id: "telebirr", labelKey: "pay_telebirr" },
-  { id: "cbe", labelKey: "pay_cbe" },
-  { id: "chapa", labelKey: "pay_chapa" },
-  { id: "boa", labelKey: "pay_boa" },
+const METHODS: { id: string; labelKey: TranslationKey; icon: string }[] = [
+  { id: "cash", labelKey: "pay_cash", icon: "💵" },
+  { id: "telebirr", labelKey: "pay_telebirr", icon: "📱" },
+  { id: "cbe", labelKey: "pay_cbe", icon: "🏦" },
 ];
 
 const TIP_PRESETS = [0, 10, 20, 30, 50];
@@ -243,7 +240,14 @@ function CheckoutPage() {
     }
   };
 
-  const canProceed = name.trim() && phone.trim() && address.trim() && !feeUnavailable;
+  const canProceed = !!(name.trim() && phone.trim() && address.trim()) && !feeUnavailable;
+  const payDetails = Object.entries(
+    (publicSettings?.[`payment_${method}`] ?? {}) as Record<string, unknown>,
+  ).filter(([k, v]) => k !== "enabled" && k !== "instructions" && v != null && v !== "");
+  const copyText = (value: string, label: string) => {
+    void navigator.clipboard?.writeText(value);
+    toast.success(t("od_copied", { label }));
+  };
 
   return (
     <form
@@ -251,21 +255,9 @@ function CheckoutPage() {
       className="container-ligo grid gap-8 py-10 lg:grid-cols-[1fr_340px]"
     >
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold">{t("checkout_heading")}</h1>
-          <ol className="mt-3 flex items-center gap-2 text-xs font-semibold">
-            <li className={step === 1 ? "text-primary" : "text-muted-foreground"}>
-              {t("checkout_step1")}
-            </li>
-            <li className="text-muted-foreground">→</li>
-            <li className={step === 2 ? "text-primary" : "text-muted-foreground"}>
-              {t("checkout_step2")}
-            </li>
-          </ol>
-        </div>
+        <h1 className="font-display text-3xl font-extrabold">{t("checkout_heading")}</h1>
 
-        {step === 1 && (
-          <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
+        <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
             <h2 className="font-display text-lg font-bold">{t("checkout_delivery_details")}</h2>
 
             {savedAddresses.length > 0 && (
@@ -357,63 +349,79 @@ function CheckoutPage() {
               </p>
             ) : null}
 
-            <Button
-              type="button"
-              className="w-full"
-              disabled={!canProceed}
-              onClick={() => setStep(2)}
-            >
-              {t("checkout_continue_payment")}
-            </Button>
           </section>
-        )}
 
-        {step === 2 && (
-          <>
-            <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-              <h2 className="font-display text-lg font-bold">{t("checkout_payment_method")}</h2>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {METHODS.map((m) => (
+          <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+            <h2 className="font-display text-lg font-bold">{t("checkout_payment_method")}</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {METHODS.map((m) => (
+                <button
+                  type="button"
+                  key={m.id}
+                  onClick={() => setMethod(m.id)}
+                  className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center text-xs font-semibold transition-colors ${method === m.id ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"}`}
+                >
+                  <span className="text-xl" aria-hidden>{m.icon}</span>
+                  {t(m.labelKey)}
+                </button>
+              ))}
+            </div>
+            {method === "cash" ? (
+              <p className="rounded-lg bg-primary-soft p-3 text-xs font-medium">
+                💵 {ETB(total)}
+              </p>
+            ) : (
+              <div className="space-y-2 rounded-lg bg-secondary/60 p-3 text-sm">
+                {payDetails.length > 0 ? (
+                  payDetails.map(([k, v]) => (
+                    <div key={k} className="flex items-center justify-between gap-2">
+                      <span className="text-xs capitalize text-muted-foreground">
+                        {k.replace(/_/g, " ")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyText(String(v), k.replace(/_/g, " "))}
+                        className="flex items-center gap-1 font-semibold hover:text-primary"
+                      >
+                        {String(v)} <Copy className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))
+                ) : null}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">{t("checkout_total")}</span>
                   <button
                     type="button"
-                    key={m.id}
-                    onClick={() => setMethod(m.id)}
-                    className={`rounded-lg border px-4 py-3 text-left text-sm font-medium ${method === m.id ? "border-primary bg-primary-soft" : "border-border"}`}
+                    onClick={() => copyText(String(total), t("checkout_total"))}
+                    className="flex items-center gap-1 font-semibold hover:text-primary"
                   >
-                    {t(m.labelKey)}
+                    {ETB(total)} <Copy className="h-3.5 w-3.5" />
                   </button>
-                ))}
-              </div>
-              {method !== "cash" && (
+                </div>
                 <p className="text-xs text-muted-foreground">{t("checkout_payment_note")}</p>
-              )}
-            </section>
-
-            <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-              <h2 className="font-display text-lg font-bold">{t("checkout_rider_tip")}</h2>
-              <div className="flex flex-wrap gap-2">
-                {TIP_PRESETS.map((amount) => (
-                  <button
-                    key={amount}
-                    type="button"
-                    onClick={() => setTip(amount)}
-                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                      tip === amount
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:bg-secondary"
-                    }`}
-                  >
-                    {amount === 0 ? t("checkout_no_tip") : ETB(amount)}
-                  </button>
-                ))}
               </div>
-            </section>
+            )}
+          </section>
 
-            <Button type="button" variant="ghost" onClick={() => setStep(1)}>
-              {t("checkout_back")}
-            </Button>
-          </>
-        )}
+          <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+            <h2 className="font-display text-lg font-bold">{t("checkout_rider_tip")}</h2>
+            <div className="flex flex-wrap gap-2">
+              {TIP_PRESETS.map((amount) => (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() => setTip(amount)}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                    tip === amount
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:bg-secondary"
+                  }`}
+                >
+                  {amount === 0 ? t("checkout_no_tip") : ETB(amount)}
+                </button>
+              ))}
+            </div>
+          </section>
       </div>
 
       <aside className="h-fit space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
@@ -497,11 +505,16 @@ function CheckoutPage() {
             <span>{ETB(total)}</span>
           </div>
         </div>
-        {step === 2 && (
-          <Button type="submit" className="w-full" disabled={busy || feeUnavailable}>
-            {busy ? t("checkout_placing") : t("checkout_place_order")}
+        <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-border bg-card p-4 lg:static lg:m-0 lg:border-0 lg:p-0">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={busy || !canProceed}
+          >
+            {busy ? t("checkout_placing") : `${t("checkout_place_order")} · ${ETB(total)}`}
           </Button>
-        )}
+        </div>
       </aside>
     </form>
   );
