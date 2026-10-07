@@ -30,6 +30,9 @@ export default function OrderMap({
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const riderMarker = useRef<L.Marker | null>(null);
+  // Fit the view once, when the rider first appears. Re-fitting on every GPS
+  // tick would yank the map around and make it impossible to follow.
+  const fitted = useRef(false);
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return;
@@ -57,12 +60,15 @@ export default function OrderMap({
     } else {
       riderMarker.current.setLatLng([riderLat, riderLng]);
     }
-    map.fitBounds(
-      L.latLngBounds([
-        [lat, lng],
-        [riderLat, riderLng],
-      ]).pad(0.3),
-    );
+    if (!fitted.current) {
+      fitted.current = true;
+      map.fitBounds(
+        L.latLngBounds([
+          [lat, lng],
+          [riderLat, riderLng],
+        ]).pad(0.3),
+      );
+    }
   }, [riderLat, riderLng, lat, lng, t]);
 
   return <div ref={ref} className="h-72 w-full rounded-xl border border-border" />;

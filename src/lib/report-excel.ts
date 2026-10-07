@@ -7,7 +7,8 @@
  */
 import ExcelJS from "exceljs";
 import {
-  formatReportDateTime,
+  deliveryStatusBucket,
+  formatReportDateTimeLocalized,
   periodRangeLabel,
   reportFileName,
   type ReportPayload,
@@ -68,7 +69,7 @@ export async function buildReportWorkbook(
   const wb = new ExcelJS.Workbook();
   wb.creator = "የኔ Go Admin";
   wb.created = new Date(payload.generatedAt);
-  const periodLabel = periodRangeLabel(payload.period);
+  const periodLabel = periodRangeLabel(payload.period, c);
 
   // ---- Summary -----------------------------------------------------------
   const summary = wb.addWorksheet(c.sheetSummary);
@@ -81,7 +82,7 @@ export async function buildReportWorkbook(
   const metaRows: [string, string][] = [
     [c.platform, "የኔ Go"],
     [c.reportPeriod, periodLabel],
-    [c.generatedAtLabel, formatReportDateTime(payload.generatedAt)],
+    [c.generatedAtLabel, formatReportDateTimeLocalized(payload.generatedAt, c)],
     [c.generatedBy, payload.generatedBy ?? "—"],
   ];
   for (const [label, value] of metaRows) {
@@ -124,9 +125,9 @@ export async function buildReportWorkbook(
     { header: c.colShop, key: "shop", width: 24 },
     { header: `${c.colTotal} (ETB)`, key: "total", width: 14 },
     { header: c.colPayment, key: "paymentMethod", width: 18 },
-    { header: `${c.colStatus} · ${c.colPayment}`, key: "paymentStatus", width: 18 },
+    { header: `${c.colPayment} · ${c.colStatus}`, key: "paymentStatus", width: 18 },
     { header: c.colStatus, key: "status", width: 16 },
-    { header: c.colStatus, key: "deliveryStatus", width: 16 },
+    { header: c.colDeliveryStage, key: "deliveryStatus", width: 16 },
     { header: c.colRider, key: "rider", width: 20 },
   ];
   for (const o of payload.orders) {
@@ -139,7 +140,7 @@ export async function buildReportWorkbook(
       paymentMethod: c.paymentMethod[o.paymentMethodId] ?? o.paymentMethod,
       paymentStatus: c.paymentStatus[o.paymentStatus] ?? o.paymentStatus.replace(/_/g, " "),
       status: c.orderStatus[o.status] ?? o.status,
-      deliveryStatus: c.orderStatus[o.status] ?? o.status,
+      deliveryStatus: c.deliveryStatus[deliveryStatusBucket(o.status)] ?? o.status,
       rider: o.rider,
     });
     row.getCell("createdAt").numFmt = DATE_FMT;

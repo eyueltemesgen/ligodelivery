@@ -1961,6 +1961,8 @@ export const am = {
   adv_cta_default: "አሁን ያዙ",
   ph_email: "you@example.com",
   supa_request_failed: "ጥያቄው አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+  order_payment_required:
+    "ይህ ትዕዛዝ ከመቀጠሉ በፊት ክፍያው መረጋገጥ አለበት። እባክዎ መጀመሪያ አስተዳዳሪው እንዲያረጋግጥ ይጠይቁ።",
   rider_meta_title: "ሯጭ — የኔ Go",
   rider_meta_desc: "የየኔ Go የሯጭ ኦፕሬሽን፦ ማሰማራት፣ ማድረስ እና ገቢ።",
   rider_meta_og_title: "ሯጭ — የኔ Go",

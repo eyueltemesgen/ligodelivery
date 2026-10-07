@@ -2024,6 +2024,8 @@ export const or = {
   adv_cta_default: "Amma ajaji",
   ph_email: "you@example.com",
   supa_request_failed: "Gaaffiin hin milkoofne. Maaloo irra deebi'ii yaali.",
+  order_payment_required:
+    "Ajajni kun dura gitaan kaffaltii mirkanaa'uu qaba. Maaloo dura bu'aan akka mirkaneessu gaafadhu.",
   rider_meta_title: "Konkolaataa — የኔ Go",
   rider_meta_desc: "Hojiileen konkolaataa የኔ Go: raabsa, geessuu fi galii.",
   rider_meta_og_title: "Konkolaataa — የኔ Go",

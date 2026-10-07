@@ -2003,6 +2003,8 @@ export const en = {
   adv_cta_default: "Order now",
   ph_email: "you@example.com",
   supa_request_failed: "Request failed. Please try again.",
+  order_payment_required:
+    "Payment must be confirmed before this order can move forward. Ask an admin to verify it first.",
   rider_meta_title: "Rider — የኔ Go",
   rider_meta_desc: "የኔ Go rider operations: dispatch, deliveries and earnings.",
   rider_meta_og_title: "Rider — የኔ Go",

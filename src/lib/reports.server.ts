@@ -14,6 +14,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { Language } from "@/lib/i18n";
+import { REPORT_COPY, type ReportCopy } from "@/lib/report-copy";
 import {
   buildBuckets,
   deliveryStatusLabel,
@@ -69,6 +70,7 @@ export async function generateReport(
   input: GenerateReportInput,
 ): Promise<ReportPayload> {
   const { period } = input;
+  const copy = REPORT_COPY[input.language ?? "en"] ?? REPORT_COPY.en;
   const { startIso, endIso } = period;
 
   // One round of queries for the period, one for the customer baseline.
@@ -228,7 +230,7 @@ export async function generateReport(
     totalSpending: grossSales,
   };
 
-  const sales = buildSalesSection(period, completedOrders);
+  const sales = buildSalesSection(period, completedOrders, copy);
 
   const reportOrders: ReportOrderRow[] = orders
     .slice()
@@ -351,8 +353,9 @@ export async function generateReport(
 function buildSalesSection(
   period: ReportPeriod,
   completedOrders: { total: number; delivery_fee: number; discount: number; created_at: string }[],
+  copy: ReportCopy,
 ): SalesSection {
-  const { granularity, buckets } = buildBuckets(period);
+  const { granularity, buckets } = buildBuckets(period, copy);
   const points: SalesPoint[] = buckets.map((bucket) => ({
     key: bucket.key,
     label: bucket.label,

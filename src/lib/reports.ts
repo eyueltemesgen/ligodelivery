@@ -7,6 +7,7 @@
  */
 import { ORDER_STATUSES, STATUS_LABEL, STATUS_LABEL_KEY, type OrderStatus } from "@/lib/orders";
 import type { TranslationKey } from "@/lib/i18n";
+import type { ReportCopy } from "@/lib/report-copy";
 import { ETB } from "@/lib/format";
 
 /**
@@ -237,11 +238,7 @@ export function deliveryStatusLabel(status: string): string {
 
 /** Delivery-stage buckets derived from an order status. */
 export type DeliveryBucket =
-  | "delivered"
-  | "cancelled"
-  | "preparing"
-  | "in_transit"
-  | "awaiting_payment";
+  "delivered" | "cancelled" | "preparing" | "in_transit" | "awaiting_payment";
 
 export function deliveryStatusBucket(status: string): DeliveryBucket {
   if (status === "delivered") return "delivered";
@@ -301,9 +298,16 @@ export const toLocalDateString = (ms: number) => ymd(localParts(ms));
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function humanDate(ms: number): string {
+/**
+ * Short month name for the report language. Falls back to the English list when
+ * no report copy is supplied (e.g. the dashboard's own English-only helpers).
+ */
+const monthName = (m: number, copy?: ReportCopy) =>
+  copy ? (copy.monthsShort[m] ?? MONTHS[m] ?? "") : (MONTHS[m] ?? "");
+
+function humanDate(ms: number, copy?: ReportCopy): string {
   const p = localParts(ms);
-  return `${p.d} ${MONTHS[p.m]} ${p.y}`;
+  return `${p.d} ${monthName(p.m, copy)} ${p.y}`;
 }
 
 function addDays(p: LocalParts, days: number): LocalParts {
@@ -429,14 +433,17 @@ export function resolvePeriod(
 }
 
 /** Human label such as "3 Oct 2026" or "1 Oct 2026 – 3 Oct 2026". */
-export function periodRangeLabel(period: ReportPeriod): string {
-  const a = humanDate(period.startMs);
-  const b = humanDate(period.endMs - 1);
+export function periodRangeLabel(period: ReportPeriod, copy?: ReportCopy): string {
+  const a = humanDate(period.startMs, copy);
+  const b = humanDate(period.endMs - 1, copy);
   return a === b ? a : `${a} – ${b}`;
 }
 
 /** Bucket labels for the sales timeline. */
-export function buildBuckets(period: ReportPeriod): {
+export function buildBuckets(
+  period: ReportPeriod,
+  copy?: ReportCopy,
+): {
   granularity: SalesSection["granularity"];
   buckets: { key: string; label: string; startMs: number; endMs: number }[];
 } {
@@ -460,7 +467,7 @@ export function buildBuckets(period: ReportPeriod): {
       const next = localMidnightMs(p.y, p.m, p.d + 1);
       buckets.push({
         key: ymd(p),
-        label: `${p.d} ${MONTHS[p.m]}`,
+        label: `${p.d} ${monthName(p.m, copy)}`,
         startMs: ms,
         endMs: next,
       });
@@ -477,7 +484,7 @@ export function buildBuckets(period: ReportPeriod): {
       const end = Math.min(next, period.endMs);
       buckets.push({
         key: ymd(p),
-        label: `${p.d} ${MONTHS[p.m]}`,
+        label: `${p.d} ${monthName(p.m, copy)}`,
         startMs: ms,
         endMs: end,
       });
@@ -492,7 +499,7 @@ export function buildBuckets(period: ReportPeriod): {
     const next = localMidnightMs(nextP.y, nextP.m, nextP.d);
     buckets.push({
       key: `${p.y}-${pad(p.m + 1)}`,
-      label: `${MONTHS[p.m]} ${p.y}`,
+      label: `${monthName(p.m, copy)} ${p.y}`,
       startMs: ms,
       endMs: Math.min(next, period.endMs),
     });
@@ -528,6 +535,20 @@ export const formatReportDateTime = (value: string | number | Date) =>
 
 export const formatReportDate = (value: string | number | Date) =>
   DATE_ONLY.format(new Date(value));
+
+/**
+ * Locale-aware date-time for exports. Uses the report language's short month
+ * names so a report never falls back to English month abbreviations.
+ */
+export const formatReportDateTimeLocalized = (
+  value: string | number | Date,
+  copy: ReportCopy,
+): string => {
+  const s = shifted(new Date(value).getTime());
+  return `${pad(s.getUTCDate())} ${monthName(s.getUTCMonth(), copy)} ${s.getUTCFullYear()}, ${pad(
+    s.getUTCHours(),
+  )}:${pad(s.getUTCMinutes())}`;
+};
 
 /** platform-report-YYYY-MM-DD.ext or platform-report-START-to-END.ext */
 export function reportFileName(period: ReportPeriod, ext: string): string {

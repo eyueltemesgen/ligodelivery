@@ -9,7 +9,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
-  formatReportDateTime,
+  formatReportDateTimeLocalized,
   periodRangeLabel,
   reportFileName,
   type ReportPayload,
@@ -93,8 +93,9 @@ export async function buildReportPdf(
   const statusText = (status: string) => c.orderStatus[status] ?? status;
   const methodText = (id: string, fallback: string) => c.paymentMethod[id] ?? fallback;
   const payStatusText = (status: string) => c.paymentStatus[status] ?? status.replace(/_/g, " ");
-  const periodLabel = periodRangeLabel(payload.period);
-  const generatedAt = formatReportDateTime(payload.generatedAt);
+  const granularityText = c.granularity[payload.sales.granularity] ?? payload.sales.granularity;
+  const periodLabel = periodRangeLabel(payload.period, c);
+  const generatedAt = formatReportDateTimeLocalized(payload.generatedAt, c);
   let cursor = 0;
 
   // ---- Header band -------------------------------------------------------
@@ -265,11 +266,7 @@ export async function buildReportPdf(
     doc.setTextColor(...BRAND_DARK);
     setFont("bold");
     doc.setFontSize(9);
-    doc.text(
-      fill(c.salesByGranularity, { granularity: payload.sales.granularity }),
-      PAGE.margin,
-      cursor - 4,
-    );
+    doc.text(fill(c.salesByGranularity, { granularity: granularityText }), PAGE.margin, cursor - 4);
     doc.setTextColor(...MUTED);
     setFont("normal");
     doc.setFontSize(7);
@@ -343,14 +340,7 @@ export async function buildReportPdf(
       cursor = PAGE.margin + 10;
     }
     const colWidth = (CONTENT_WIDTH - 24) / 2;
-    const leftBottom = drawHBar(
-      PAGE.margin,
-      cursor,
-      colWidth,
-      c.ordersByStatus,
-      statusRows,
-      BRAND,
-    );
+    const leftBottom = drawHBar(PAGE.margin, cursor, colWidth, c.ordersByStatus, statusRows, BRAND);
     const rightBottom = paymentRows.length
       ? drawHBar(
           PAGE.margin + colWidth + 24,
@@ -377,19 +367,33 @@ export async function buildReportPdf(
     cursor += 8;
   };
 
+  const tableFont = fontReady ? "Report" : "helvetica";
   const tableTheme = {
+    // Pin the table font to the embedded Ethiopic family; jspdf-autotable
+    // otherwise defaults to helvetica and drops Amharic glyphs.
+    styles: { font: tableFont, fontSize: 8.5, cellPadding: 5, textColor: INK },
     headStyles: {
       fillColor: BRAND,
       textColor: [255, 255, 255] as [number, number, number],
+      font: tableFont,
       fontStyle: "bold" as const,
     },
-    styles: { fontSize: 8.5, cellPadding: 5, textColor: INK },
-    alternateRowStyles: { fillColor: [247, 250, 248] as [number, number, number] },
+    bodyStyles: { font: tableFont },
+    footStyles: {
+      font: tableFont,
+      fillColor: [231, 240, 234] as [number, number, number],
+      textColor: INK,
+      fontStyle: "bold" as const,
+    },
+    alternateRowStyles: {
+      fillColor: [247, 250, 248] as [number, number, number],
+      font: tableFont,
+    },
     margin: { left: PAGE.margin, right: PAGE.margin },
   };
 
   // Sales summary
-  startNewSection(fill(c.salesSummary, { granularity: payload.sales.granularity }));
+  startNewSection(fill(c.salesSummary, { granularity: granularityText }));
   autoTable(doc, {
     ...tableTheme,
     startY: cursor,
@@ -412,7 +416,12 @@ export async function buildReportPdf(
         money(payload.sales.totals.net),
       ],
     ],
-    footStyles: { fillColor: [231, 240, 234], textColor: INK, fontStyle: "bold" },
+    footStyles: {
+      font: tableFont,
+      fillColor: [231, 240, 234] as [number, number, number],
+      textColor: INK,
+      fontStyle: "bold" as const,
+    },
     columnStyles: {
       1: { halign: "right" },
       2: { halign: "right" },
@@ -428,7 +437,9 @@ export async function buildReportPdf(
   autoTable(doc, {
     ...tableTheme,
     startY: cursor,
-    head: [[c.colMethod, c.colTransactions, c.colAmount, c.colSuccessful, c.colPending, c.colFailed]],
+    head: [
+      [c.colMethod, c.colTransactions, c.colAmount, c.colSuccessful, c.colPending, c.colFailed],
+    ],
     body: payload.payments.map((p) => [
       p.label,
       String(p.transactions),
@@ -452,10 +463,21 @@ export async function buildReportPdf(
   autoTable(doc, {
     ...tableTheme,
     startY: cursor,
-    head: [[c.colOrder, c.colDate, c.colCustomer, c.colShop, c.colTotal, c.colPayment, c.colStatus, c.colRider]],
+    head: [
+      [
+        c.colOrder,
+        c.colDate,
+        c.colCustomer,
+        c.colShop,
+        c.colTotal,
+        c.colPayment,
+        c.colStatus,
+        c.colRider,
+      ],
+    ],
     body: payload.orders.map((o) => [
       o.orderCode,
-      formatReportDateTime(o.createdAt),
+      formatReportDateTimeLocalized(o.createdAt, c),
       o.customer,
       o.shop,
       money(o.total),
@@ -562,7 +584,11 @@ export async function buildReportPdf(
     doc.setTextColor(...MUTED);
     setFont("normal");
     doc.setFontSize(8);
-    doc.text(`${branding.name} · ${c.businessReport} · ${periodLabel}`, PAGE.margin, PAGE.height - 20);
+    doc.text(
+      `${branding.name} · ${c.businessReport} · ${periodLabel}`,
+      PAGE.margin,
+      PAGE.height - 20,
+    );
     doc.text(`${c.page} ${i} / ${pageCount}`, PAGE.width - PAGE.margin, PAGE.height - 20, {
       align: "right",
     });

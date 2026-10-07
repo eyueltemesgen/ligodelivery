@@ -15,6 +15,11 @@ export function supabaseErrorMessage(err: unknown): string {
 /** Localized error text: falls back to a translated message for non-API errors. */
 export function supabaseErrorText(t: (key: TranslationKey) => string, err: unknown): string {
   if (!err || typeof err !== "object") return t("supa_request_failed");
+  const message = (err as { message?: string }).message ?? "";
+  // The order guard raises a fixed English string; show it in the UI language.
+  if (/payment (must be verified|has not been verified)/i.test(message)) {
+    return t("order_payment_required");
+  }
   return supabaseErrorMessage(err);
 }
 

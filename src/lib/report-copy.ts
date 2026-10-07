@@ -71,6 +71,8 @@ export type ReportCopy = {
   colTotal: string;
   colPayment: string;
   colStatus: string;
+  /** Delivery-stage column header, derived from the order status. */
+  colDeliveryStage: string;
   colRider: string;
 
   colSales: string;
@@ -104,6 +106,11 @@ export type ReportCopy = {
   exSubtitle: string;
   exTotal: string;
   exAvgOrderValue: string;
+
+  /** Unit labels for the sales granularity, used to fill {granularity}. */
+  granularity: { hour: string; day: string; week: string; month: string };
+  /** Short month names (Jan–Dec) for period ranges and bucket labels. */
+  monthsShort: string[];
 
   /** Order status labels, keyed by the platform status id. */
   orderStatus: Record<string, string>;
@@ -180,6 +187,7 @@ const en: ReportCopy = {
   colTotal: "Total",
   colPayment: "Payment",
   colStatus: "Status",
+  colDeliveryStage: "Delivery stage",
   colRider: "Rider",
 
   colSales: "Sales",
@@ -213,6 +221,9 @@ const en: ReportCopy = {
   exSubtitle: "Reporting period: {period}",
   exTotal: "TOTAL",
   exAvgOrderValue: "Average order value (ETB)",
+
+  granularity: { hour: "hour", day: "day", week: "week", month: "month" },
+  monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
 
   orderStatus: {
     pending_payment: "Pending Payment",
@@ -318,6 +329,7 @@ const am: ReportCopy = {
   colTotal: "ጠቅላላ",
   colPayment: "ክፍያ",
   colStatus: "ሁኔታ",
+  colDeliveryStage: "የማድረስ ደረጃ",
   colRider: "ራይደር",
 
   colSales: "ሽያጭ",
@@ -351,6 +363,9 @@ const am: ReportCopy = {
   exSubtitle: "የሪፖርት ጊዜ፦ {period}",
   exTotal: "ጠቅላላ",
   exAvgOrderValue: "አማካይ የትዕዛዝ ዋጋ (ETB)",
+
+  granularity: { hour: "ሰዓት", day: "ቀን", week: "ሳምንት", month: "ወር" },
+  monthsShort: ["ጃንዩ", "ፌብሩ", "ማርች", "ኤፕሪ", "ሜይ", "ጁን", "ጁላይ", "ኦገስ", "ሴፕቴ", "ኦክቶ", "ኖቬም", "ዲሴም"],
 
   orderStatus: {
     pending_payment: "በክፍያ በመጠበቅ",
@@ -456,6 +471,7 @@ const or: ReportCopy = {
   colTotal: "Waliigala",
   colPayment: "Kaffaltii",
   colStatus: "Haala",
+  colDeliveryStage: "Sadarkaa geessuu",
   colRider: "Raayidara",
 
   colSales: "Gurgurtaa",
@@ -489,6 +505,9 @@ const or: ReportCopy = {
   exSubtitle: "Yeroo gabaasaa: {period}",
   exTotal: "WALIIGALA",
   exAvgOrderValue: "Giddu-galeessa gatii ajajaa (ETB)",
+
+  granularity: { hour: "sa'aatii", day: "guyyaa", week: "torban", month: "ji'a" },
+  monthsShort: ["Ama", "Gur", "Bit", "Elb", "Cam", "Wax", "Ado", "Hag", "Ful", "Onk", "Sad", "Mud"],
 
   orderStatus: {
     pending_payment: "Kaffaltii eegaa",

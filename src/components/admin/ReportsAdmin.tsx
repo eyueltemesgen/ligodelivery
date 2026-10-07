@@ -64,8 +64,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n";
+import { REPORT_COPY } from "@/lib/report-copy";
 import {
-  formatReportDateTime,
+  formatReportDateTimeLocalized,
   money,
   orderStatuses,
   periodRangeLabel,
@@ -219,7 +220,10 @@ export function ReportsAdmin() {
               {t("rp_language")}
             </Label>
             <Select value={reportLang} onValueChange={(v) => setReportLang(v as Language)}>
-              <SelectTrigger id="report-language" className="h-7 w-[9.5rem] border-0 px-1 shadow-none">
+              <SelectTrigger
+                id="report-language"
+                className="h-7 w-[9.5rem] border-0 px-1 shadow-none"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -255,7 +259,7 @@ export function ReportsAdmin() {
         setDraft={setDraft}
         onGenerate={generate}
         busy={isFetching}
-        periodLabel={report ? periodRangeLabel(report.period) : null}
+        periodLabel={report ? periodRangeLabel(report.period, REPORT_COPY[reportLang]) : null}
         generatedAt={report?.generatedAt ?? null}
         generatedBy={report?.generatedBy ?? profile?.full_name ?? null}
         onRefresh={() => void refetch()}
@@ -300,7 +304,7 @@ function ReportFilters({
   generatedBy: string | null;
   onRefresh: () => void;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const customInvalid =
     draft.range === "custom" && draft.start !== "" && draft.end !== "" && draft.start > draft.end;
 
@@ -381,7 +385,13 @@ function ReportFilters({
       {periodLabel && (
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">{periodLabel}</span>
-          {generatedAt && <span>{t("rp_generated", { date: formatReportDateTime(generatedAt) })}</span>}
+          {generatedAt && (
+            <span>
+              {t("rp_generated", {
+                date: formatReportDateTimeLocalized(generatedAt, REPORT_COPY[language]),
+              })}
+            </span>
+          )}
           <span>{t("rp_by", { name: generatedBy ?? "—" })}</span>
           <span>{t("rp_timezone")}</span>
         </div>
@@ -410,9 +420,7 @@ function ReportBody({
     <div className="space-y-6">
       <SummaryGrid report={report} />
 
-      {!hasData && (
-        <EmptyState title={t("rp_empty_title")} body={t("rp_empty_body")} />
-      )}
+      {!hasData && <EmptyState title={t("rp_empty_title")} body={t("rp_empty_body")} />}
 
       {hasData && <ChartsSection report={report} />}
 
@@ -590,8 +598,12 @@ function ChartsSection({ report }: { report: ReportPayload }) {
 
   return (
     <section className="grid gap-4 lg:grid-cols-2">
-      <ChartCard title={t("rp_chart_sales_over_time")}
-        subtitle={t("rp_chart_gross_vs_net", { granularity: t(GRANULARITY_KEY[report.sales.granularity] ?? "rp_gran_day") })}>
+      <ChartCard
+        title={t("rp_chart_sales_over_time")}
+        subtitle={t("rp_chart_gross_vs_net", {
+          granularity: t(GRANULARITY_KEY[report.sales.granularity] ?? "rp_gran_day"),
+        })}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={salesData} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
             <defs>
@@ -684,7 +696,12 @@ function ChartsSection({ report }: { report: ReportPayload }) {
               />
               <YAxis tick={{ fontSize: 11 }} width={64} />
               <Tooltip formatter={(v: number) => money(v)} />
-              <Bar dataKey="amount" name={t("rp_chart_amount")} fill="#059669" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="amount"
+                name={t("rp_chart_amount")}
+                fill="#059669"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -704,7 +721,12 @@ function ChartsSection({ report }: { report: ReportPayload }) {
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
               <Tooltip formatter={(v: number) => money(v)} />
-              <Bar dataKey="sales" name={t("rp_chart_sales")} fill="#0ea5e9" radius={[0, 4, 4, 0]} />
+              <Bar
+                dataKey="sales"
+                name={t("rp_chart_sales")}
+                fill="#0ea5e9"
+                radius={[0, 4, 4, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -724,7 +746,12 @@ function ChartsSection({ report }: { report: ReportPayload }) {
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
               <Tooltip formatter={(v: number) => money(v)} />
-              <Bar dataKey="revenue" name={t("rp_chart_revenue")} fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+              <Bar
+                dataKey="revenue"
+                name={t("rp_chart_revenue")}
+                fill="#8b5cf6"
+                radius={[0, 4, 4, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -947,7 +974,10 @@ function OrdersTab({ report }: { report: ReportPayload }) {
           </SelectContent>
         </Select>
         <span className="text-xs text-muted-foreground">
-          {t("rp_orders_count", { shown: filtered.length.toLocaleString(), total: report.orders.length.toLocaleString() })}
+          {t("rp_orders_count", {
+            shown: filtered.length.toLocaleString(),
+            total: report.orders.length.toLocaleString(),
+          })}
         </span>
       </div>
 
@@ -1015,12 +1045,12 @@ function OrdersTab({ report }: { report: ReportPayload }) {
 }
 
 function OrderRow({ order }: { order: ReportOrderRow }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   return (
     <tr className="border-b border-border last:border-0">
       <Td className="font-medium">{order.orderCode}</Td>
       <Td className="whitespace-nowrap text-muted-foreground">
-        {formatReportDateTime(order.createdAt)}
+        {formatReportDateTimeLocalized(order.createdAt, REPORT_COPY[language])}
       </Td>
       <Td>{order.customer}</Td>
       <Td>{order.shop}</Td>
@@ -1182,9 +1212,7 @@ function ProductsTab({ report }: { report: ReportPayload }) {
             <Td align="right">{p.orders}</Td>
           </tr>
         ))}
-        {report.products.length === 0 && (
-          <NoRows span={5} label={t("rp_no_products")} />
-        )}
+        {report.products.length === 0 && <NoRows span={5} label={t("rp_no_products")} />}
       </tbody>
     </TableShell>
   );
@@ -1254,7 +1282,7 @@ function RidersTab({ report }: { report: ReportPayload }) {
 // ---------------------------------------------------------------------------
 
 function ReportHistory() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data, isLoading } = useQuery({
     queryKey: ["admin-report-history"],
     queryFn: async () => reportHistoryFn({ data: { limit: 15 } }),
@@ -1302,7 +1330,7 @@ function ReportHistory() {
                     : `${item.startDate} → ${item.endDate}`}
                 </Td>
                 <Td className="whitespace-nowrap text-muted-foreground">
-                  {formatReportDateTime(item.createdAt)}
+                  {formatReportDateTimeLocalized(item.createdAt, REPORT_COPY[language])}
                 </Td>
                 <Td>{item.generatedBy ?? "—"}</Td>
                 <Td>

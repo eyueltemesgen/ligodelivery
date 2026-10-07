@@ -13,6 +13,7 @@ import {
   withFallback,
 } from "@/lib/fallbacks";
 import { bannersQuery, siteContentQuery } from "@/lib/content";
+import { AdCarousel } from "@/components/ligo/AdCarousel";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
@@ -62,7 +63,6 @@ function Home() {
   const { data: offers = [] } = useQuery(offersQuery);
   const { data: c } = useQuery(siteContentQuery);
   const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
-  const heroBanner = heroBanners[0];
   const { data: serviceCategories = [] } = useQuery(serviceCategoriesQuery);
   const { data: momentServices = [] } = useQuery({
     ...servicesQuery(),
@@ -107,14 +107,15 @@ function Home() {
               ))}
             </div>
           </div>
-          {heroBanner?.image_url ? (
-            <StorageImage
-              path={heroBanner.image_url}
-              alt={heroBanner.title || "የኔ Go hero banner"}
+          {heroBanners.length > 0 ? (
+            <AdCarousel
+              placement="home_hero"
+              className=""
+              chrome={false}
               priority
               width={1080}
-              height={540}
-              className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
+              aspect="aspect-[16/9] lg:aspect-auto lg:h-96"
+              wrapperClassName="rounded-2xl shadow-pop"
             />
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">

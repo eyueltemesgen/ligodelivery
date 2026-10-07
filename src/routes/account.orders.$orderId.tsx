@@ -98,6 +98,9 @@ function OrderDetails() {
   const { data: rider } = useQuery({
     queryKey: ["order-rider", order?.rider_id],
     enabled: !!order?.rider_id,
+    // Poll as a fallback: a dropped realtime event (or a rider app that went
+    // offline) must not freeze the marker on the customer's map.
+    refetchInterval: order?.rider_id ? 10_000 : false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("riders")
@@ -131,6 +134,26 @@ function OrderDetails() {
       void supabase.removeChannel(channel);
     };
   }, [orderId, qc]);
+
+  // Live rider movement: the assigned rider's GPS rows drive the customer's
+  // map, so subscribe to them directly in addition to the polling fallback.
+  useEffect(() => {
+    if (!order?.rider_id) return;
+    const riderId = order.rider_id;
+    const channel = supabase
+      .channel(`order-rider-${riderId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "riders", filter: `id=eq.${riderId}` },
+        () => {
+          void qc.invalidateQueries({ queryKey: ["order-rider", riderId] });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [order?.rider_id, qc]);
 
   if (isLoading) {
     return (

@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
+import { supabaseErrorText } from "@/lib/supa-error";
 import { RiderGate } from "@/components/auth/guards";
 import { ETB, formatDate } from "@/lib/format";
 import { uploadImage } from "@/lib/media";
@@ -488,7 +489,7 @@ function RiderPortal() {
   const setStatus = async (order: OrderRow, status: OrderStatus) => {
     const { error } = await supabase.from("orders").update({ status }).eq("id", order.id);
     if (error) {
-      toast.error(error.message);
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     await notify(

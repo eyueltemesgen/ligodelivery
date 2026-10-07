@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
+import { supabaseErrorText } from "@/lib/supa-error";
 import { isShopOpenNow } from "@/lib/hours";
 import { categoriesQuery, type Product, type Shop } from "@/lib/queries";
 import { ETB } from "@/lib/format";
@@ -293,7 +294,7 @@ function MerchantDashboard() {
   const advance = async (orderId: string, next: OrderStatus) => {
     const { error } = await supabase.from("orders").update({ status: next }).eq("id", orderId);
     if (error) {
-      toast.error(error.message);
+      toast.error(supabaseErrorText(t, error));
       return;
     }
     void qc.invalidateQueries({ queryKey: ["merchant-orders"] });
