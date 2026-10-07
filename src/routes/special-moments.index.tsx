@@ -7,7 +7,8 @@ import { ServiceCard, ServiceCategoryCard } from "@/components/special-moments/S
 import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { Button } from "@/components/ui/button";
 import { GridSkeleton } from "@/components/account/States";
-import { siteContentQuery } from "@/lib/content";
+import { StorageImage } from "@/lib/media";
+import { siteContentQuery, bannersQuery } from "@/lib/content";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
 
@@ -40,6 +41,16 @@ function SpecialMomentsHub() {
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
   const { data: services = [], isLoading } = useQuery(servicesQuery());
   const { data: content } = useQuery(siteContentQuery);
+  const { data: smBanners = [] } = useQuery(bannersQuery("special_moments"));
+  const heroImages = smBanners.filter((b) => b.image_url);
+
+  // Fallback hero slides keep the previous category-card grid so the page is
+  // unchanged until an admin uploads `special_moments` banners.
+  const categoryPairs = useMemo(() => {
+    const pairs: (typeof categories)[] = [];
+    for (let i = 0; i < categories.length; i += 2) pairs.push(categories.slice(i, i + 2));
+    return pairs.slice(0, 4);
+  }, [categories]);
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -52,12 +63,6 @@ function SpecialMomentsHub() {
   const featured = services.filter((s) => s.is_featured).slice(0, 8);
   const showcase = featured.length > 0 ? featured : services.slice(0, 8);
   const giftsCategory = categories.find((c) => c.slug === "gifts");
-  // Two categories per hero slide, rotating through the set.
-  const categoryPairs = useMemo(() => {
-    const pairs: (typeof categories)[] = [];
-    for (let i = 0; i < categories.length; i += 2) pairs.push(categories.slice(i, i + 2));
-    return pairs.slice(0, 4);
-  }, [categories]);
 
   return (
     <div>
@@ -100,19 +105,43 @@ function SpecialMomentsHub() {
               ))}
             </div>
           </div>
-          <RotatingSlides
-            ariaLabel={t("smi_show_categories")}
-            controls={categoryPairs.length > 1}
-            className="rounded-2xl"
-          >
-            {categoryPairs.map((pair, i) => (
-              <div key={i} className="grid grid-cols-2 gap-3 pb-8 sm:gap-4">
-                {pair.map((c) => (
-                  <ServiceCategoryCard key={c.id} category={c} />
-                ))}
-              </div>
-            ))}
-          </RotatingSlides>
+          {heroImages.length > 0 ? (
+            <RotatingSlides
+              ariaLabel={t("banner_carousel_aria")}
+              controls={heroImages.length > 1}
+              className="h-72 w-full rounded-2xl shadow-pop lg:h-96"
+            >
+              {heroImages.map((b) => (
+                <StorageImage
+                  key={b.id}
+                  path={b.image_url}
+                  alt={b.title || "የኔ Go Special Moments"}
+                  priority
+                  width={1080}
+                  height={540}
+                  className="h-72 w-full rounded-2xl object-cover lg:h-96"
+                />
+              ))}
+            </RotatingSlides>
+          ) : categoryPairs.length > 0 ? (
+            <RotatingSlides
+              ariaLabel={t("smi_show_categories")}
+              controls={categoryPairs.length > 1}
+              className="rounded-2xl"
+            >
+              {categoryPairs.map((pair, i) => (
+                <div key={i} className="grid grid-cols-2 gap-3 pb-8 sm:gap-4">
+                  {pair.map((c) => (
+                    <ServiceCategoryCard key={c.id} category={c} />
+                  ))}
+                </div>
+              ))}
+            </RotatingSlides>
+          ) : (
+            <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
+              <Sparkles className="h-12 w-12 text-primary/60" />
+            </div>
+          )}
         </div>
       </section>
 

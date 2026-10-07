@@ -102,7 +102,7 @@ export function RotatingSlides({
   children,
   ariaLabel,
   className,
-  intervalMs = 6000,
+  intervalMs = 3000,
   controls = true,
 }: {
   children: ReactNode;
@@ -148,6 +148,15 @@ export function RotatingSlides({
         touchX.current = null;
         setPaused(false);
       }}
+      // Cancelled touch/pointer gestures must still resume autoplay.
+      onTouchCancel={() => {
+        touchX.current = null;
+        setPaused(false);
+      }}
+      onPointerCancel={() => {
+        touchX.current = null;
+        setPaused(false);
+      }}
     >
       <div
         className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
@@ -189,7 +198,7 @@ export function RotatingRow<T>({
   ariaLabel,
   className,
   itemClassName = "w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[23%]",
-  intervalMs = 5500,
+  intervalMs = 3000,
 }: {
   items: T[];
   renderItem: (item: T, index: number) => ReactNode;
@@ -243,6 +252,10 @@ export function RotatingRow<T>({
       onBlurCapture={() => setPaused(false)}
       onPointerDown={() => setPaused(true)}
       onPointerUp={() => setPaused(false)}
+      // A horizontal touch drag makes the browser fire pointercancel, not
+      // pointerup. Without these the row stays paused after every swipe.
+      onPointerCancel={() => setPaused(false)}
+      onPointerLeave={() => setPaused(false)}
     >
       <div
         ref={ref}
