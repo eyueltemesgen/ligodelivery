@@ -18,6 +18,7 @@ export const BANNER_PLACEMENTS = [
   { value: "home_hero", labelKey: "bp_home_hero" },
   { value: "home_middle", labelKey: "bp_home_middle" },
   { value: "home_bottom", labelKey: "bp_home_bottom" },
+  { value: "special_moments", labelKey: "bp_special_moments" },
   { value: "shops", labelKey: "bp_shops" },
   { value: "offers", labelKey: "bp_offers" },
   { value: "categories", labelKey: "bp_categories" },
