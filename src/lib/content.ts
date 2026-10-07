@@ -13,15 +13,31 @@ export type Banner = {
   is_active: boolean;
 };
 
-export const BANNER_PLACEMENTS = [
-  { value: "home_top", labelKey: "bp_home_top" },
-  { value: "home_hero", labelKey: "bp_home_hero" },
-  { value: "home_middle", labelKey: "bp_home_middle" },
-  { value: "home_bottom", labelKey: "bp_home_bottom" },
+export type BannerPlacement = { value: string; labelKey: TranslationKey; legacy?: boolean };
+
+export const BANNER_PLACEMENTS: readonly BannerPlacement[] = [
+  { value: "home", labelKey: "bp_home" },
   { value: "shops", labelKey: "bp_shops" },
   { value: "offers", labelKey: "bp_offers" },
   { value: "categories", labelKey: "bp_categories" },
-] as const satisfies readonly { value: string; labelKey: TranslationKey }[];
+  // Legacy per-section home placements. Kept so banners created before the
+  // single rotating home slot still resolve and display; they all now rotate
+  // together in that one slot (see HOME_BANNER_PLACEMENTS). Hidden from the
+  // create/edit picker so admins choose the single "home" placement.
+  { value: "home_hero", labelKey: "bp_home_hero", legacy: true },
+  { value: "home_top", labelKey: "bp_home_top", legacy: true },
+  { value: "home_middle", labelKey: "bp_home_middle", legacy: true },
+  { value: "home_bottom", labelKey: "bp_home_bottom", legacy: true },
+];
+
+/** All placements merged into the home page's single rotating banner slot. */
+export const HOME_BANNER_PLACEMENTS = [
+  "home",
+  "home_hero",
+  "home_top",
+  "home_middle",
+  "home_bottom",
+] as const;
 
 export const DEFAULT_CONTENT = {
   brand_name: "የኔ Go",
@@ -122,12 +138,17 @@ function normalizeContent(raw: Partial<SiteContent>): SiteContent {
   return merged;
 }
 
-export const bannersQuery = (placement?: string) => ({
-  queryKey: ["banners", placement ?? "all"],
+export const bannersQuery = (placement?: string | readonly string[]) => ({
+  queryKey: ["banners", Array.isArray(placement) ? placement.join(",") : (placement ?? "all")],
   staleTime: 5 * 60_000,
   queryFn: async (): Promise<Banner[]> => {
     let q = supabase.from("banners").select("*").eq("is_active", true).order("sort_order");
-    if (placement) q = q.eq("placement", placement);
+    if (typeof placement === "string") {
+      q = q.eq("placement", placement);
+    } else if (placement) {
+      if (placement.length === 0) return [];
+      q = q.in("placement", [...placement]);
+    }
     const { data } = await q;
     const legacy = /^(ligo|ligo delivery)$/i;
     return ((data ?? []) as Banner[]).map((b) => ({

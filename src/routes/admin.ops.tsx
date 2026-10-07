@@ -1797,7 +1797,7 @@ function BannersAdmin() {
     subtitle: "",
     cta_label: "",
     link_url: "",
-    placement: "home_top",
+    placement: "home",
     sort_order: "0",
   });
   const [file, setFile] = useState<File | null>(null);
@@ -1918,7 +1918,7 @@ function BannersAdmin() {
           value={form.placement}
           onChange={(e) => setForm({ ...form, placement: e.target.value })}
         >
-          {BANNER_PLACEMENTS.map((p) => (
+          {BANNER_PLACEMENTS.filter((p) => !p.legacy).map((p) => (
             <option key={p.value} value={p.value}>
               {t(p.labelKey)}
             </option>

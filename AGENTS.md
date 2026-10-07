@@ -86,3 +86,8 @@
 - UI mirrors the gate so users get a disabled button and an explanation instead of a raw DB error: `admin.ops.tsx` (Approve & Dispatch) and `merchant.tsx` (accept/prepare) both disable the action when `payment_method !== 'cash' && payment_status !== 'paid'`.
 - The order detail page (`account.orders.$orderId.tsx`) presents payment before tracking: the map renders only once `paymentSettled` (`payment_method === 'cash' || payment_status === 'paid'`). While unsettled it shows `od_tracking_locked` instead of the map, so a customer cannot watch a rider before paying.
 
+## Home banner placement (single rotating slot)
+
+- The home page shows **one** banner slot, in the hero's right column (`src/routes/index.tsx`), rendered by `AdCarousel` with `placement={HOME_BANNER_PLACEMENTS}`. It rotates every active home banner in that one place. Do not add more `BannerSlot`/`AdCarousel` instances back to the home page — the earlier `home_top`/`home_middle`/`home_bottom` slots were removed for exactly this reason.
+- `HOME_BANNER_PLACEMENTS` (`src/lib/content.ts`) is the merge list: `home` plus the legacy `home_hero`/`home_top`/`home_middle`/`home_bottom`. `bannersQuery` accepts a single placement string or an array (`q.in("placement", ...)`), so all of them rotate together and no existing banner is lost.
+- Admin Banners tab (`src/routes/admin.ops.tsx`) offers only non-legacy placements in the create picker (`BANNER_PLACEMENTS.filter(p => !p.legacy)`); the per-row edit select still lists legacy values so old banners stay editable and labelled. `BANNER_PLACEMENTS` is a typed `readonly BannerPlacement[]` (not `as const`) so the optional `legacy` flag type-checks.

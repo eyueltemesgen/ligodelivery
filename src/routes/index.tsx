@@ -12,9 +12,8 @@ import {
   FALLBACK_SHOPS,
   withFallback,
 } from "@/lib/fallbacks";
-import { bannersQuery, siteContentQuery } from "@/lib/content";
+import { bannersQuery, siteContentQuery, HOME_BANNER_PLACEMENTS } from "@/lib/content";
 import { AdCarousel } from "@/components/ligo/AdCarousel";
-import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
   CategoryCardSkeleton,
@@ -62,7 +61,7 @@ function Home() {
   });
   const { data: offers = [] } = useQuery(offersQuery);
   const { data: c } = useQuery(siteContentQuery);
-  const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
+  const { data: heroBanners = [] } = useQuery(bannersQuery(HOME_BANNER_PLACEMENTS));
   const { data: serviceCategories = [] } = useQuery(serviceCategoriesQuery);
   const { data: momentServices = [] } = useQuery({
     ...servicesQuery(),
@@ -78,7 +77,6 @@ function Home() {
       <div className="container-ligo pt-4">
         <ActiveOrderBanner />
       </div>
-      <BannerSlot placement="home_top" />
       <section className="border-b border-border bg-surface">
         <div className="container-ligo grid items-center gap-8 py-12 lg:grid-cols-2">
           <div>
@@ -109,7 +107,7 @@ function Home() {
           </div>
           {heroBanners.length > 0 ? (
             <AdCarousel
-              placement="home_hero"
+              placement={HOME_BANNER_PLACEMENTS}
               className=""
               chrome={false}
               priority
@@ -198,8 +196,6 @@ function Home() {
           )}
         </div>
       </section>
-
-      <BannerSlot placement="home_middle" />
 
       {serviceCategories.length > 0 && (
         <section className="container-ligo py-8">
@@ -298,8 +294,6 @@ function Home() {
           </section>
         )
       )}
-
-      <BannerSlot placement="home_bottom" />
 
       <section className="container-ligo pb-16">
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">

@@ -32,7 +32,8 @@ export function AdCarousel({
   priority = false,
   aspect = "aspect-[16/6]",
 }: {
-  placement: string;
+  /** A single placement, or several to merge into one rotating slot. */
+  placement: string | readonly string[];
   className?: string | undefined;
   /** Extra classes on the carousel card itself (not the outer section). */
   wrapperClassName?: string | undefined;

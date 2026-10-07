@@ -1868,6 +1868,7 @@ export const en = {
   shop_offline: "This shop is temporarily offline.",
   shop_closed_today: "This shop is closed today.",
   shop_outside_hours: "This shop is currently outside its opening hours.",
+  bp_home: "Home — rotating banner",
   bp_home_top: "Home — top (above hero)",
   bp_home_hero: "Home — hero image",
   bp_home_middle: "Home — middle (after categories)",

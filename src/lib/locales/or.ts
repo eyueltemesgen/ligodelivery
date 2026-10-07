@@ -1884,6 +1884,7 @@ export const or = {
   shop_offline: "Dukkaan kun yeroof offline jira.",
   shop_closed_today: "Dukkaan kun har'a cufaa jira.",
   shop_outside_hours: "Dukkaan kun amma sa'aatii banaa isaa ala jira.",
+  bp_home: "Mana — baannerii naanna'u",
   bp_home_top: "Mana — irra (hero irra)",
   bp_home_hero: "Mana — suuraa hero",
   bp_home_middle: "Mana — gidduu (ramaddiiwwan booda)",

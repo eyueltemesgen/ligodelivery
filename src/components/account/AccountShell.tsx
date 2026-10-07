@@ -52,7 +52,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
   return (
     <div className="container-ligo py-6 lg:py-10">
       <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
-        <aside className="lg:sticky lg:top-20 lg:h-fit">
+        <aside className="min-w-0 lg:sticky lg:top-20 lg:h-fit">
           <div className="rounded-xl border border-border bg-card p-4 shadow-card">
             <div className="flex items-center gap-3">
               <IdentityAvatar
