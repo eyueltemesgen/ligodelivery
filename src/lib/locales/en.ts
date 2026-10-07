@@ -172,7 +172,8 @@ export const en = {
   checkout_promo_placeholder: "ENTER CODE",
   checkout_apply: "Apply",
   checkout_total: "Total",
-  checkout_pay_before_fulfilment: "We verify your payment before the shop prepares and dispatches your order.",
+  checkout_pay_before_fulfilment:
+    "We verify your payment before the shop prepares and dispatches your order.",
   checkout_place_order: "Place order",
   checkout_placing: "Placing order…",
   checkout_pay_cash_hint: "Pay the rider in cash when your order arrives.",
@@ -415,7 +416,8 @@ export const en = {
   acct_hi: "Hi",
   acct_overview_desc: "Here's what's happening with your account and orders.",
   acct_addr_prompt_title: "Add your delivery address",
-  acct_addr_prompt_desc: "Save an address now so checkout is faster and your rider always finds you.",
+  acct_addr_prompt_desc:
+    "Save an address now so checkout is faster and your rider always finds you.",
   acct_addr_prompt_cta: "Add address",
   acct_edit_profile: "Edit profile",
   acct_active_order: "Active order",
@@ -2183,7 +2185,8 @@ export const en = {
   rp_timezone: "Timezone: Africa/Addis_Ababa",
   rp_select_dates: "Select both a start and an end date.",
   rp_empty_title: "No orders in this period",
-  rp_empty_body: "There is no activity for the selected dates. Choose a different period to see sales, payments and performance data.",
+  rp_empty_body:
+    "There is no activity for the selected dates. Choose a different period to see sales, payments and performance data.",
   rp_tab_sales: "Sales",
   rp_tab_orders: "Orders",
   rp_tab_payments: "Payments",
@@ -2283,7 +2286,8 @@ export const en = {
   rp_cust_returning: "Returning customers",
   rp_cust_orders: "Orders in period",
   rp_cust_spending: "Total spending",
-  rp_cust_note: "Customer reports aggregate order behaviour only — no private customer details are exposed.",
+  rp_cust_note:
+    "Customer reports aggregate order behaviour only — no private customer details are exposed.",
   rp_col_assigned_orders: "Assigned orders",
   rp_col_completion_rate: "Completion rate",
   rp_no_riders: "No rider activity for this period.",
@@ -2311,4 +2315,10 @@ export const en = {
   rp_delivery_delivered: "Delivered",
   rp_delivery_cancelled: "Cancelled",
   rp_delivery_processing: "Processing",
+  banner_carousel_aria: "Promotions",
+  carousel_show: "Show slide {n}",
+  smi_categories: "Service categories",
+  smi_categories_sub: "Gifts, surprises, holiday gifts, catering and decoration.",
+  smi_show_categories: "Browse categories",
+  smi_show_services: "Featured services",
 } as const;

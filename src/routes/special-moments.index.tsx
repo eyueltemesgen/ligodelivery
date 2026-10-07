@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ArrowRight, Compass, Gift, Sparkles, UtensilsCrossed } from "lucide-react";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
 import { ServiceCard, ServiceCategoryCard } from "@/components/special-moments/ServiceCards";
+import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { Button } from "@/components/ui/button";
 import { GridSkeleton } from "@/components/account/States";
 import { siteContentQuery } from "@/lib/content";
@@ -48,9 +49,15 @@ function SpecialMomentsHub() {
     return map;
   }, [services]);
 
-  const featured = services.filter((s) => s.is_featured).slice(0, 4);
-  const showcase = featured.length > 0 ? featured : services.slice(0, 4);
+  const featured = services.filter((s) => s.is_featured).slice(0, 8);
+  const showcase = featured.length > 0 ? featured : services.slice(0, 8);
   const giftsCategory = categories.find((c) => c.slug === "gifts");
+  // Two categories per hero slide, rotating through the set.
+  const categoryPairs = useMemo(() => {
+    const pairs: (typeof categories)[] = [];
+    for (let i = 0; i < categories.length; i += 2) pairs.push(categories.slice(i, i + 2));
+    return pairs.slice(0, 4);
+  }, [categories]);
 
   return (
     <div>
@@ -93,11 +100,19 @@ function SpecialMomentsHub() {
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {categories.slice(0, 4).map((c) => (
-              <ServiceCategoryCard key={c.id} category={c} className="col-span-1" />
+          <RotatingSlides
+            ariaLabel={t("smi_show_categories")}
+            controls={categoryPairs.length > 1}
+            className="rounded-2xl"
+          >
+            {categoryPairs.map((pair, i) => (
+              <div key={i} className="grid grid-cols-2 gap-3 pb-8 sm:gap-4">
+                {pair.map((c) => (
+                  <ServiceCategoryCard key={c.id} category={c} />
+                ))}
+              </div>
             ))}
-          </div>
+          </RotatingSlides>
         </div>
       </section>
 
@@ -114,11 +129,16 @@ function SpecialMomentsHub() {
         {categories.length === 0 ? (
           <EmptyCategoryState />
         ) : (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {categories.map((c) => (
-              <ServiceCategoryCard key={c.id} category={c} count={counts[c.id] ?? 0} />
-            ))}
-          </div>
+          <RotatingRow
+            ariaLabel={t("smi_categories")}
+            items={categories}
+            keyOf={(c) => c.id}
+            className="mt-5"
+            itemClassName="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[23%]"
+            renderItem={(c) => (
+              <ServiceCategoryCard category={c} count={counts[c.id] ?? 0} className="h-full" />
+            )}
+          />
         )}
       </section>
 
@@ -136,11 +156,13 @@ function SpecialMomentsHub() {
         ) : showcase.length === 0 ? (
           <EmptyServiceState />
         ) : (
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {showcase.map((s) => (
-              <ServiceCard key={s.id} service={s} />
-            ))}
-          </div>
+          <RotatingRow
+            ariaLabel={t("smi_show_services")}
+            items={showcase}
+            keyOf={(s) => s.id}
+            className="mt-5"
+            renderItem={(s) => <ServiceCard service={s} />}
+          />
         )}
       </section>
 

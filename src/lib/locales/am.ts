@@ -2260,4 +2260,10 @@ export const am = {
   rp_delivery_delivered: "ደርሷል",
   rp_delivery_cancelled: "ተሰርዟል",
   rp_delivery_processing: "በሂደት ላይ",
+  banner_carousel_aria: "ማስታወቂያዎች",
+  carousel_show: "ስላይድ {n} አሳይ",
+  smi_categories: "የአገልግሎት ምድቦች",
+  smi_categories_sub: "ስጦታዎች፣ አስደናቂዎች፣ የበዓል ስጦታዎች፣ የምግብ እና የጌጣጌጥ አገልግሎቶች።",
+  smi_show_categories: "ምድቦችን ያስሱ",
+  smi_show_services: "የተመረጡ አገልግሎቶች",
 } as const;

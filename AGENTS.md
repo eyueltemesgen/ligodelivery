@@ -86,3 +86,18 @@
 - UI mirrors the gate so users get a disabled button and an explanation instead of a raw DB error: `admin.ops.tsx` (Approve & Dispatch) and `merchant.tsx` (accept/prepare) both disable the action when `payment_method !== 'cash' && payment_status !== 'paid'`.
 - The order detail page (`account.orders.$orderId.tsx`) presents payment before tracking: the map renders only once `paymentSettled` (`payment_method === 'cash' || payment_status === 'paid'`). While unsettled it shows `od_tracking_locked` instead of the map, so a customer cannot watch a rider before paying.
 
+
+## Rotating banners & carousels
+- One reusable rotator lives in `src/components/ligo/RotatingCarousel.tsx`: `RotatingSlides` (full-width slides, translateX track, autoplay) and `RotatingRow<T>` (horizontally scrollable card row that pages one screen at a time). Both pause on hover/focus/drag and honor `prefers-reduced-motion` (no autoplay, no smooth scroll). Use these instead of writing new carousel logic.
+- `RotatingSlides` renders a single child as-is (no controls), so it is safe for a placement that only has one banner.
+- `BannerSlot` rotates every active banner for a placement through one slot rather than stacking a grid, so a placement with N banners occupies one slot on the page. Banners are DB-driven (`public.banners`, `bannersQuery(placement)` in `src/lib/content.ts`).
+- The homepage hero (`src/routes/index.tsx`) rotates all `home_hero` banners with images (`heroImages`); controls appear only when there is more than one.
+- Special Moments hub (`special-moments.index.tsx`) rotates the category hero (2 categories per slide) and the "Browse by category" and "Featured services" rows via `RotatingRow`.
+- Carousels set `aria-roledescription="carousel"` + a distinct `aria-label` per region. Keep the labels distinct — two regions with the same label are ambiguous for screen readers. Keys used: `banner_carousel_aria`, `carousel_show`, `smi_categories`, `smi_show_categories`, `smi_show_services`, `home_moments_title`.
+
+## Mobile responsiveness: account area
+- `src/components/account/AccountShell.tsx`: the shell grid is `min-w-0` (so a wide child cannot force page overflow) and `lg:grid-cols-[260px_minmax(0,1fr)]`; the sidebar is `lg:sticky lg:top-20 lg:h-fit`. Below `lg` the desktop nav is hidden and a horizontally scrollable pill nav is shown, plus a sign-out button in the identity card.
+- `AccountHeader` titles use `break-words` and a smaller base size (`text-xl sm:text-2xl lg:text-3xl`).
+- Route content (e.g. `account.profile.tsx`) uses `p-4 sm:p-5` section padding and stacks the avatar/photo row (`flex-col sm:flex-row`) so nothing is clipped at 390 px.
+- Verified at 390×844: `/account`, `/account/orders`, `/account/wishlist`, `/account/addresses`, `/account/profile`, `/account/notifications`, `/account/help` all have zero horizontal document overflow. Re-check with a headless Chromium CDP script if you touch these layouts.
+
