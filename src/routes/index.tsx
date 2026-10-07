@@ -12,7 +12,7 @@ import {
   FALLBACK_SHOPS,
   withFallback,
 } from "@/lib/fallbacks";
-import { bannersQuery, DEFAULT_CONTENT, siteContentQuery } from "@/lib/content";
+import { bannersQuery, DEFAULT_CONTENT, localizedContent, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [quickCategory, setQuickCategory] = useState<string | null>(null);
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     ...categoriesQuery,
@@ -61,7 +61,8 @@ function Home() {
     queryFn: () => withFallback(() => featuredProductsQuery.queryFn(), FALLBACK_PRODUCTS),
   });
   const { data: offers = [] } = useQuery(offersQuery);
-  const { data: c } = useQuery(siteContentQuery);
+  const { data: rawContent } = useQuery(siteContentQuery);
+  const c = localizedContent(t, rawContent, language);
   const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
   const heroImages = heroBanners.filter((b) => b.image_url);
   const { data: serviceCategories = [] } = useQuery(serviceCategoriesQuery);

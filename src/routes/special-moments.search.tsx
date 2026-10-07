@@ -11,6 +11,7 @@ import {
   type ServiceFilters,
 } from "@/lib/special-moments";
 import { ServiceCategoryPill, ServiceCard } from "@/components/special-moments/ServiceCards";
+import { categoryCopy } from "@/lib/service-catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/special-moments/search")({
 const OCCASION_OPTIONS = [...OCCASIONS, ...HOLIDAY_OCCASIONS];
 
 function SpecialMomentsSearch() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
@@ -177,7 +178,7 @@ function SpecialMomentsSearch() {
                     : "border-border bg-card",
                 )}
               >
-                {c.name}
+                {categoryCopy(t, c, language).name}
               </button>
             ))}
           </div>

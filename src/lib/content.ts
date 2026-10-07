@@ -1,4 +1,4 @@
-import type { TranslationKey } from "@/lib/i18n";
+import type { Language, TranslationKey } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Banner = {
@@ -57,6 +57,40 @@ export const DEFAULT_CONTENT = {
 };
 
 export type SiteContent = typeof DEFAULT_CONTENT;
+
+/**
+ * `site_content` is a single admin-authored (English) row, so it stays English
+ * no matter which language the visitor picked. For Amharic and Oromo we
+ * substitute the curated i18n copy for the headline fields, and fall back to the
+ * stored value when a key is missing. Contact details and brand names are left
+ * untouched because they are not language-specific.
+ */
+export function localizedContent(
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  content: SiteContent | undefined,
+  language: Language,
+): SiteContent {
+  if (!content) return content as unknown as SiteContent;
+  if (language === "en") return content;
+  return {
+    ...content,
+    hero_title: t("home_hero_title"),
+    hero_subtitle: t("home_hero_subtitle", { city: content.city ?? "Bishoftu" }),
+    hero_primary_cta: t("home_hero_cta"),
+    hero_secondary_cta: t("home_hero_cta_secondary"),
+    categories_title: t("home_categories_title"),
+    offers_title: t("home_offers_title"),
+    shops_title: t("home_shops_title"),
+    trending_title: t("home_trending_title"),
+    how_title: t("home_how_title"),
+    how_step1_title: t("home_how_step1_title"),
+    how_step1_text: t("home_how_step1_text"),
+    how_step2_title: t("home_how_step2_title"),
+    how_step2_text: t("home_how_step2_text"),
+    how_step3_title: t("home_how_step3_title"),
+    how_step3_text: t("home_how_step3_text"),
+  };
+}
 
 export const CONTENT_FIELDS: {
   key: keyof SiteContent;

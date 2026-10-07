@@ -111,3 +111,21 @@
 - Reproduce/verify with a headless Chromium CDP script at 390×844: dispatch `Input.dispatchTouchEvent` (touchStart + touchEnd) on the hero, then sample `translateX` every 1.5 s. Old code stayed on slide 0 for 16 s; fixed code cycles 0→1→2.
 - Deployment gotcha: `ligodelivery-novexa4.vercel.app` serves an **older** build than `ligodelivery.vercel.app` (no `RotatingCarousel` chunk at all). When a fix "isn't live", check which alias the user is on before re-debugging the code.
 
+
+## i18n: DB content is single-language
+- `public.settings.site_content` holds one admin-authored English row, so hero/section copy stayed English under Amharic/Oromo. `src/lib/content.ts` `localizedContent(t, content, language)` swaps the headline fields for curated i18n keys when `language !== "en"` and leaves contact details alone. `src/routes/index.tsx`, `SiteFooter.tsx` and `Logo.tsx` (tagline only) use it.
+- Category names/taglines come from `service_categories`, also English. `categoryCopy(t, category, language)` in `src/lib/service-catalog.ts` is the single accessor — use it (not `category.name`) in every surface: `ServiceCards.tsx`, `special-moments.category.$slug.tsx`, `special-moments.search.tsx`, `special-moments.service.$serviceId.tsx`.
+- Merchant/shop names and product descriptions are user data, intentionally left as authored.
+- Locale files are at `en=am=or=2231` keys with no duplicates. When injecting keys programmatically, run `npx eslint --fix` on the locale files afterward (Prettier reflows long lines) and re-check for duplicate keys — a naive insert next to an existing key silently duplicates it.
+
+## Root error boundary must not throw
+- `useLanguage()` returns an English fallback instead of throwing when there is no provider. TanStack renders the root `errorComponent`/`notFoundComponent` *above* `LanguageProvider`, so throwing there replaced every real route error with a misleading "useLanguage must be used inside LanguageProvider" and hid the actual cause. Keep the fallback.
+
+## Carousel autoplay polish
+- `RotatingSlides`/`RotatingRow` share `usePauseControl` (hover = mouse only, focus, touch, manual) and `useOnScreen` (IntersectionObserver) — autoplay stops when the carousel is off-screen or the tab is hidden. Default interval is 5000 ms.
+- `SlideControls` renders an explicit play/pause button (`aria-pressed`) and a progress ring on the active dot (`@keyframes carousel-progress` in `src/styles.css`, duration set inline from `intervalMs`). The ring is `motion-reduce:hidden`; paused state fills the dot.
+- Special Moments service page (`special-moments.service.$serviceId.tsx`): the gallery rotates via `RotatingSlides` (`intervalMs={4000}`) and the image column is `lg:grid-cols-[1.6fr_1fr]` with a `lg:sticky` gallery, so the image is always larger than the detail column. Verified 544 px image vs 270 px details at 1440 px, 288 vs 262 at 390 px.
+
+## Verifying data-driven pages with no DB rows
+- `services` is empty on the live DB, so the service page renders nothing. Verify with a CDP harness: `Fetch.enable` on `*supabase.co/rest/v1/*`, answer `OPTIONS` with a 204 + CORS headers, and fulfil GETs with stubbed JSON. Handle preflight or Supabase's `Failed to fetch` hides the result.
+- When intercepting `services`, match the exact shape (`select=*&id=eq.`); a loose `id=eq.` also matches `service_category_id=eq.` and returns an object where the related-services query expects an array (`related.filter is not a function`).

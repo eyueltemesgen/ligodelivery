@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ImageOff } from "lucide-react";
 import { serviceCategoriesQuery, servicesQuery, type ServiceFilters } from "@/lib/special-moments";
 import { ServiceCard } from "@/components/special-moments/ServiceCards";
-import { categoryMeta } from "@/lib/service-catalog";
+import { categoryMeta, categoryCopy } from "@/lib/service-catalog";
 import { StorageImage } from "@/lib/media";
 import { GridSkeleton } from "@/components/account/States";
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,12 @@ export const Route = createFileRoute("/special-moments/category/$slug")({
 });
 
 function CategoryPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { slug } = Route.useParams();
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
   const category = categories.find((c) => c.slug === slug);
   const meta = categoryMeta(slug);
+  const copy = categoryCopy(t, category, language);
 
   const filters: ServiceFilters = { categoryId: category?.id ?? "__none__" };
   const { data: services = [], isLoading } = useQuery({
@@ -51,12 +52,8 @@ function CategoryPage() {
               <Icon className="h-6 w-6" />
             </span>
             <div className="min-w-0 flex-1">
-              <h1 className="font-display text-3xl font-extrabold">
-                {category?.name ?? t(meta.nounKey)}
-              </h1>
-              <p className="mt-1 max-w-2xl text-muted-foreground">
-                {category?.description || category?.tagline || t(meta.blurbKey)}
-              </p>
+              <h1 className="font-display text-3xl font-extrabold">{copy.name}</h1>
+              <p className="mt-1 max-w-2xl text-muted-foreground">{copy.description}</p>
             </div>
             <Button asChild variant="outline">
               <Link to="/special-moments/search">{t("smc_search_all")}</Link>
@@ -72,7 +69,7 @@ function CategoryPage() {
           <div className="rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
             <ImageOff className="mx-auto h-7 w-7 text-muted-foreground" />
             <p className="mt-3 font-display font-bold">
-              {t("smc_empty_title", { category: category?.name ?? t(meta.nounKey) })}
+              {t("smc_empty_title", { category: copy.name })}
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
               {t("smc_empty_text")}
@@ -94,7 +91,7 @@ function CategoryPage() {
         <section className="container-ligo pb-14">
           <StorageImage
             path={category.image_url}
-            alt={category.name}
+            alt={copy.name}
             className="h-56 w-full rounded-2xl object-cover shadow-card"
           />
         </section>

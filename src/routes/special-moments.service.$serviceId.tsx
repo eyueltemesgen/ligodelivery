@@ -19,7 +19,8 @@ import {
   servicesQuery,
   type Service,
 } from "@/lib/special-moments";
-import { categoryMeta, pricingLabel } from "@/lib/service-catalog";
+import { categoryCopy, categoryMeta, pricingLabel } from "@/lib/service-catalog";
+import { RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { StorageImage } from "@/lib/media";
 import { shopQuery } from "@/lib/queries";
 import { isShopOpenNow } from "@/lib/hours";
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/special-moments/service/$serviceId")({
 });
 
 function ServiceDetailPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { serviceId } = Route.useParams();
   const { data: service, isLoading } = useQuery(serviceQuery(serviceId));
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
@@ -73,6 +74,7 @@ function ServiceDetailPage() {
   const category = categories.find((c) => c.id === service.service_category_id);
   const slug = category?.slug ?? "";
   const meta = categoryMeta(slug);
+  const copy = categoryCopy(t, category, language);
   const isQuote = service.pricing_type === "quote";
   const gallery = [service.image_url, ...(service.gallery ?? [])].filter(Boolean) as string[];
   const others = related.filter((s) => s.id !== service.id).slice(0, 4);
@@ -82,42 +84,49 @@ function ServiceDetailPage() {
       <div className="container-ligo pt-6">
         <BackButton
           fallback={slug ? `/special-moments/category/${slug}` : "/special-moments"}
-          label={category?.name ?? t("smi_badge")}
+          label={copy.name}
         />
       </div>
 
-      <section className="container-ligo grid gap-8 py-6 lg:grid-cols-[1.15fr_1fr]">
-        <div className="space-y-3">
-          <StorageImage
-            path={service.image_url}
-            alt={service.name}
-            priority
-            width={1080}
-            height={450}
-            className="h-64 w-full rounded-2xl object-cover shadow-card sm:h-80"
-            fallback={<meta.icon className="h-10 w-10 text-muted-foreground" />}
-          />
-          {gallery.length > 1 && (
-            <div className="grid grid-cols-3 gap-3">
-              {gallery.slice(1, 4).map((g, i) => (
+      <section className="container-ligo grid gap-8 py-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+        <div className="lg:sticky lg:top-20">
+          {gallery.length > 1 ? (
+            <RotatingSlides
+              ariaLabel={t("smd_gallery_aria")}
+              className="rounded-2xl shadow-card"
+              intervalMs={4000}
+            >
+              {gallery.map((g, i) => (
                 <StorageImage
                   key={`${g}-${i}`}
                   path={g}
-                  alt={`${service.name} image ${i + 2}`}
-                  width={360}
-                  height={108}
-                  className="h-24 w-full rounded-xl object-cover"
+                  alt={t("smd_photo_n", { name: service.name, n: i + 1 })}
+                  priority={i === 0}
+                  width={1440}
+                  height={1080}
+                  className="h-72 w-full object-cover sm:h-96 lg:h-[30rem] xl:h-[34rem]"
+                  fallback={<meta.icon className="h-10 w-10 text-muted-foreground" />}
                 />
               ))}
-            </div>
+            </RotatingSlides>
+          ) : (
+            <StorageImage
+              path={service.image_url}
+              alt={service.name}
+              priority
+              width={1440}
+              height={1080}
+              className="h-72 w-full rounded-2xl object-cover shadow-card sm:h-96 lg:h-[30rem] xl:h-[34rem]"
+              fallback={<meta.icon className="h-10 w-10 text-muted-foreground" />}
+            />
           )}
         </div>
 
-        <div>
+        <div className="lg:pt-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
               <meta.icon className="h-3.5 w-3.5" />
-              {category?.name ?? t(meta.nounKey)}
+              {copy.name}
             </span>
             {service.occasion && (
               <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -298,7 +307,7 @@ function ServiceDetailPage() {
       {others.length > 0 && (
         <section className="container-ligo pb-16">
           <h2 className="font-display text-xl font-bold">
-            {t("smd_more_in", { category: category?.name ?? t(meta.nounKey) })}
+            {t("smd_more_in", { category: copy.name })}
           </h2>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {others.map((s) => (

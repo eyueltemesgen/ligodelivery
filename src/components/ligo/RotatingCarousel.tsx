@@ -1,5 +1,5 @@
-import { Children, useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
@@ -37,24 +37,6 @@ function useAutoplay(active: boolean, intervalMs: number, advance: () => void) {
   }, [active, intervalMs]);
 }
 
-/**
- * Hover-pause is a mouse affordance only. Touch devices synthesise
- * mouseenter/mouseleave around taps, and a stray mouseenter with no matching
- * mouseleave would latch `paused` true and stop autoplay for good.
- */
-function useHoverPause() {
-  const [paused, setPaused] = useState(false);
-  const handlers = {
-    onPointerEnter: (e: { pointerType?: string }) => {
-      if (e.pointerType === "mouse") setPaused(true);
-    },
-    onPointerLeave: (e: { pointerType?: string }) => {
-      if (e.pointerType === "mouse") setPaused(false);
-    },
-  };
-  return [paused, setPaused, handlers] as const;
-}
-
 /** Stop rotating while the tab is hidden, resume when it comes back. */
 function useDocumentVisible() {
   const [visible, setVisible] = useState(true);
@@ -67,12 +49,71 @@ function useDocumentVisible() {
   return visible;
 }
 
+/**
+ * Pause a carousel while it is scrolled out of view. Autoplay is a courtesy for
+ * content the visitor can actually see; rotating off-screen slides burns work
+ * and can leave a carousel mid-transition when the user scrolls back to it.
+ */
+function useOnScreen<T extends HTMLElement>(rootMargin = "80px") {
+  const ref = useRef<T>(null);
+  const [onScreen, setOnScreen] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOnScreen(entry?.isIntersecting ?? true),
+      { rootMargin },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [rootMargin]);
+  return [ref, onScreen] as const;
+}
+
+/**
+ * Everything that should stop a carousel from advancing: hover (mouse only),
+ * keyboard focus inside it, a touch drag in progress, or an explicit
+ * play/pause toggle. Touch devices synthesise mouseenter/mouseleave around
+ * taps, so hover is filtered to real pointer devices — otherwise a stray
+ * mouseenter with no matching mouseleave latches `paused` true forever.
+ */
+function usePauseControl() {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [touching, setTouching] = useState(false);
+  const [manual, setManual] = useState(false);
+
+  const handlers = {
+    onPointerEnter: (e: { pointerType?: string }) => {
+      if (e.pointerType === "mouse") setHovered(true);
+    },
+    onPointerLeave: (e: { pointerType?: string }) => {
+      if (e.pointerType === "mouse") setHovered(false);
+    },
+    onFocusCapture: () => setFocused(true),
+    onBlurCapture: () => setFocused(false),
+  };
+
+  return {
+    paused: hovered || focused || touching || manual,
+    manual,
+    toggleManual: () => setManual((v) => !v),
+    setTouching,
+    handlers,
+  };
+}
+
 type SlideControlsProps = {
   count: number;
   active: number;
   onPrev: () => void;
   onNext: () => void;
   onSelect: (index: number) => void;
+  /** Seconds the active slide has been showing; drives the dot progress ring. */
+  intervalMs?: number;
+  progress?: boolean;
+  paused?: boolean;
+  onTogglePlay?: () => void;
   tone?: "overlay" | "plain";
 };
 
@@ -82,13 +123,17 @@ function SlideControls({
   onPrev,
   onNext,
   onSelect,
+  intervalMs = 5000,
+  progress = false,
+  paused = false,
+  onTogglePlay,
   tone = "overlay",
 }: SlideControlsProps) {
   const { t } = useLanguage();
   const overlay = tone === "overlay";
   const arrow = overlay
-    ? "absolute top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow sm:flex"
-    : "hidden h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-card sm:flex";
+    ? "absolute top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition hover:bg-background sm:flex"
+    : "hidden h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-card transition hover:bg-muted sm:flex";
   return (
     <>
       <button
@@ -109,10 +154,26 @@ function SlideControls({
       </button>
       <div
         className={cn(
-          "flex justify-center gap-1.5",
-          overlay && "absolute bottom-2 left-1/2 -translate-x-1/2",
+          "z-10 flex items-center justify-center gap-1.5",
+          overlay && "absolute bottom-3 left-1/2 -translate-x-1/2",
         )}
       >
+        {onTogglePlay && count > 1 && (
+          <button
+            type="button"
+            aria-label={paused ? t("carousel_play") : t("carousel_pause")}
+            aria-pressed={paused}
+            onClick={onTogglePlay}
+            className={cn(
+              "grid h-6 w-6 place-items-center rounded-full transition",
+              overlay
+                ? "bg-background/80 text-foreground backdrop-blur hover:bg-background"
+                : "border border-border bg-card text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+          </button>
+        )}
         {Array.from({ length: count }, (_, i) => (
           <button
             key={i}
@@ -121,12 +182,23 @@ function SlideControls({
             aria-current={i === active}
             onClick={() => onSelect(i)}
             className={cn(
-              "h-2 rounded-full transition-all",
+              "relative h-2 overflow-hidden rounded-full transition-all",
               i === active
-                ? "w-5 bg-primary"
+                ? "w-5 bg-primary/35"
                 : cn("w-2", overlay ? "bg-background/80" : "bg-border"),
             )}
-          />
+          >
+            {progress && i === active && !paused && (
+              <span
+                key={`${active}-${intervalMs}`}
+                className="absolute inset-0 origin-left rounded-full bg-primary motion-reduce:hidden"
+                style={{ animation: `carousel-progress ${intervalMs}ms linear forwards` }}
+              />
+            )}
+            {i === active && paused && (
+              <span className="absolute inset-0 rounded-full bg-primary" />
+            )}
+          </button>
         ))}
       </div>
     </>
@@ -141,7 +213,7 @@ export function RotatingSlides({
   children,
   ariaLabel,
   className,
-  intervalMs = 3000,
+  intervalMs = 5000,
   controls = true,
 }: {
   children: ReactNode;
@@ -153,7 +225,8 @@ export function RotatingSlides({
   const slides = Children.toArray(children);
   const n = slides.length;
   const [index, setIndex] = useState(0);
-  const [paused, setPaused, hoverHandlers] = useHoverPause();
+  const { paused, manual, toggleManual, setTouching, handlers } = usePauseControl();
+  const [rootRef, onScreen] = useOnScreen<HTMLDivElement>();
   const visible = useDocumentVisible();
   const reduced = usePrefersReducedMotion();
   const touchX = useRef<number | null>(null);
@@ -161,7 +234,9 @@ export function RotatingSlides({
 
   useEffect(() => setIndex(0), [n]);
 
-  useAutoplay(n > 1 && !paused && visible, intervalMs, () => setIndex((v) => (v + 1) % n));
+  useAutoplay(n > 1 && !paused && visible && onScreen, intervalMs, () =>
+    setIndex((v) => (v + 1) % n),
+  );
 
   if (n === 0) return null;
   if (n === 1) return <div className={className}>{slides[0]}</div>;
@@ -170,32 +245,31 @@ export function RotatingSlides({
 
   return (
     <div
+      ref={rootRef}
       className={cn("relative overflow-hidden", className)}
       role="region"
       aria-roledescription="carousel"
       aria-label={ariaLabel}
-      {...hoverHandlers}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
+      {...handlers}
       onTouchStart={(e) => {
         touchX.current = e.touches[0]?.clientX ?? null;
-        setPaused(true);
+        setTouching(true);
       }}
       onTouchEnd={(e) => {
         const start = touchX.current;
         const end = e.changedTouches[0]?.clientX;
         if (start != null && end != null && Math.abs(end - start) > 40) go(end < start ? 1 : -1);
         touchX.current = null;
-        setPaused(false);
+        setTouching(false);
       }}
       // Cancelled touch/pointer gestures must still resume autoplay.
       onTouchCancel={() => {
         touchX.current = null;
-        setPaused(false);
+        setTouching(false);
       }}
       onPointerCancel={() => {
         touchX.current = null;
-        setPaused(false);
+        setTouching(false);
       }}
     >
       <div
@@ -223,6 +297,10 @@ export function RotatingSlides({
           onPrev={() => go(-1)}
           onNext={() => go(1)}
           onSelect={setIndex}
+          intervalMs={intervalMs}
+          progress
+          paused={paused}
+          onTogglePlay={toggleManual}
         />
       )}
     </div>
@@ -241,7 +319,7 @@ export function RotatingRow<T>({
   ariaLabel,
   className,
   itemClassName = "w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[23%]",
-  intervalMs = 3000,
+  intervalMs = 5000,
 }: {
   items: T[];
   renderItem: (item: T, index: number) => ReactNode;
@@ -251,28 +329,28 @@ export function RotatingRow<T>({
   itemClassName?: string;
   intervalMs?: number;
 }) {
-  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
-  const [paused, setPaused, hoverHandlers] = useHoverPause();
+  const { paused, manual, toggleManual, setTouching, handlers } = usePauseControl();
+  const [rootRef, onScreen] = useOnScreen<HTMLDivElement>();
   const visible = useDocumentVisible();
   const [active, setActive] = useState(0);
   const n = items.length;
 
-  const step = () => {
+  const step = useCallback(() => {
     const el = ref.current;
     if (!el) return 0;
     const first = el.firstElementChild as HTMLElement | null;
     return (first?.offsetWidth ?? el.clientWidth) + GAP_PX;
-  };
+  }, []);
 
-  const advance = () => {
+  const advance = useCallback(() => {
     const el = ref.current;
     if (!el) return;
     const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
     el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + step(), behavior: "smooth" });
-  };
+  }, [step]);
 
-  useAutoplay(n > 1 && !paused && visible, intervalMs, advance);
+  useAutoplay(n > 1 && !paused && visible && onScreen, intervalMs, advance);
 
   const scrollByStep = (dir: 1 | -1) => {
     ref.current?.scrollBy({ left: dir * step(), behavior: "smooth" });
@@ -286,18 +364,17 @@ export function RotatingRow<T>({
 
   return (
     <div
+      ref={rootRef}
       className={cn("relative", className)}
       role="region"
       aria-roledescription="carousel"
       aria-label={ariaLabel}
-      {...hoverHandlers}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
-      onPointerDown={() => setPaused(true)}
-      onPointerUp={() => setPaused(false)}
+      {...handlers}
+      onPointerDown={() => setTouching(true)}
+      onPointerUp={() => setTouching(false)}
       // A horizontal touch drag makes the browser fire pointercancel, not
       // pointerup. Without these the row stays paused after every swipe.
-      onPointerCancel={() => setPaused(false)}
+      onPointerCancel={() => setTouching(false)}
     >
       <div
         ref={ref}
@@ -322,6 +399,10 @@ export function RotatingRow<T>({
           onPrev={() => scrollByStep(-1)}
           onNext={() => scrollByStep(1)}
           onSelect={scrollTo}
+          intervalMs={intervalMs}
+          progress
+          paused={paused}
+          onTogglePlay={toggleManual}
         />
       )}
     </div>

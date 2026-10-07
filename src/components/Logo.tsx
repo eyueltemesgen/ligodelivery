@@ -1,10 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { siteContentQuery } from "@/lib/content";
+import { useLanguage } from "@/hooks/useLanguage";
 import { StorageImage } from "@/lib/media";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
+  const { t, language } = useLanguage();
   const { data: c } = useQuery(siteContentQuery);
+  const tagline = language === "en" ? c?.brand_tagline : t("brand_tagline");
   const short = c?.brand_short_name || c?.brand_name || "የኔ Go";
   const mark = short.trim().charAt(0).toUpperCase();
 
@@ -20,10 +23,8 @@ export function Logo({ compact = false }: { compact?: boolean }) {
       {!compact && (
         <span className="leading-none">
           <span className="block font-display text-xl font-extrabold tracking-tight">{short}</span>
-          {c?.brand_tagline && (
-            <span className="block text-[11px] font-medium text-muted-foreground">
-              {c.brand_tagline}
-            </span>
+          {tagline && (
+            <span className="block text-[11px] font-medium text-muted-foreground">{tagline}</span>
           )}
         </span>
       )}

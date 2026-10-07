@@ -91,8 +91,25 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
-export function useLanguage() {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used inside LanguageProvider");
-  return ctx;
+/**
+ * English fallback for consumers that legitimately render outside
+ * `LanguageProvider` — TanStack's root `errorComponent` and `notFoundComponent`
+ * render above it. Throwing here replaced the real route error with a
+ * misleading "useLanguage must be used inside LanguageProvider" message.
+ */
+const fallback: LanguageValue = {
+  language: "en",
+  setLanguage: () => {},
+  toggleLanguage: () => {},
+  t: (key, vars) => {
+    const text = en[key] ?? key;
+    if (!vars) return text;
+    return text.replace(/\{(\w+)\}/g, (match, name: string) =>
+      name in vars ? String(vars[name]) : match,
+    );
+  },
+};
+
+export function useLanguage(): LanguageValue {
+  return useContext(LanguageContext) ?? fallback;
 }
