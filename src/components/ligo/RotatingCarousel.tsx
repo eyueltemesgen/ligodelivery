@@ -3,7 +3,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
-/** Honor the user's reduced-motion preference: no autoplay, no smooth scrolling. */
+/**
+ * Honor the user's reduced-motion preference. The carousel still advances, but
+ * the swap is instant instead of sliding — autoplay must keep working, since
+ * silently freezing a banner is a worse outcome than an unanimated change.
+ */
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -19,13 +23,48 @@ function usePrefersReducedMotion() {
 
 const GAP_PX = 16;
 
+/**
+ * Autoplay with a stable timer. `advance` is read through a ref so a re-render
+ * cannot restart the interval and starve rotation on a busy page.
+ */
 function useAutoplay(active: boolean, intervalMs: number, advance: () => void) {
-  const reduced = usePrefersReducedMotion();
+  const advanceRef = useRef(advance);
+  advanceRef.current = advance;
   useEffect(() => {
-    if (!active || reduced) return;
-    const timer = setInterval(advance, intervalMs);
+    if (!active) return;
+    const timer = setInterval(() => advanceRef.current(), intervalMs);
     return () => clearInterval(timer);
-  }, [active, reduced, intervalMs, advance]);
+  }, [active, intervalMs]);
+}
+
+/**
+ * Hover-pause is a mouse affordance only. Touch devices synthesise
+ * mouseenter/mouseleave around taps, and a stray mouseenter with no matching
+ * mouseleave would latch `paused` true and stop autoplay for good.
+ */
+function useHoverPause() {
+  const [paused, setPaused] = useState(false);
+  const handlers = {
+    onPointerEnter: (e: { pointerType?: string }) => {
+      if (e.pointerType === "mouse") setPaused(true);
+    },
+    onPointerLeave: (e: { pointerType?: string }) => {
+      if (e.pointerType === "mouse") setPaused(false);
+    },
+  };
+  return [paused, setPaused, handlers] as const;
+}
+
+/** Stop rotating while the tab is hidden, resume when it comes back. */
+function useDocumentVisible() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const onChange = () => setVisible(!document.hidden);
+    onChange();
+    document.addEventListener("visibilitychange", onChange);
+    return () => document.removeEventListener("visibilitychange", onChange);
+  }, []);
+  return visible;
 }
 
 type SlideControlsProps = {
@@ -114,13 +153,15 @@ export function RotatingSlides({
   const slides = Children.toArray(children);
   const n = slides.length;
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused, hoverHandlers] = useHoverPause();
+  const visible = useDocumentVisible();
+  const reduced = usePrefersReducedMotion();
   const touchX = useRef<number | null>(null);
   const idx = n > 0 ? ((index % n) + n) % n : 0;
 
   useEffect(() => setIndex(0), [n]);
 
-  useAutoplay(n > 1 && !paused, intervalMs, () => setIndex((v) => (v + 1) % n));
+  useAutoplay(n > 1 && !paused && visible, intervalMs, () => setIndex((v) => (v + 1) % n));
 
   if (n === 0) return null;
   if (n === 1) return <div className={className}>{slides[0]}</div>;
@@ -133,8 +174,7 @@ export function RotatingSlides({
       role="region"
       aria-roledescription="carousel"
       aria-label={ariaLabel}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      {...hoverHandlers}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       onTouchStart={(e) => {
@@ -159,7 +199,10 @@ export function RotatingSlides({
       }}
     >
       <div
-        className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
+        className={cn(
+          "flex transition-transform duration-500 ease-out",
+          reduced && "transition-none",
+        )}
         style={{ transform: `translateX(-${idx * 100}%)` }}
       >
         {slides.map((slide, i) => (
@@ -210,7 +253,8 @@ export function RotatingRow<T>({
 }) {
   const { t } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused, hoverHandlers] = useHoverPause();
+  const visible = useDocumentVisible();
   const [active, setActive] = useState(0);
   const n = items.length;
 
@@ -228,7 +272,7 @@ export function RotatingRow<T>({
     el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + step(), behavior: "smooth" });
   };
 
-  useAutoplay(n > 1 && !paused, intervalMs, advance);
+  useAutoplay(n > 1 && !paused && visible, intervalMs, advance);
 
   const scrollByStep = (dir: 1 | -1) => {
     ref.current?.scrollBy({ left: dir * step(), behavior: "smooth" });
@@ -246,8 +290,7 @@ export function RotatingRow<T>({
       role="region"
       aria-roledescription="carousel"
       aria-label={ariaLabel}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      {...hoverHandlers}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       onPointerDown={() => setPaused(true)}
@@ -255,7 +298,6 @@ export function RotatingRow<T>({
       // A horizontal touch drag makes the browser fire pointercancel, not
       // pointerup. Without these the row stays paused after every swipe.
       onPointerCancel={() => setPaused(false)}
-      onPointerLeave={() => setPaused(false)}
     >
       <div
         ref={ref}
