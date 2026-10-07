@@ -3,7 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ArrowRight, Compass, Gift, Sparkles, UtensilsCrossed } from "lucide-react";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
-import { ServiceCard, ServiceCategoryCard } from "@/components/special-moments/ServiceCards";
+import {
+  ServiceCard,
+  ServiceCategoryCard,
+  ServiceHeroSlide,
+} from "@/components/special-moments/ServiceCards";
 import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { Button } from "@/components/ui/button";
 import { GridSkeleton } from "@/components/account/States";
@@ -44,14 +48,6 @@ function SpecialMomentsHub() {
   const { data: smBanners = [] } = useQuery(bannersQuery("special_moments"));
   const heroImages = smBanners.filter((b) => b.image_url);
 
-  // Fallback hero slides keep the previous category-card grid so the page is
-  // unchanged until an admin uploads `special_moments` banners.
-  const categoryPairs = useMemo(() => {
-    const pairs: (typeof categories)[] = [];
-    for (let i = 0; i < categories.length; i += 2) pairs.push(categories.slice(i, i + 2));
-    return pairs.slice(0, 4);
-  }, [categories]);
-
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
     for (const s of services) {
@@ -66,17 +62,51 @@ function SpecialMomentsHub() {
 
   return (
     <div>
-      <section className="border-b border-border bg-surface">
-        <div className="container-ligo grid gap-8 py-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
+      <section className="relative h-[calc(100svh-4rem)] min-h-[30rem] w-full overflow-hidden bg-foreground">
+        {showcase.length > 0 ? (
+          <RotatingSlides
+            ariaLabel={t("smi_show_services")}
+            onMedia
+            intervalMs={6000}
+            className="absolute inset-0 h-full w-full"
+          >
+            {showcase.map((s) => (
+              <ServiceHeroSlide key={s.id} service={s} priority />
+            ))}
+          </RotatingSlides>
+        ) : heroImages.length > 0 ? (
+          <RotatingSlides
+            ariaLabel={t("banner_carousel_aria")}
+            onMedia
+            intervalMs={6000}
+            className="absolute inset-0 h-full w-full"
+          >
+            {heroImages.map((b) => (
+              <StorageImage
+                key={b.id}
+                path={b.image_url}
+                alt={b.title || "የኔ Go Special Moments"}
+                priority
+                width={1920}
+                height={1080}
+                className="h-full w-full"
+              />
+            ))}
+          </RotatingSlides>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-primary/10" />
+        )}
+
+        <div className="pointer-events-none relative flex h-full flex-col justify-end">
+          <div className="container-ligo pointer-events-auto pb-16 sm:pb-20">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
               <Sparkles className="h-3.5 w-3.5" />
               {t("smi_badge")}
             </span>
-            <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
+            <h1 className="mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight text-white drop-shadow md:text-5xl">
               {t("smi_headline")}
             </h1>
-            <p className="mt-4 max-w-xl text-muted-foreground">{t("smi_intro")}</p>
+            <p className="mt-4 max-w-xl text-sm text-white/85 sm:text-base">{t("smi_intro")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {giftsCategory ? (
                 <Button asChild size="lg">
@@ -89,59 +119,30 @@ function SpecialMomentsHub() {
                   <Link to="/special-moments/search">{t("smi_explore_services")}</Link>
                 </Button>
               )}
-              <Button asChild size="lg" variant="outline">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/40 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+              >
                 <Link to="/special-moments/search">{t("smi_find_service")}</Link>
               </Button>
             </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {HIGHLIGHTS.map((h) => (
-                <div key={h.titleKey} className="flex gap-3">
-                  <h.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                  <div>
-                    <p className="text-sm font-semibold">{t(h.titleKey)}</p>
-                    <p className="text-xs text-muted-foreground">{t(h.textKey)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
-          {heroImages.length > 0 ? (
-            <RotatingSlides
-              ariaLabel={t("banner_carousel_aria")}
-              controls={heroImages.length > 1}
-              className="h-72 w-full rounded-2xl shadow-pop lg:h-96"
-            >
-              {heroImages.map((b) => (
-                <StorageImage
-                  key={b.id}
-                  path={b.image_url}
-                  alt={b.title || "የኔ Go Special Moments"}
-                  priority
-                  width={1080}
-                  height={540}
-                  className="h-72 w-full rounded-2xl object-cover lg:h-96"
-                />
-              ))}
-            </RotatingSlides>
-          ) : categoryPairs.length > 0 ? (
-            <RotatingSlides
-              ariaLabel={t("smi_show_categories")}
-              controls={categoryPairs.length > 1}
-              className="rounded-2xl"
-            >
-              {categoryPairs.map((pair, i) => (
-                <div key={i} className="grid grid-cols-2 gap-3 pb-8 sm:gap-4">
-                  {pair.map((c) => (
-                    <ServiceCategoryCard key={c.id} category={c} />
-                  ))}
-                </div>
-              ))}
-            </RotatingSlides>
-          ) : (
-            <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
-              <Sparkles className="h-12 w-12 text-primary/60" />
+        </div>
+      </section>
+
+      <section className="container-ligo -mt-10 pb-4">
+        <div className="grid gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:grid-cols-3">
+          {HIGHLIGHTS.map((h) => (
+            <div key={h.titleKey} className="flex gap-3">
+              <h.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div>
+                <p className="text-sm font-semibold">{t(h.titleKey)}</p>
+                <p className="text-xs text-muted-foreground">{t(h.textKey)}</p>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </section>
 
@@ -171,20 +172,14 @@ function SpecialMomentsHub() {
         )}
       </section>
 
-      <section className="container-ligo pb-14">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <h2 className="font-display text-2xl font-bold">{t("smi_featured")}</h2>
-          <Link to="/special-moments/search" className="text-sm font-medium text-primary">
-            {t("smi_see_everything")}
-          </Link>
-        </div>
-        {isLoading ? (
-          <div className="mt-5">
-            <GridSkeleton count={4} />
+      {showcase.length > 0 && (
+        <section className="container-ligo pb-14">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <h2 className="font-display text-2xl font-bold">{t("smi_featured")}</h2>
+            <Link to="/special-moments/search" className="text-sm font-medium text-primary">
+              {t("smi_see_everything")}
+            </Link>
           </div>
-        ) : showcase.length === 0 ? (
-          <EmptyServiceState />
-        ) : (
           <RotatingRow
             ariaLabel={t("smi_show_services")}
             items={showcase}
@@ -192,8 +187,14 @@ function SpecialMomentsHub() {
             className="mt-5"
             renderItem={(s) => <ServiceCard service={s} />}
           />
-        )}
-      </section>
+        </section>
+      )}
+
+      {isLoading && showcase.length === 0 && (
+        <section className="container-ligo pb-14">
+          <GridSkeleton count={4} />
+        </section>
+      )}
 
       <section className="container-ligo pb-16">
         <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
@@ -224,17 +225,6 @@ function EmptyCategoryState() {
       <Compass className="mx-auto h-7 w-7 text-muted-foreground" />
       <p className="mt-3 font-display font-bold">{t("smi_setup_title")}</p>
       <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{t("smi_setup_text")}</p>
-    </div>
-  );
-}
-
-function EmptyServiceState() {
-  const { t } = useLanguage();
-  return (
-    <div className="mt-5 rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center">
-      <Sparkles className="mx-auto h-7 w-7 text-muted-foreground" />
-      <p className="mt-3 font-display font-bold">{t("smi_empty_title")}</p>
-      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{t("smi_empty_text")}</p>
     </div>
   );
 }

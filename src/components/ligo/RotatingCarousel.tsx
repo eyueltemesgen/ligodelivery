@@ -1,5 +1,5 @@
 import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
@@ -71,17 +71,16 @@ function useOnScreen<T extends HTMLElement>(rootMargin = "80px") {
 }
 
 /**
- * Everything that should stop a carousel from advancing: hover (mouse only),
- * keyboard focus inside it, a touch drag in progress, or an explicit
- * play/pause toggle. Touch devices synthesise mouseenter/mouseleave around
- * taps, so hover is filtered to real pointer devices — otherwise a stray
- * mouseenter with no matching mouseleave latches `paused` true forever.
+ * Pause a carousel while the visitor is engaging with it: hovering (mouse
+ * only), keyboard focus inside it, or a touch drag in progress. Touch devices
+ * synthesise mouseenter/mouseleave around taps, so hover is filtered to real
+ * pointer devices — otherwise a stray mouseenter with no matching mouseleave
+ * latches `paused` true forever.
  */
 function usePauseControl() {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [touching, setTouching] = useState(false);
-  const [manual, setManual] = useState(false);
 
   const handlers = {
     onPointerEnter: (e: { pointerType?: string }) => {
@@ -94,13 +93,7 @@ function usePauseControl() {
     onBlurCapture: () => setFocused(false),
   };
 
-  return {
-    paused: hovered || focused || touching || manual,
-    manual,
-    toggleManual: () => setManual((v) => !v),
-    setTouching,
-    handlers,
-  };
+  return { paused: hovered || focused || touching, setTouching, handlers };
 }
 
 type SlideControlsProps = {
@@ -109,12 +102,13 @@ type SlideControlsProps = {
   onPrev: () => void;
   onNext: () => void;
   onSelect: (index: number) => void;
-  /** Seconds the active slide has been showing; drives the dot progress ring. */
-  intervalMs?: number;
-  progress?: boolean;
-  paused?: boolean;
-  onTogglePlay?: () => void;
+  /**
+   * "overlay" sits on top of imagery and is always visible; "plain" sits under a
+   * card row and only appears on hover/focus so it does not add chrome.
+   */
   tone?: "overlay" | "plain";
+  /** Use light arrows/indicators for text over a dark image. */
+  onMedia?: boolean;
 };
 
 function SlideControls({
@@ -123,85 +117,91 @@ function SlideControls({
   onPrev,
   onNext,
   onSelect,
-  intervalMs = 5000,
-  progress = false,
-  paused = false,
-  onTogglePlay,
   tone = "overlay",
+  onMedia = false,
 }: SlideControlsProps) {
   const { t } = useLanguage();
   const overlay = tone === "overlay";
-  const arrow = overlay
-    ? "absolute top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition hover:bg-background sm:flex"
-    : "hidden h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-card transition hover:bg-muted sm:flex";
-  return (
+
+  const dot = (i: number) => (
+    <button
+      key={i}
+      type="button"
+      aria-label={t("carousel_show", { n: i + 1 })}
+      aria-current={i === active}
+      onClick={() => onSelect(i)}
+      className={cn(
+        "h-1.5 rounded-full transition-all duration-300",
+        i === active
+          ? onMedia
+            ? "w-6 bg-white"
+            : "w-6 bg-primary"
+          : onMedia
+            ? "w-1.5 bg-white/50 hover:bg-white/80"
+            : "w-1.5 bg-foreground/25 hover:bg-foreground/50",
+      )}
+    />
+  );
+
+  const arrowClass = cn(
+    "grid h-9 w-9 place-items-center rounded-full transition",
+    onMedia
+      ? "bg-black/25 text-white backdrop-blur-sm hover:bg-black/45"
+      : "border border-border bg-card text-foreground shadow-card hover:bg-muted",
+  );
+
+  const arrows = (
     <>
       <button
         type="button"
         aria-label={t("ui_previous_slide")}
         onClick={onPrev}
-        className={cn(arrow, overlay ? "left-2" : "-left-3")}
+        className={arrowClass}
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
-      <button
-        type="button"
-        aria-label={t("ui_next_slide")}
-        onClick={onNext}
-        className={cn(arrow, overlay ? "right-2" : "-right-3")}
-      >
+      <button type="button" aria-label={t("ui_next_slide")} onClick={onNext} className={arrowClass}>
         <ChevronRight className="h-5 w-5" />
       </button>
-      <div
-        className={cn(
-          "z-10 flex items-center justify-center gap-1.5",
-          overlay && "absolute bottom-3 left-1/2 -translate-x-1/2",
-        )}
-      >
-        {onTogglePlay && count > 1 && (
-          <button
-            type="button"
-            aria-label={paused ? t("carousel_play") : t("carousel_pause")}
-            aria-pressed={paused}
-            onClick={onTogglePlay}
-            className={cn(
-              "grid h-6 w-6 place-items-center rounded-full transition",
-              overlay
-                ? "bg-background/80 text-foreground backdrop-blur hover:bg-background"
-                : "border border-border bg-card text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-          </button>
-        )}
-        {Array.from({ length: count }, (_, i) => (
-          <button
-            key={i}
-            type="button"
-            aria-label={t("carousel_show", { n: i + 1 })}
-            aria-current={i === active}
-            onClick={() => onSelect(i)}
-            className={cn(
-              "relative h-2 overflow-hidden rounded-full transition-all",
-              i === active
-                ? "w-5 bg-primary/35"
-                : cn("w-2", overlay ? "bg-background/80" : "bg-border"),
-            )}
-          >
-            {progress && i === active && !paused && (
-              <span
-                key={`${active}-${intervalMs}`}
-                className="absolute inset-0 origin-left rounded-full bg-primary motion-reduce:hidden"
-                style={{ animation: `carousel-progress ${intervalMs}ms linear forwards` }}
-              />
-            )}
-            {i === active && paused && (
-              <span className="absolute inset-0 rounded-full bg-primary" />
-            )}
-          </button>
-        ))}
-      </div>
     </>
+  );
+
+  // Overlay: arrows float on the media, indicators sit on a pill at the bottom.
+  if (overlay) {
+    return (
+      <>
+        <button
+          type="button"
+          aria-label={t("ui_previous_slide")}
+          onClick={onPrev}
+          className={cn(arrowClass, "absolute left-3 top-1/2 z-10 -translate-y-1/2")}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          aria-label={t("ui_next_slide")}
+          onClick={onNext}
+          className={cn(arrowClass, "absolute right-3 top-1/2 z-10 -translate-y-1/2")}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+        <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-background/80 px-3 py-1.5 shadow-card backdrop-blur">
+          {Array.from({ length: count }, (_, i) => dot(i))}
+        </div>
+      </>
+    );
+  }
+
+  // Plain: everything stays in flow below the cards, so nothing hangs outside
+  // the container and causes horizontal overflow on narrow screens.
+  return (
+    <div className="mt-3 flex items-center justify-center gap-3">
+      {arrows}
+      <div className="flex items-center gap-2">
+        {Array.from({ length: count }, (_, i) => dot(i))}
+      </div>
+    </div>
   );
 }
 
@@ -215,17 +215,19 @@ export function RotatingSlides({
   className,
   intervalMs = 5000,
   controls = true,
+  onMedia = false,
 }: {
   children: ReactNode;
   ariaLabel: string;
   className?: string;
   intervalMs?: number;
   controls?: boolean;
+  onMedia?: boolean;
 }) {
   const slides = Children.toArray(children);
   const n = slides.length;
   const [index, setIndex] = useState(0);
-  const { paused, manual, toggleManual, setTouching, handlers } = usePauseControl();
+  const { paused, setTouching, handlers } = usePauseControl();
   const [rootRef, onScreen] = useOnScreen<HTMLDivElement>();
   const visible = useDocumentVisible();
   const reduced = usePrefersReducedMotion();
@@ -274,7 +276,7 @@ export function RotatingSlides({
     >
       <div
         className={cn(
-          "flex transition-transform duration-500 ease-out",
+          "flex transition-transform duration-700 ease-out",
           reduced && "transition-none",
         )}
         style={{ transform: `translateX(-${idx * 100}%)` }}
@@ -297,10 +299,7 @@ export function RotatingSlides({
           onPrev={() => go(-1)}
           onNext={() => go(1)}
           onSelect={setIndex}
-          intervalMs={intervalMs}
-          progress
-          paused={paused}
-          onTogglePlay={toggleManual}
+          onMedia={onMedia}
         />
       )}
     </div>
@@ -330,7 +329,7 @@ export function RotatingRow<T>({
   intervalMs?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { paused, manual, toggleManual, setTouching, handlers } = usePauseControl();
+  const { paused, setTouching, handlers } = usePauseControl();
   const [rootRef, onScreen] = useOnScreen<HTMLDivElement>();
   const visible = useDocumentVisible();
   const [active, setActive] = useState(0);
@@ -399,10 +398,6 @@ export function RotatingRow<T>({
           onPrev={() => scrollByStep(-1)}
           onNext={() => scrollByStep(1)}
           onSelect={scrollTo}
-          intervalMs={intervalMs}
-          progress
-          paused={paused}
-          onTogglePlay={toggleManual}
         />
       )}
     </div>

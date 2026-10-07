@@ -122,8 +122,11 @@
 - `useLanguage()` returns an English fallback instead of throwing when there is no provider. TanStack renders the root `errorComponent`/`notFoundComponent` *above* `LanguageProvider`, so throwing there replaced every real route error with a misleading "useLanguage must be used inside LanguageProvider" and hid the actual cause. Keep the fallback.
 
 ## Carousel autoplay polish
-- `RotatingSlides`/`RotatingRow` share `usePauseControl` (hover = mouse only, focus, touch, manual) and `useOnScreen` (IntersectionObserver) — autoplay stops when the carousel is off-screen or the tab is hidden. Default interval is 5000 ms.
-- `SlideControls` renders an explicit play/pause button (`aria-pressed`) and a progress ring on the active dot (`@keyframes carousel-progress` in `src/styles.css`, duration set inline from `intervalMs`). The ring is `motion-reduce:hidden`; paused state fills the dot.
+- `RotatingSlides`/`RotatingRow` share `usePauseControl` (hover = mouse only, focus, touch) and `useOnScreen` (IntersectionObserver) — autoplay stops when the carousel is off-screen or the tab is hidden. Default interval is 5000 ms.
+- There is deliberately **no play/pause button, progress ring or dot-count chrome** — an earlier build shipped YouTube-style player controls and the client rejected it. `SlideControls` is just prev/next arrows plus small pill indicators. Do not reintroduce `aria-pressed`, a Pause/Play icon or `@keyframes carousel-progress` here.
+- Two control tones: `overlay` (arrows float on the media, indicators on a bottom pill — used by heroes/galleries) and `plain` (everything sits **in flow** below a card row). The plain tone must stay in flow: absolutely positioning arrows at `-right-12` hung outside `container-ligo` and caused ~32 px of horizontal overflow on phones.
+- `onMedia` switches arrows/indicators to a light treatment for text over a dark photo (hero slides, galleries).
+- Special Moments hub (`special-moments.index.tsx`): the hero is a **full-screen service showcase**, not a card grid — `h-[calc(100svh-4rem)]` (the header is `h-16`), all services rotate through it via `RotatingSlides` + `ServiceHeroSlide`, and the headline/CTAs overlay the bottom. Category and featured strips below are `RotatingRow`s. Verified 836 px at a 900 px viewport, 780 px at 844 px, zero overflow.
 - Special Moments service page (`special-moments.service.$serviceId.tsx`): the gallery rotates via `RotatingSlides` (`intervalMs={4000}`) and the image column is `lg:grid-cols-[1.6fr_1fr]` with a `lg:sticky` gallery, so the image is always larger than the detail column. Verified 544 px image vs 270 px details at 1440 px, 288 vs 262 at 390 px.
 
 ## Verifying data-driven pages with no DB rows
