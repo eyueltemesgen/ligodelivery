@@ -88,7 +88,7 @@
 
 
 ## Rotating banners & carousels
-- One reusable rotator lives in `src/components/ligo/RotatingCarousel.tsx`: `RotatingSlides` (full-width slides, translateX track, autoplay) and `RotatingRow<T>` (horizontally scrollable card row that pages one screen at a time). Both pause on hover/focus/drag and honor `prefers-reduced-motion` (no autoplay, no smooth scroll). Use these instead of writing new carousel logic.
+- One reusable rotator lives in `src/components/ligo/RotatingCarousel.tsx`: `RotatingSlides` (full-width slides, translateX track, autoplay) and `RotatingRow<T>` (horizontally scrollable card row that pages one screen at a time). Both default to a 3 s autoplay interval (`intervalMs`, overridable per call site), pause on hover/focus/drag and honor `prefers-reduced-motion` (no autoplay, no smooth scroll). Use these instead of writing new carousel logic.
 - `RotatingSlides` renders a single child as-is (no controls), so it is safe for a placement that only has one banner.
 - `BannerSlot` rotates every active banner for a placement through one slot rather than stacking a grid, so a placement with N banners occupies one slot on the page. Banners are DB-driven (`public.banners`, `bannersQuery(placement)` in `src/lib/content.ts`).
 - The homepage hero (`src/routes/index.tsx`) rotates all `home_hero` banners with images (`heroImages`); controls appear only when there is more than one.

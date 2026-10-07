@@ -102,7 +102,7 @@ export function RotatingSlides({
   children,
   ariaLabel,
   className,
-  intervalMs = 6000,
+  intervalMs = 3000,
   controls = true,
 }: {
   children: ReactNode;
@@ -189,7 +189,7 @@ export function RotatingRow<T>({
   ariaLabel,
   className,
   itemClassName = "w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[23%]",
-  intervalMs = 5500,
+  intervalMs = 3000,
 }: {
   items: T[];
   renderItem: (item: T, index: number) => ReactNode;
