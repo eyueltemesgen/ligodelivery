@@ -103,3 +103,11 @@
 - Route content (e.g. `account.profile.tsx`) uses `p-4 sm:p-5` section padding and stacks the avatar/photo row (`flex-col sm:flex-row`) so nothing is clipped at 390 px.
 - Verified at 390×844: `/account`, `/account/orders`, `/account/wishlist`, `/account/addresses`, `/account/profile`, `/account/notifications`, `/account/help` all have zero horizontal document overflow. Re-check with a headless Chromium CDP script if you touch these layouts.
 
+## Carousels must not stop advancing (`RotatingCarousel.tsx`)
+- `RotatingRow`/`RotatingSlides` back the home hero, `BannerSlot` placements and the Special Moments hero. Two things silently froze them, both fixed in `4ca3a16`:
+  - **Touch latch.** Hover-pause used `onMouseEnter`/`onMouseLeave`. Touch devices synthesise a `mouseenter` around a tap; if no `mouseleave` follows, `paused` latches `true` and autoplay never resumes. Hover pause now runs through `onPointerEnter`/`onPointerLeave` and ignores events whose `pointerType !== "mouse"`. Do not reintroduce raw `onMouseEnter` pause handlers here.
+  - **Reduced motion.** `useAutoplay` used to bail out entirely under `prefers-reduced-motion: reduce`, so those users got a banner that never changed. Autoplay now always runs; reduced motion only drops the slide animation (`transition-none`). Never gate the *advance* on a motion preference — gate only the animation.
+- `useAutoplay` holds `advance` in a ref and depends on `[active, intervalMs]` only. Keeping the callback in the dep array tears the interval down on every render and can starve rotation on a page whose queries keep resolving.
+- Reproduce/verify with a headless Chromium CDP script at 390×844: dispatch `Input.dispatchTouchEvent` (touchStart + touchEnd) on the hero, then sample `translateX` every 1.5 s. Old code stayed on slide 0 for 16 s; fixed code cycles 0→1→2.
+- Deployment gotcha: `ligodelivery-novexa4.vercel.app` serves an **older** build than `ligodelivery.vercel.app` (no `RotatingCarousel` chunk at all). When a fix "isn't live", check which alias the user is on before re-debugging the code.
+
