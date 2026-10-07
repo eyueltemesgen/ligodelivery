@@ -173,7 +173,8 @@ export const or = {
   checkout_promo_placeholder: "KOODII GALCHI",
   checkout_apply: "Hojiirra oolchi",
   checkout_total: "Waliigala",
-  checkout_pay_before_fulfilment: "Suuqi ajaja kee qopheessuu fi erguu irra dura kaffaltii kee mirkaneessina.",
+  checkout_pay_before_fulfilment:
+    "Suuqi ajaja kee qopheessuu fi erguu irra dura kaffaltii kee mirkaneessina.",
   checkout_place_order: "Ajaja galchi",
   checkout_placing: "Ajaja galchaa jira…",
   checkout_pay_cash_hint: "Ajajni kee yeroo gahu ogeessaaf maallaqa harkaa kenni.",
@@ -2203,7 +2204,8 @@ export const or = {
   rp_timezone: "Naannoo yeroo: Africa/Addis_Ababa",
   rp_select_dates: "Guyyaa jalqabaa fi xumuraa lamaan filadhu.",
   rp_empty_title: "Yeroo kana keessatti ajajni hin jiru",
-  rp_empty_body: "Guyyaawwan filatamaniif sochii hin jiru. Gurgurtaa, kaffaltii fi raawwii ilaaluuf yeroo biraa filadhu.",
+  rp_empty_body:
+    "Guyyaawwan filatamaniif sochii hin jiru. Gurgurtaa, kaffaltii fi raawwii ilaaluuf yeroo biraa filadhu.",
   rp_tab_sales: "Gurgurtaa",
   rp_tab_orders: "Ajajoota",
   rp_tab_payments: "Kaffaltiiwwan",
@@ -2303,12 +2305,14 @@ export const or = {
   rp_cust_returning: "Maamiltoota deebi'an",
   rp_cust_orders: "Ajajoota yeroo kana keessatti",
   rp_cust_spending: "Baasii waliigalaa",
-  rp_cust_note: "Gabaasni maamiltootaa amala ajajaa qofa walitti qaba — odeeffannoon maamila dhuunfaa hin mul'atu.",
+  rp_cust_note:
+    "Gabaasni maamiltootaa amala ajajaa qofa walitti qaba — odeeffannoon maamila dhuunfaa hin mul'atu.",
   rp_col_assigned_orders: "Ajajoota ramadaman",
   rp_col_completion_rate: "Safara xumuraa",
   rp_no_riders: "Yeroo kanaaf sochii raayidaraa hin jiru.",
   rp_history_title: "Gabaasota maddisiifaman",
-  rp_history_empty: "Amma gabaasni hin maddisiifamne. Asitti galmeessuuf gabaasa maddisiisi ykn ergi.",
+  rp_history_empty:
+    "Amma gabaasni hin maddisiifamne. Asitti galmeessuuf gabaasa maddisiisi ykn ergi.",
   rp_col_report: "Gabaasa",
   rp_col_date_range: "Daangaa guyyaa",
   rp_col_generated: "Kan maddisiise",
@@ -2331,4 +2335,10 @@ export const or = {
   rp_delivery_delivered: "Geesse",
   rp_delivery_cancelled: "Haqame",
   rp_delivery_processing: "Adeemsa keessa",
+  banner_carousel_aria: "Beeksisawwan",
+  carousel_show: "Slaayidii {n} agarsiisi",
+  smi_categories: "Ramaddii tajaajilaa",
+  smi_categories_sub: "Kennaalee, ajaa'iboota, kennaalee ayyaanaa, nyaata fi faaya.",
+  smi_show_categories: "Ramaddiiwwan ilaali",
+  smi_show_services: "Tajaajila filatamaa",
 } as const;

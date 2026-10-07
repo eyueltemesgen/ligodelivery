@@ -92,15 +92,15 @@ function ProfilePage() {
       <AccountHeader title={t("prof_title")} description={t("prof_desc")} />
 
       {/* Identity */}
-      <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+      <section className="rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
         <SectionHeading title={t("prof_photo")} />
-        <div className="mt-4 flex items-center gap-4">
+        <div className="mt-4 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
           <IdentityAvatar
             path={profile?.avatar_url}
             name={profile?.full_name}
             className="h-20 w-20 text-2xl"
           />
-          <div className="space-y-2">
+          <div className="w-full space-y-2 sm:w-auto">
             <input
               ref={fileRef}
               type="file"
@@ -111,6 +111,7 @@ function ProfilePage() {
             <Button
               variant="outline"
               size="sm"
+              className="w-full sm:w-auto"
               disabled={uploadingAvatar}
               onClick={() => fileRef.current?.click()}
             >
@@ -123,7 +124,7 @@ function ProfilePage() {
       </section>
 
       {/* Personal details */}
-      <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+      <section className="rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
         <SectionHeading title={t("prof_personal_info")} />
         <form onSubmit={saveProfile} className="mt-4 space-y-4">
           <div className="space-y-1.5">
@@ -170,7 +171,7 @@ function ProfilePage() {
       </section>
 
       {/* Security */}
-      <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+      <section className="rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
         <SectionHeading title={t("prof_security")} description={t("prof_security_desc")} />
         <PasswordForm />
         <Separator className="my-5" />

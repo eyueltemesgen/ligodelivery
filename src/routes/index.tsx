@@ -14,6 +14,7 @@ import {
 } from "@/lib/fallbacks";
 import { bannersQuery, DEFAULT_CONTENT, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
+import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
   CategoryCardSkeleton,
@@ -62,7 +63,7 @@ function Home() {
   const { data: offers = [] } = useQuery(offersQuery);
   const { data: c } = useQuery(siteContentQuery);
   const { data: heroBanners = [] } = useQuery(bannersQuery("home_hero"));
-  const heroBanner = heroBanners[0];
+  const heroImages = heroBanners.filter((b) => b.image_url);
   const { data: serviceCategories = [] } = useQuery(serviceCategoriesQuery);
   const { data: momentServices = [] } = useQuery({
     ...servicesQuery(),
@@ -116,15 +117,24 @@ function Home() {
               ))}
             </div>
           </div>
-          {heroBanner?.image_url ? (
-            <StorageImage
-              path={heroBanner.image_url}
-              alt={heroBanner.title || "የኔ Go hero banner"}
-              priority
-              width={1080}
-              height={540}
-              className="h-72 w-full rounded-2xl object-cover shadow-pop lg:h-96"
-            />
+          {heroImages.length > 0 ? (
+            <RotatingSlides
+              ariaLabel={t("banner_carousel_aria")}
+              controls={heroImages.length > 1}
+              className="h-72 w-full rounded-2xl shadow-pop lg:h-96"
+            >
+              {heroImages.map((b) => (
+                <StorageImage
+                  key={b.id}
+                  path={b.image_url}
+                  alt={b.title || "የኔ Go hero banner"}
+                  priority
+                  width={1080}
+                  height={540}
+                  className="h-72 w-full rounded-2xl object-cover lg:h-96"
+                />
+              ))}
+            </RotatingSlides>
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
               <span className="font-display text-2xl font-bold text-primary/60">የኔ Go</span>
@@ -224,12 +234,20 @@ function Home() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {serviceCategories.slice(0, 5).map((cat) => {
-              const count = momentServices.filter((s) => s.service_category_id === cat.id).length;
-              return <ServiceCategoryCard key={cat.id} category={cat} count={count} />;
-            })}
-          </div>
+          <RotatingRow
+            ariaLabel={t("home_moments_title")}
+            items={serviceCategories}
+            keyOf={(cat) => cat.id}
+            className="mt-5"
+            itemClassName="w-[44%] shrink-0 snap-start sm:w-[30%] lg:w-[19%]"
+            renderItem={(cat) => (
+              <ServiceCategoryCard
+                category={cat}
+                count={momentServices.filter((s) => s.service_category_id === cat.id).length}
+                className="h-full"
+              />
+            )}
+          />
         </section>
       )}
 

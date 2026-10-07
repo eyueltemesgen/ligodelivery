@@ -33,7 +33,12 @@ const NAV: NavItem[] = [
   { to: "/account/wishlist", labelKey: "acct_stat_saved", icon: Heart, badgeKey: "wishlist" },
   { to: "/account/addresses", labelKey: "acct_stat_addresses", icon: MapPin },
   { to: "/account/profile", labelKey: "acct_profile", icon: User },
-  { to: "/account/notifications", labelKey: "acct_notif_title", icon: Bell, badgeKey: "notifications" },
+  {
+    to: "/account/notifications",
+    labelKey: "acct_notif_title",
+    icon: Bell,
+    badgeKey: "notifications",
+  },
   { to: "/account/help", labelKey: "acct_help_support", icon: HelpCircle },
 ];
 
@@ -51,8 +56,8 @@ export function AccountShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="container-ligo py-6 lg:py-10">
-      <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
-        <aside className="lg:sticky lg:top-20 lg:h-fit">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
+        <aside className="min-w-0 lg:sticky lg:top-20 lg:h-fit">
           <div className="rounded-xl border border-border bg-card p-4 shadow-card">
             <div className="flex items-center gap-3">
               <IdentityAvatar
@@ -60,7 +65,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                 name={profile?.full_name}
                 className="h-11 w-11 text-base"
               />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate font-display text-sm font-bold">
                   {profile?.full_name || t("acct_your_account")}
                 </p>
@@ -69,6 +74,14 @@ export function AccountShell({ children }: { children: ReactNode }) {
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive lg:hidden"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              {t("acct_sign_out")}
+            </button>
           </div>
 
           {/* Desktop / tablet sidebar */}
@@ -159,8 +172,10 @@ export function AccountHeader({
 }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="font-display text-2xl font-extrabold sm:text-3xl">{title}</h1>
+      <div className="min-w-0">
+        <h1 className="break-words font-display text-xl font-extrabold sm:text-2xl lg:text-3xl">
+          {title}
+        </h1>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {action}

@@ -1,49 +1,92 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { bannersQuery } from "@/lib/content";
 import { StorageImage } from "@/lib/media";
+import { useLanguage } from "@/hooks/useLanguage";
+import { RotatingSlides } from "@/components/ligo/RotatingCarousel";
 
+/**
+ * Database-driven banner placement. All active banners for `placement` rotate
+ * through one slot instead of stacking, so several banners share the same
+ * screen space.
+ */
 export function BannerSlot({ placement, className }: { placement: string; className?: string }) {
+  const { t } = useLanguage();
   const { data: banners = [] } = useQuery(bannersQuery(placement));
   if (banners.length === 0) return null;
 
   return (
     <section className={className ?? "container-ligo py-6"}>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {banners.map((b) => {
-          const inner = (
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-shadow hover:shadow-pop">
-              {b.image_url && (
-                <StorageImage
-                  path={b.image_url}
-                  alt={b.title}
-                  width={1080}
-                  height={225}
-                  className="h-40 w-full object-cover"
-                />
-              )}
-              <div className="p-4">
-                <p className="font-display text-lg font-bold">{b.title}</p>
-                {b.subtitle && <p className="mt-1 text-sm text-muted-foreground">{b.subtitle}</p>}
-                {b.cta_label && (
-                  <p className="mt-3 text-sm font-semibold text-primary">{b.cta_label}</p>
-                )}
-              </div>
-            </div>
-          );
-          return b.link_url ? (
-            <a
-              key={b.id}
-              href={b.link_url}
-              className="block"
-              {...(/^https?:/.test(b.link_url) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            >
-              {inner}
-            </a>
-          ) : (
-            <div key={b.id}>{inner}</div>
-          );
-        })}
-      </div>
+      <RotatingSlides
+        ariaLabel={t("banner_carousel_aria")}
+        className="rounded-2xl border border-border bg-card shadow-card"
+      >
+        {banners.map((b) => (
+          <BannerSlide
+            key={b.id}
+            title={b.title}
+            subtitle={b.subtitle}
+            imagePath={b.image_url}
+            linkUrl={b.link_url}
+            ctaLabel={b.cta_label}
+          />
+        ))}
+      </RotatingSlides>
     </section>
+  );
+}
+
+function BannerSlide({
+  title,
+  subtitle,
+  imagePath,
+  linkUrl,
+  ctaLabel,
+}: {
+  title: string;
+  subtitle: string | null;
+  imagePath: string | null;
+  linkUrl: string | null;
+  ctaLabel: string | null;
+}) {
+  const body = (
+    <div className="grid min-w-0 sm:grid-cols-[1.35fr_1fr]">
+      {imagePath && (
+        <StorageImage
+          path={imagePath}
+          alt={title}
+          priority
+          width={1080}
+          height={540}
+          className="aspect-[16/9] w-full sm:aspect-auto sm:min-h-56"
+        />
+      )}
+      <div className="flex min-w-0 flex-col justify-center gap-1 p-5 pb-8 sm:p-6">
+        <p className="break-words font-display text-xl font-bold leading-tight sm:text-2xl">
+          {title}
+        </p>
+        {subtitle && <p className="break-words text-sm text-muted-foreground">{subtitle}</p>}
+        {ctaLabel && (
+          <span className="mt-3 inline-flex w-fit rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground">
+            {ctaLabel}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  if (!linkUrl) return body;
+  const external = /^https?:/.test(linkUrl);
+  if (external) {
+    return (
+      <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="block">
+        {body}
+      </a>
+    );
+  }
+  return (
+    <Link to={linkUrl} className="block">
+      {body}
+    </Link>
   );
 }
