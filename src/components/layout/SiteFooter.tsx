@@ -2,12 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/Logo";
 import { Phone, Mail, MapPin } from "lucide-react";
-import { siteContentQuery } from "@/lib/content";
+import { localizedContent, siteContentQuery } from "@/lib/content";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export function SiteFooter() {
-  const { data: c } = useQuery(siteContentQuery);
-  const { t } = useLanguage();
+  const { data: rawContent } = useQuery(siteContentQuery);
+  const { t, language } = useLanguage();
+  const c = localizedContent(t, rawContent, language);
 
   return (
     <footer className="mt-16 border-t border-border bg-surface">

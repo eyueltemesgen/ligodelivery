@@ -188,6 +188,20 @@
   padding-inline: 1rem;
 }
 
+/*
+ * Autoplay progress ring shown on the active carousel dot. The animation
+ * duration is set inline from the carousel's interval so the fill always
+ * matches the real timer.
+ */
+@keyframes carousel-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @layer components {
   .ligo-card {
     background-color: var(--color-card);
