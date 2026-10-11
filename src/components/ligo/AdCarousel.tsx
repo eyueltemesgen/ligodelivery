@@ -1,21 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { bannersQuery, type Banner } from "@/lib/content";
 import { StorageImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAutoRotate } from "@/hooks/useAutoRotate";
 
 /** Milliseconds each advertisement stays on screen before the next one. */
 const ROTATE_MS = 3000;
 /** How long to hold after a manual swipe/tap before auto-rotation resumes. */
 const RESUME_MS = 8000;
-
-function prefersReducedMotion() {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
-  );
-}
 
 /**
  * One shared advertisement slot. All active banners for `placement` occupy a
@@ -88,28 +82,11 @@ function Carousel({
   wrapperClassName?: string | undefined;
 }) {
   const { t } = useLanguage();
-  const [i, setI] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [manualUntil, setManualUntil] = useState(0);
-  const touchX = useRef<number | null>(null);
-  const n = ads.length;
-  const idx = n > 0 ? i % n : 0;
-  const many = n > 1;
-
-  useEffect(() => {
-    if (!many || paused || prefersReducedMotion()) return;
-    const id = setInterval(() => setI((v) => v + 1), ROTATE_MS);
-    return () => clearInterval(id);
-  }, [many, paused]);
-
-  // Pause briefly after the visitor drives the carousel themselves.
-  useEffect(() => {
-    if (!manualUntil) return;
-    const id = setTimeout(() => setManualUntil(0), Math.max(0, manualUntil - Date.now()));
-    return () => clearTimeout(id);
-  }, [manualUntil]);
-
-  const holdAfterManual = () => setManualUntil(Date.now() + RESUME_MS);
+  const { idx, many, goTo, ...rot } = useAutoRotate({
+    count: ads.length,
+    intervalMs: ROTATE_MS,
+    resumeMs: RESUME_MS,
+  });
 
   return (
     <div
@@ -118,20 +95,7 @@ function Carousel({
         chrome && "rounded-2xl border border-border bg-card shadow-card",
         wrapperClassName,
       )}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={(e) => {
-        touchX.current = e.touches[0]?.clientX ?? null;
-      }}
-      onTouchEnd={(e) => {
-        const start = touchX.current;
-        const end = e.changedTouches[0]?.clientX;
-        if (start != null && end != null && Math.abs(end - start) > 40) {
-          setI((v) => v + (end < start ? 1 : -1));
-          holdAfterManual();
-        }
-        touchX.current = null;
-      }}
+      {...rot}
     >
       <div className={cn("relative w-full", aspect)}>
         {ads.map((ad, k) => (
@@ -157,10 +121,7 @@ function Carousel({
                 type="button"
                 aria-label={t("ads_show", { n: k + 1 })}
                 aria-current={k === idx}
-                onClick={() => {
-                  setI(k);
-                  holdAfterManual();
-                }}
+                onClick={() => goTo(k)}
                 className={cn(
                   "h-1.5 rounded-full transition-all",
                   k === idx ? "w-5 bg-primary" : "w-1.5 bg-foreground/40 hover:bg-foreground/60",
