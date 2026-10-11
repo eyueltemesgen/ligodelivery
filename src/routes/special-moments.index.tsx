@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ArrowRight, Compass, Gift, Sparkles, UtensilsCrossed } from "lucide-react";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
-import { ServiceCard, ServiceCategoryCard } from "@/components/special-moments/ServiceCards";
+import { ServiceCard, ServiceCategoryBanner } from "@/components/special-moments/ServiceCards";
 import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { Button } from "@/components/ui/button";
 import { GridSkeleton } from "@/components/account/States";
@@ -43,14 +43,6 @@ function SpecialMomentsHub() {
   const { data: content } = useQuery(siteContentQuery);
   const { data: smBanners = [] } = useQuery(bannersQuery("special_moments"));
   const heroImages = smBanners.filter((b) => b.image_url);
-
-  // Fallback hero slides keep the previous category-card grid so the page is
-  // unchanged until an admin uploads `special_moments` banners.
-  const categoryPairs = useMemo(() => {
-    const pairs: (typeof categories)[] = [];
-    for (let i = 0; i < categories.length; i += 2) pairs.push(categories.slice(i, i + 2));
-    return pairs.slice(0, 4);
-  }, [categories]);
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -123,20 +115,11 @@ function SpecialMomentsHub() {
                 />
               ))}
             </RotatingSlides>
-          ) : categoryPairs.length > 0 ? (
-            <RotatingSlides
+          ) : categories.length > 0 ? (
+            <ServiceCategoryBanner
               ariaLabel={t("smi_show_categories")}
-              controls={categoryPairs.length > 1}
-              className="rounded-2xl"
-            >
-              {categoryPairs.map((pair, i) => (
-                <div key={i} className="grid grid-cols-2 gap-3 pb-8 sm:gap-4">
-                  {pair.map((c) => (
-                    <ServiceCategoryCard key={c.id} category={c} />
-                  ))}
-                </div>
-              ))}
-            </RotatingSlides>
+              categories={categories.slice(0, 4)}
+            />
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
               <Sparkles className="h-12 w-12 text-primary/60" />
@@ -158,15 +141,11 @@ function SpecialMomentsHub() {
         {categories.length === 0 ? (
           <EmptyCategoryState />
         ) : (
-          <RotatingRow
+          <ServiceCategoryBanner
             ariaLabel={t("smi_categories")}
-            items={categories}
-            keyOf={(c) => c.id}
+            categories={categories}
+            counts={counts}
             className="mt-5"
-            itemClassName="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[23%]"
-            renderItem={(c) => (
-              <ServiceCategoryCard category={c} count={counts[c.id] ?? 0} className="h-full" />
-            )}
           />
         )}
       </section>
