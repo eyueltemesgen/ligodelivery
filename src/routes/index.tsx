@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Bike, Clock, ShieldCheck, Search } from "lucide-react";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
-import { ServiceCategoryBanner } from "@/components/special-moments/ServiceCards";
+import { ServiceCategoryCard } from "@/components/special-moments/ServiceCards";
 import {
   FALLBACK_CATEGORIES,
   FALLBACK_PRODUCTS,
@@ -14,7 +14,7 @@ import {
 } from "@/lib/fallbacks";
 import { bannersQuery, DEFAULT_CONTENT, localizedContent, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
-import { RotatingSlides } from "@/components/ligo/RotatingCarousel";
+import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
   CategoryCardSkeleton,
@@ -235,16 +235,19 @@ function Home() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <ServiceCategoryBanner
+          <RotatingRow
             ariaLabel={t("home_moments_title")}
-            categories={serviceCategories}
-            counts={Object.fromEntries(
-              serviceCategories.map((cat) => [
-                cat.id,
-                momentServices.filter((s) => s.service_category_id === cat.id).length,
-              ]),
-            )}
+            items={serviceCategories}
+            keyOf={(cat) => cat.id}
             className="mt-5"
+            itemClassName="w-[44%] shrink-0 snap-start sm:w-[30%] lg:w-[19%]"
+            renderItem={(cat) => (
+              <ServiceCategoryCard
+                category={cat}
+                count={momentServices.filter((s) => s.service_category_id === cat.id).length}
+                className="h-full"
+              />
+            )}
           />
         </section>
       )}

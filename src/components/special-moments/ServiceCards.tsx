@@ -8,6 +8,55 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { OPTION_LABEL_KEY } from "@/lib/special-moments";
 import { cn } from "@/lib/utils";
 
+/** Category tile used on the homepage strip. */
+export function ServiceCategoryCard({
+  category,
+  count,
+  className,
+}: {
+  category: ServiceCategory;
+  count?: number;
+  className?: string;
+}) {
+  const { t, language } = useLanguage();
+  const meta = categoryMeta(category.slug);
+  const copy = categoryCopy(t, category, language);
+  const Icon = meta.icon;
+  return (
+    <Link
+      to="/special-moments/category/$slug"
+      params={{ slug: category.slug }}
+      className={cn(
+        "group relative overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg",
+        className,
+      )}
+    >
+      <StorageImage
+        path={category.image_url}
+        alt={copy.name}
+        fallback={<Icon className="h-8 w-8 text-primary/70" />}
+        width={720}
+        height={240}
+        className="h-36 w-full object-cover sm:h-40"
+      />
+      <div className="p-4">
+        <div className="flex items-center gap-2">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary-soft text-primary">
+            <Icon className="h-4 w-4" />
+          </span>
+          <h3 className="font-display text-base font-bold">{copy.name}</h3>
+        </div>
+        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{copy.tagline}</p>
+        {count != null && (
+          <p className="mt-3 text-xs font-semibold text-primary">
+            {count > 0 ? t("sc_available", { count }) : t("sc_coming_soon")}
+          </p>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 /**
  * Compact auto-rotating banner for the Special Moments categories. One wide
  * slide shows at a time over a dark scrim so the title, badge and tagline stay
