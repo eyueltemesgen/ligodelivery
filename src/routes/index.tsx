@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Bike, Clock, ShieldCheck, Search } from "lucide-react";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
-import { ServiceCategoryBanner } from "@/components/special-moments/ServiceCards";
+import { ServiceCategoryCard } from "@/components/special-moments/ServiceCards";
 import {
   FALLBACK_CATEGORIES,
   FALLBACK_PRODUCTS,
@@ -14,7 +14,8 @@ import {
 } from "@/lib/fallbacks";
 import { bannersQuery, DEFAULT_CONTENT, localizedContent, siteContentQuery } from "@/lib/content";
 import { BannerSlot } from "@/components/ligo/BannerSlot";
-import { RotatingSlides } from "@/components/ligo/RotatingCarousel";
+import { AdCarousel } from "@/components/ligo/AdCarousel";
+import { RotatingRow } from "@/components/ligo/RotatingCarousel";
 import { ShopCard, ProductCard } from "@/components/ligo/Cards";
 import {
   CategoryCardSkeleton,
@@ -119,23 +120,15 @@ function Home() {
             </div>
           </div>
           {heroImages.length > 0 ? (
-            <RotatingSlides
-              ariaLabel={t("banner_carousel_aria")}
-              controls={heroImages.length > 1}
-              className="h-72 w-full rounded-2xl shadow-pop lg:h-96"
-            >
-              {heroImages.map((b) => (
-                <StorageImage
-                  key={b.id}
-                  path={b.image_url}
-                  alt={b.title || "የኔ Go hero banner"}
-                  priority
-                  width={1080}
-                  height={540}
-                  className="h-72 w-full rounded-2xl object-cover lg:h-96"
-                />
-              ))}
-            </RotatingSlides>
+            <AdCarousel
+              placement="home_hero"
+              className=""
+              chrome={false}
+              priority
+              width={1080}
+              aspect="aspect-[16/9] lg:aspect-auto lg:h-96"
+              wrapperClassName="rounded-2xl shadow-pop"
+            />
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
               <span className="font-display text-2xl font-bold text-primary/60">የኔ Go</span>
@@ -235,16 +228,19 @@ function Home() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <ServiceCategoryBanner
+          <RotatingRow
             ariaLabel={t("home_moments_title")}
-            categories={serviceCategories}
-            counts={Object.fromEntries(
-              serviceCategories.map((cat) => [
-                cat.id,
-                momentServices.filter((s) => s.service_category_id === cat.id).length,
-              ]),
-            )}
+            items={serviceCategories}
+            keyOf={(cat) => cat.id}
             className="mt-5"
+            itemClassName="w-[44%] shrink-0 snap-start sm:w-[30%] lg:w-[19%]"
+            renderItem={(cat) => (
+              <ServiceCategoryCard
+                category={cat}
+                count={momentServices.filter((s) => s.service_category_id === cat.id).length}
+                className="h-full"
+              />
+            )}
           />
         </section>
       )}
