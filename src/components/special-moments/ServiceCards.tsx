@@ -1,10 +1,10 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, MapPin, Star, Wallet } from "lucide-react";
 import type { Service, ServiceCategory } from "@/lib/special-moments";
 import { categoryMeta, categoryCopy, pricingLabel } from "@/lib/service-catalog";
 import { StorageImage } from "@/lib/media";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useAutoRotate } from "@/hooks/useAutoRotate";
 import { OPTION_LABEL_KEY } from "@/lib/special-moments";
 import { cn } from "@/lib/utils";
 
@@ -78,9 +78,23 @@ export function ServiceCategoryBanner({
 }) {
   const { t } = useLanguage();
   const n = categories.length;
-  const { idx, many, goTo, ...rot } = useAutoRotate({ count: n, intervalMs });
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touchX = useRef<number | null>(null);
+  const idx = n > 0 ? index % n : 0;
+
+  // Reset to the first slide whenever the set of categories changes.
+  useEffect(() => setIndex(0), [n]);
+
+  useEffect(() => {
+    if (n < 2 || paused) return;
+    const timer = setInterval(() => setIndex((v) => (v + 1) % n), intervalMs);
+    return () => clearInterval(timer);
+  }, [n, paused, intervalMs]);
 
   if (n === 0) return null;
+
+  const go = (delta: number) => setIndex((v) => (v + delta + n) % n);
 
   return (
     <div
@@ -91,7 +105,33 @@ export function ServiceCategoryBanner({
       role="region"
       aria-roledescription="carousel"
       aria-label={ariaLabel}
-      {...rot}
+      onPointerEnter={(e) => {
+        if (e.pointerType === "mouse") setPaused(true);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "mouse") setPaused(false);
+      }}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+      onTouchStart={(e) => {
+        touchX.current = e.touches[0]?.clientX ?? null;
+        setPaused(true);
+      }}
+      onTouchEnd={(e) => {
+        const start = touchX.current;
+        const end = e.changedTouches[0]?.clientX;
+        if (start != null && end != null && Math.abs(end - start) > 40) go(end < start ? 1 : -1);
+        touchX.current = null;
+        setPaused(false);
+      }}
+      // A horizontal drag makes the browser fire pointercancel *before*
+      // touchend, so the origin must survive it for the swipe to register.
+      // Only a genuine touchcancel (no touchend follows) clears it.
+      onTouchCancel={() => {
+        touchX.current = null;
+        setPaused(false);
+      }}
+      onPointerCancel={() => setPaused(false)}
     >
       <div
         className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
@@ -108,7 +148,7 @@ export function ServiceCategoryBanner({
           </div>
         ))}
       </div>
-      {many && (
+      {n > 1 && (
         <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
           {categories.map((category, i) => (
             <button
@@ -116,7 +156,7 @@ export function ServiceCategoryBanner({
               type="button"
               aria-label={t("carousel_show", { n: i + 1 })}
               aria-current={i === idx}
-              onClick={() => goTo(i)}
+              onClick={() => setIndex(i)}
               className={cn(
                 "h-2 rounded-full transition-all",
                 i === idx ? "w-5 bg-primary" : "w-2 bg-background/70 hover:bg-background",
