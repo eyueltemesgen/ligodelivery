@@ -8,70 +8,17 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { OPTION_LABEL_KEY } from "@/lib/special-moments";
 import { cn } from "@/lib/utils";
 
-/** How long to hold after a manual swipe/tap before auto-rotation resumes (matches the hero). */
-const RESUME_MS = 8000;
-
-/** Category tile used on the homepage strip. */
-export function ServiceCategoryCard({
-  category,
-  count,
-  className,
-}: {
-  category: ServiceCategory;
-  count?: number;
-  className?: string;
-}) {
-  const { t, language } = useLanguage();
-  const meta = categoryMeta(category.slug);
-  const copy = categoryCopy(t, category, language);
-  const Icon = meta.icon;
-  return (
-    <Link
-      to="/special-moments/category/$slug"
-      params={{ slug: category.slug }}
-      className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg",
-        className,
-      )}
-    >
-      <StorageImage
-        path={category.image_url}
-        alt={copy.name}
-        fallback={<Icon className="h-8 w-8 text-primary/70" />}
-        width={720}
-        height={240}
-        className="h-36 w-full object-cover sm:h-40"
-      />
-      <div className="p-4">
-        <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary-soft text-primary">
-            <Icon className="h-4 w-4" />
-          </span>
-          <h3 className="font-display text-base font-bold">{copy.name}</h3>
-        </div>
-        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{copy.tagline}</p>
-        {count != null && (
-          <p className="mt-3 text-xs font-semibold text-primary">
-            {count > 0 ? t("sc_available", { count }) : t("sc_coming_soon")}
-          </p>
-        )}
-      </div>
-    </Link>
-  );
-}
-
 /**
- * Compact auto-rotating banner for the Special Moments categories. Built on the
- * exact same system as the home hero banner (`AdCarousel`): full-bleed slides
- * that cross-fade over a dark scrim, a top-left badge, a top-right pill, and
- * bottom-centre bar indicators, rotating every 3 s and holding 8 s after a
- * manual swipe/tap. Content is Special Moments categories instead of ad banners.
+ * Compact auto-rotating banner for the Special Moments categories. One wide
+ * slide shows at a time over a dark scrim so the title, badge and tagline stay
+ * legible on any image, and the pill indicators sit bottom-right for manual
+ * selection. Styling follows the sponsored `AdSlot` banner.
  */
 export function ServiceCategoryBanner({
   categories,
   counts,
   ariaLabel,
-  intervalMs = 3000,
+  intervalMs = 5000,
   className,
 }: {
   categories: ServiceCategory[];
@@ -84,7 +31,6 @@ export function ServiceCategoryBanner({
   const n = categories.length;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [manualUntil, setManualUntil] = useState(0);
   const touchX = useRef<number | null>(null);
   const idx = n > 0 ? index % n : 0;
 
@@ -93,25 +39,18 @@ export function ServiceCategoryBanner({
 
   useEffect(() => {
     if (n < 2 || paused) return;
-    const timer = setInterval(() => setIndex((v) => v + 1), intervalMs);
+    const timer = setInterval(() => setIndex((v) => (v + 1) % n), intervalMs);
     return () => clearInterval(timer);
   }, [n, paused, intervalMs]);
 
-  // Hold briefly after the visitor drives the carousel themselves.
-  useEffect(() => {
-    if (!manualUntil) return;
-    const id = setTimeout(() => setManualUntil(0), Math.max(0, manualUntil - Date.now()));
-    return () => clearTimeout(id);
-  }, [manualUntil]);
-
   if (n === 0) return null;
 
-  const hold = () => setManualUntil(Date.now() + RESUME_MS);
+  const go = (delta: number) => setIndex((v) => (v + delta + n) % n);
 
   return (
     <div
       className={cn(
-        "relative h-48 overflow-hidden rounded-2xl border border-border bg-card shadow-card sm:h-56",
+        "relative overflow-hidden rounded-2xl border border-border bg-card shadow-card",
         className,
       )}
       role="region"
@@ -132,10 +71,7 @@ export function ServiceCategoryBanner({
       onTouchEnd={(e) => {
         const start = touchX.current;
         const end = e.changedTouches[0]?.clientX;
-        if (start != null && end != null && Math.abs(end - start) > 40) {
-          setIndex((v) => v + (end < start ? 1 : -1));
-          hold();
-        }
+        if (start != null && end != null && Math.abs(end - start) > 40) go(end < start ? 1 : -1);
         touchX.current = null;
         setPaused(false);
       }}
@@ -148,40 +84,37 @@ export function ServiceCategoryBanner({
       }}
       onPointerCancel={() => setPaused(false)}
     >
-      {categories.map((category, i) => (
-        <CategorySlide
-          key={category.id}
-          category={category}
-          count={counts ? (counts[category.id] ?? 0) : undefined}
-          active={i === idx}
-          priority={i === 0}
-          hidden={i !== idx}
-        />
-      ))}
-      {n > 1 && (
-        <>
-          <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 rounded-full bg-background/70 px-2 py-1 backdrop-blur-sm">
-            {categories.map((category, i) => (
-              <button
-                key={category.id}
-                type="button"
-                aria-label={t("carousel_show", { n: i + 1 })}
-                aria-current={i === idx}
-                onClick={() => {
-                  setIndex(i);
-                  hold();
-                }}
-                className={cn(
-                  "h-1.5 rounded-full transition-all",
-                  i === idx ? "w-5 bg-primary" : "w-1.5 bg-foreground/40 hover:bg-foreground/60",
-                )}
-              />
-            ))}
+      <div
+        className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
+        style={{ transform: `translateX(-${idx * 100}%)` }}
+      >
+        {categories.map((category, i) => (
+          <div key={category.id} className="w-full shrink-0" aria-hidden={i !== idx}>
+            <CategorySlide
+              category={category}
+              count={counts ? (counts[category.id] ?? 0) : undefined}
+              priority={i === 0}
+              hidden={i !== idx}
+            />
           </div>
-          <span className="sr-only" aria-live="polite">
-            {t("carousel_show", { n: idx + 1 })}
-          </span>
-        </>
+        ))}
+      </div>
+      {n > 1 && (
+        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
+          {categories.map((category, i) => (
+            <button
+              key={category.id}
+              type="button"
+              aria-label={t("carousel_show", { n: i + 1 })}
+              aria-current={i === idx}
+              onClick={() => setIndex(i)}
+              className={cn(
+                "h-2 rounded-full transition-all",
+                i === idx ? "w-5 bg-primary" : "w-2 bg-background/70 hover:bg-background",
+              )}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -190,13 +123,11 @@ export function ServiceCategoryBanner({
 function CategorySlide({
   category,
   count,
-  active,
   priority,
   hidden,
 }: {
   category: ServiceCategory;
   count?: number | undefined;
-  active: boolean;
   priority: boolean;
   hidden: boolean;
 }) {
@@ -210,11 +141,7 @@ function CategorySlide({
       to="/special-moments/category/$slug"
       params={{ slug: category.slug }}
       tabIndex={hidden ? -1 : 0}
-      aria-hidden={hidden}
-      className={cn(
-        "absolute inset-0 block transition-opacity duration-700 ease-in-out",
-        active ? "opacity-100" : "pointer-events-none opacity-0",
-      )}
+      className="group relative block"
     >
       <StorageImage
         path={category.image_url}
@@ -222,15 +149,15 @@ function CategorySlide({
         priority={priority}
         width={1080}
         height={540}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="h-48 w-full object-cover sm:h-56"
         fallback={
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/25 to-accent/25">
+          <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-primary/25 to-accent/25 sm:h-56">
             <Icon className="h-9 w-9 text-primary" />
           </div>
         }
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-3 pb-8 sm:p-5 sm:pb-8">
+      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-4 pr-20 sm:p-6 sm:pr-28">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground">
             <Icon className="h-3.5 w-3.5" />
@@ -242,12 +169,10 @@ function CategorySlide({
             </span>
           )}
         </div>
-        <h3 className="line-clamp-1 break-words font-display text-sm font-extrabold leading-tight text-white drop-shadow sm:text-lg">
+        <h3 className="break-words font-display text-xl font-extrabold leading-tight text-white drop-shadow sm:text-2xl">
           {copy.name}
         </h3>
-        {copy.tagline && (
-          <p className="line-clamp-1 text-xs text-white/85 sm:text-sm">{copy.tagline}</p>
-        )}
+        <p className="line-clamp-2 max-w-xl text-sm text-white/85">{copy.tagline}</p>
       </div>
     </Link>
   );
