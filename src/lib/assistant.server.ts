@@ -290,10 +290,12 @@ function normalizeReason(reason: string | undefined): DeliveryFailureReason {
 /**
  * Delivery-fee estimate.
  *
- * The RPC is REVOKEd from `anon`, so the call is made with the service-role
- * client. It is a pure, read-only calculation (no writes), and the returned
- * numbers are copied through verbatim — this module performs no arithmetic on
- * the fee or the distance.
+ * The RPC is REVOKEd from `anon` and granted to `authenticated`, so it is
+ * called with the caller's own client: a signed-in customer gets a real quote,
+ * an anonymous visitor gets a typed `error` failure instead. It is a pure,
+ * read-only calculation (no writes), and the returned numbers are copied
+ * through verbatim — this module performs no arithmetic on the fee or the
+ * distance.
  */
 export async function estimateDeliveryFee(
   db: Db,
@@ -338,8 +340,13 @@ async function callFeeEngine(
   });
 
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.rpc("calculate_delivery_fee", {
+    // Run through the caller's own client, exactly like `src/lib/delivery.ts`:
+    // the RPC is granted to `authenticated` and revoked from `anon` by
+    // design, so a signed-in customer gets a real quote and an anonymous one
+    // gets `error`/`permission denied`, which the tool degrades to a typed
+    // failure. Using the service-role client here would need
+    // SUPABASE_SERVICE_ROLE_KEY at runtime and would bypass that intent.
+    const { data, error } = await db.rpc("calculate_delivery_fee", {
       p_shop_id: shopId,
       p_lat: (lat ?? null) as number,
       p_lng: (lng ?? null) as number,
