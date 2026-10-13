@@ -11,9 +11,6 @@
 export const ASSISTANT_BASE_URL = "https://ai.gateway.lovable.dev/v1";
 export const ASSISTANT_MODEL = "openai/gpt-5.5";
 
-/** Request shape limits, mirrored by the client in `assistant.ts`. */
-export const ASSISTANT_TEMPERATURE = 0.3;
-
 /** Best-effort per-session cap. In-memory counters are per-instance only. */
 export const ASSISTANT_SESSION_LIMIT = 30;
 export const ASSISTANT_SESSION_WINDOW_MS = 10 * 60_000;
