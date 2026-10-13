@@ -41,7 +41,6 @@ import {
   ASSISTANT_REQUEST_TIMEOUT_MS,
   ASSISTANT_SESSION_LIMIT,
   ASSISTANT_SESSION_WINDOW_MS,
-  ASSISTANT_TEMPERATURE,
   assistantApiKey,
 } from "@/lib/assistant-config";
 import type { Language } from "@/lib/i18n";
