@@ -217,20 +217,34 @@ const LANGUAGE_RULE: Record<Language, string> = {
   en: [
     "LANGUAGE: Reply in English.",
     "Always answer in English, whatever language the customer writes in.",
+    "The interface language is English, so English is the correct reply language here — never tell the customer you are unable to answer in English.",
   ].join(" "),
   am: [
     "LANGUAGE: ሁልጊዜ በአማርኛ መልስ ስጥ።",
     "The customer's reply language is Amharic — you are fully able to write Amharic, so never claim you cannot.",
-    "Answer in Amharic even when the customer's question is in English or Afaan Oromoo.",
     "Keep shop and product names exactly as they appear in the tool results; do not translate them.",
   ].join(" "),
   or: [
     "LANGUAGE: Yeroo hunda Afaan Oromootiin deebisi.",
     "The customer's reply language is Afaan Oromoo — you are fully able to write Afaan Oromoo, so never claim you cannot.",
-    "Answer in Afaan Oromoo even when the customer's question is in English or Amharic.",
     "Keep shop and product names exactly as they appear in the tool results; do not translate them.",
   ].join(" "),
 };
+
+/** Ethiopic script (U+1200–U+137F) — a reliable signal that the text is Amharic. */
+const ETHIOPIC = /[\u1200-\u137F]/;
+
+/**
+ * The language to answer in. The interface language wins, except when the
+ * customer writes in Ethiopic script: someone typing Amharic wants an Amharic
+ * answer even if they never switched the site language, and detecting that here
+ * is deterministic where a prompt instruction alone is not.
+ */
+function effectiveLanguage(requested: Language, messages: AssistantTurn[]): Language {
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  if (lastUser && ETHIOPIC.test(lastUser.text)) return "am";
+  return requested;
+}
 
 function systemPrompt(language: Language, signedIn: boolean): string {
   return [
@@ -386,8 +400,11 @@ export const askAssistantFn = createServerFn({ method: "POST" })
     }
 
     const coords = { lat: request.lat ?? null, lng: request.lng ?? null };
+    // Script detection can override the interface language, so compute it here
+    // rather than trusting `request.language` alone.
+    const replyLanguage = effectiveLanguage(request.language, request.messages);
     const messages: ChatMessage[] = [
-      { role: "system", content: systemPrompt(request.language, !!ctx.userId) },
+      { role: "system", content: systemPrompt(replyLanguage, !!ctx.userId) },
       ...request.messages.map((m) => ({ role: m.role, content: m.text }) as ChatMessage),
     ];
 
