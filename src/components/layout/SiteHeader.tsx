@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/lib/cart";
 import { CartDrawer, CartTrigger } from "@/components/ligo/CartDrawer";
+import { useAssistant } from "@/components/assistant/AssistantProvider";
 import { useQuery } from "@tanstack/react-query";
 import { siteContentQuery } from "@/lib/content";
 import {
@@ -48,6 +49,7 @@ export function SiteHeader() {
   const { user, profile, isAdmin, isRider, isMerchant, signOut } = useAuth();
   const { data: content } = useQuery(siteContentQuery);
   const { t } = useLanguage();
+  const { setOpen: setAssistantOpen } = useAssistant();
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -88,6 +90,14 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setAssistantOpen(true)}
+            aria-label={t("ai_header_label")}
+            className="hidden rounded-md p-2 text-muted-foreground transition-all duration-100 hover:bg-secondary active:scale-95 sm:block"
+          >
+            <Sparkles className="h-5 w-5" />
+          </button>
           <LanguageToggle />
           <ThemeToggle />
           <CartTrigger onOpen={() => setCartOpen(true)} />

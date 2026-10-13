@@ -9,7 +9,7 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, lazy, Suspense, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -21,6 +21,11 @@ import { SavedProvider } from "@/lib/saved";
 import { SiteHeader, MobileTabBar } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ToastHost } from "@/lib/toast";
+import { AssistantProvider } from "@/components/assistant/AssistantProvider";
+
+// Lazy so the assistant's chunk never lands in another route's initial bundle;
+// it is fetched the first time a visitor opens the panel.
+const ShoppingAssistant = lazy(() => import("@/components/assistant/ShoppingAssistant"));
 
 function NotFoundComponent() {
   const { t } = useLanguage();
@@ -149,15 +154,20 @@ function RootComponent() {
           <LanguageProvider>
             <CartProvider>
               <SavedProvider>
-                <div className="flex min-h-screen flex-col pb-16 md:pb-0">
-                  <SiteHeader />
-                  <main className="flex-1">
-                    {/* Required: nested routes render here. */}
-                    <Outlet />
-                  </main>
-                  <SiteFooter />
-                  <MobileTabBar />
-                </div>
+                <AssistantProvider>
+                  <div className="flex min-h-screen flex-col pb-16 md:pb-0">
+                    <SiteHeader />
+                    <main className="flex-1">
+                      {/* Required: nested routes render here. */}
+                      <Outlet />
+                    </main>
+                    <SiteFooter />
+                    <MobileTabBar />
+                  </div>
+                  <Suspense fallback={null}>
+                    <ShoppingAssistant />
+                  </Suspense>
+                </AssistantProvider>
                 <ToastHost position="top-center" richColors />
               </SavedProvider>
             </CartProvider>
