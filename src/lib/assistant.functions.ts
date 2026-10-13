@@ -207,6 +207,31 @@ const LANGUAGE_NAME: Record<Language, string> = {
   or: "Afaan Oromoo",
 };
 
+/**
+ * A language directive strong enough to survive a customer whose question is in
+ * another script. The model otherwise tends to mirror the user's message
+ * language and then claims it "cannot" reply in Amharic/Oromo, so the rule is
+ * stated up front, restated last, and paired with an explicit "you can" note.
+ */
+const LANGUAGE_RULE: Record<Language, string> = {
+  en: [
+    "LANGUAGE: Reply in English.",
+    "Always answer in English, whatever language the customer writes in.",
+  ].join(" "),
+  am: [
+    "LANGUAGE: ሁልጊዜ በአማርኛ መልስ ስጥ።",
+    "The customer's reply language is Amharic — you are fully able to write Amharic, so never claim you cannot.",
+    "Answer in Amharic even when the customer's question is in English or Afaan Oromoo.",
+    "Keep shop and product names exactly as they appear in the tool results; do not translate them.",
+  ].join(" "),
+  or: [
+    "LANGUAGE: Yeroo hunda Afaan Oromootiin deebisi.",
+    "The customer's reply language is Afaan Oromoo — you are fully able to write Afaan Oromoo, so never claim you cannot.",
+    "Answer in Afaan Oromoo even when the customer's question is in English or Amharic.",
+    "Keep shop and product names exactly as they appear in the tool results; do not translate them.",
+  ].join(" "),
+};
+
 function systemPrompt(language: Language, signedIn: boolean): string {
   return [
     "You are the shopping assistant for የኔ Go (Yene Go), a local delivery marketplace in Bishoftu, Ethiopia.",
@@ -224,7 +249,11 @@ function systemPrompt(language: Language, signedIn: boolean): string {
       ? "The customer is signed in, so you may look up their own orders."
       : "The customer is not signed in. If they ask about an order, ask them to sign in and offer the order-tracking page.",
     "",
-    `Reply in ${LANGUAGE_NAME[language]}.`,
+    LANGUAGE_RULE[language],
+    "",
+    // Restated last: the most recent instruction wins when a model is torn
+    // between mirroring the question's language and following the directive.
+    `REMINDER — ${LANGUAGE_NAME[language]}: write your whole answer in ${LANGUAGE_NAME[language]}.`,
   ].join("\n");
 }
 
