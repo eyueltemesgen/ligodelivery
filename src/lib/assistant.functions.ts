@@ -41,7 +41,6 @@ import {
   ASSISTANT_REQUEST_TIMEOUT_MS,
   ASSISTANT_SESSION_LIMIT,
   ASSISTANT_SESSION_WINDOW_MS,
-  ASSISTANT_TEMPERATURE,
   assistantApiKey,
 } from "@/lib/assistant-config";
 import type { Language } from "@/lib/i18n";
@@ -292,7 +291,8 @@ async function callModel(apiKey: string, messages: ChatMessage[]): Promise<ChatM
         messages,
         tools: TOOLS,
         tool_choice: "auto",
-        temperature: ASSISTANT_TEMPERATURE,
+        // This model rejects custom temperature; tools on chat completions need reasoning off.
+        reasoning_effort: "none",
       }),
       signal: controller.signal,
     });
