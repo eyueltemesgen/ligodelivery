@@ -36,12 +36,13 @@ import {
   type AssistantTurn,
 } from "@/lib/assistant";
 import {
-  ASSISTANT_BASE_URL,
-  ASSISTANT_MODEL,
   ASSISTANT_REQUEST_TIMEOUT_MS,
   ASSISTANT_SESSION_LIMIT,
   ASSISTANT_SESSION_WINDOW_MS,
   assistantApiKey,
+  assistantBaseUrl,
+  assistantModel,
+  assistantReasoningEffort,
 } from "@/lib/assistant-config";
 import type { Language } from "@/lib/i18n";
 
@@ -322,20 +323,22 @@ type ChatResponse = {
 async function callModel(apiKey: string, messages: ChatMessage[]): Promise<ChatMessage | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ASSISTANT_REQUEST_TIMEOUT_MS);
+  // Sent only when configured: reasoning models need `none` for tool calls to be
+  // emitted at all, but non-reasoning models reject the field outright.
+  const reasoningEffort = assistantReasoningEffort();
   try {
-    const res = await fetch(`${ASSISTANT_BASE_URL}/chat/completions`, {
+    const res = await fetch(`${assistantBaseUrl()}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: ASSISTANT_MODEL,
+        model: assistantModel(),
         messages,
         tools: TOOLS,
         tool_choice: "auto",
-        // This model rejects custom temperature; tools on chat completions need reasoning off.
-        reasoning_effort: "none",
+        ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
       }),
       signal: controller.signal,
     });
@@ -390,7 +393,9 @@ export const askAssistantFn = createServerFn({ method: "POST" })
 
     const apiKey = assistantApiKey();
     if (!apiKey) {
-      console.error("[assistant] LOVABLE_API_KEY is not configured");
+      console.error(
+        "[assistant] no model credential configured (set OPENAI_API_KEY, ASSISTANT_API_KEY or LOVABLE_API_KEY)",
+      );
       return { reply: "", results: [{ kind: "none", noteKey: "ai_unavailable" }] };
     }
 
