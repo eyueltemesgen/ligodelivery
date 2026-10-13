@@ -5,24 +5,34 @@
  * never read a secret at module scope: every value is either a public constant
  * or is read inside a function at call time.
  *
- * The model is provider-neutral. Supabase hosts the data and the tools run
+ * The model is provider-neutral and defaults to **DeepSeek** (`deepseek-flash`
+ * at `https://api.deepseek.com`). Supabase hosts the data and the tools run
  * there, but Supabase has no hosted chat-completions API (its `Supabase.ai`
  * runtime does embeddings only), so the LLM stays an external provider behind
  * this one OpenAI-compatible endpoint. Point `ASSISTANT_BASE_URL` at any
  * OpenAI-compatible gateway and set the matching key; no code change is needed
- * to switch provider. Lovable's gateway still works by setting
- * `ASSISTANT_BASE_URL=https://ai.gateway.lovable.dev/v1`.
+ * to switch provider.
+ *
+ * DeepSeek note: the legacy `deepseek-chat` / `deepseek-reasoner` names were
+ * retired on 2026-07-24 and now return errors, and the current V4 models default
+ * to thinking mode. Use `deepseek-flash` (or `deepseek-v4-pro`) and leave
+ * thinking disabled for tool calls — see `assistantThinking` below.
  */
 
-const DEFAULT_BASE_URL = "https://api.openai.com/v1";
-const DEFAULT_MODEL = "gpt-4o-mini";
+const DEFAULT_BASE_URL = "https://api.deepseek.com";
+const DEFAULT_MODEL = "deepseek-flash";
 
 /**
  * Env vars holding the credential, in priority order. A provider-specific name
  * wins so a project can hold several keys at once; the generic name is the
  * documented fallback for any other OpenAI-compatible provider.
  */
-const API_KEY_ENV_NAMES = ["OPENAI_API_KEY", "ASSISTANT_API_KEY", "LOVABLE_API_KEY"] as const;
+const API_KEY_ENV_NAMES = [
+  "DEEPSEEK_API_KEY",
+  "OPENAI_API_KEY",
+  "ASSISTANT_API_KEY",
+  "LOVABLE_API_KEY",
+] as const;
 
 /** Chat-completions base URL, without a trailing slash. */
 export function assistantBaseUrl(): string {
@@ -33,6 +43,28 @@ export function assistantBaseUrl(): string {
 
 export function assistantModel(): string {
   return process.env["ASSISTANT_MODEL"]?.trim() || DEFAULT_MODEL;
+}
+
+function isDeepSeek(baseUrl: string): boolean {
+  return /(^|\.)deepseek\.com/.test(new URL(baseUrl).hostname);
+}
+
+/**
+ * DeepSeek's V4 models default to **thinking on**, which is both expensive and
+ * historically unreliable alongside tool calls, so we ask for it off. The
+ * parameter is DeepSeek-only — sending it to any other provider is a 400 — so
+ * it is emitted only for a DeepSeek host, or when `ASSISTANT_THINKING` is set
+ * to `enabled`/`disabled` explicitly.
+ */
+export function assistantThinking(): { type: string } | null {
+  const explicit = process.env["ASSISTANT_THINKING"]?.trim().toLowerCase();
+  if (explicit === "enabled" || explicit === "disabled") return { type: explicit };
+  if (explicit) return null; // unrecognised value: don't send a guess
+  try {
+    return isDeepSeek(assistantBaseUrl()) ? { type: "disabled" } : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

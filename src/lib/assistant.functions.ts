@@ -43,6 +43,7 @@ import {
   assistantBaseUrl,
   assistantModel,
   assistantReasoningEffort,
+  assistantThinking,
 } from "@/lib/assistant-config";
 import type { Language } from "@/lib/i18n";
 
@@ -323,9 +324,11 @@ type ChatResponse = {
 async function callModel(apiKey: string, messages: ChatMessage[]): Promise<ChatMessage | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ASSISTANT_REQUEST_TIMEOUT_MS);
-  // Sent only when configured: reasoning models need `none` for tool calls to be
-  // emitted at all, but non-reasoning models reject the field outright.
+  // Both of these are provider-specific and sent only when applicable:
+  // `reasoning_effort` breaks non-reasoning models, `thinking` is DeepSeek-only,
+  // and DeepSeek's V4 default of thinking-on is costly and unreliable with tools.
   const reasoningEffort = assistantReasoningEffort();
+  const thinking = assistantThinking();
   try {
     const res = await fetch(`${assistantBaseUrl()}/chat/completions`, {
       method: "POST",
@@ -339,6 +342,7 @@ async function callModel(apiKey: string, messages: ChatMessage[]): Promise<ChatM
         tools: TOOLS,
         tool_choice: "auto",
         ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+        ...(thinking ? { thinking } : {}),
       }),
       signal: controller.signal,
     });
@@ -394,7 +398,7 @@ export const askAssistantFn = createServerFn({ method: "POST" })
     const apiKey = assistantApiKey();
     if (!apiKey) {
       console.error(
-        "[assistant] no model credential configured (set OPENAI_API_KEY, ASSISTANT_API_KEY or LOVABLE_API_KEY)",
+        "[assistant] no model credential configured (set DEEPSEEK_API_KEY, OPENAI_API_KEY, ASSISTANT_API_KEY or LOVABLE_API_KEY)",
       );
       return { reply: "", results: [{ kind: "none", noteKey: "ai_unavailable" }] };
     }
