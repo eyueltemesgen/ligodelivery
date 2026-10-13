@@ -1457,6 +1457,7 @@ export const am = {
   sma_available_from: "ከዚህ ጀምሮ ይገኛል",
   sma_available_to: "እስከዚህ ድረስ ይገኛል",
   sma_main_image: "ዋና ምስል",
+  sma_remove_image: "ምስል ያስወግዱ",
   sma_gallery: "የጋለሪ ምስል መንገዶች (በአንድ መስመር አንድ፣ አማራጭ)",
   sma_provider: "አቅራቢ (ሱቅ)",
   sma_quote_amount: "የዋጋ መጠን (ETB)",
