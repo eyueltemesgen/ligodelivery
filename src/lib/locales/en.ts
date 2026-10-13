@@ -1485,6 +1485,7 @@ export const en = {
   sma_available_from: "Available from",
   sma_available_to: "Available to",
   sma_main_image: "Main image",
+  sma_remove_image: "Remove image",
   sma_gallery: "Gallery image paths (one per line, optional)",
   sma_provider: "Provider (shop)",
   sma_quote_amount: "Quote amount (ETB)",
