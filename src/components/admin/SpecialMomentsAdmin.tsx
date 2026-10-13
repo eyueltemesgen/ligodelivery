@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import {
@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isMissingTable, supabaseErrorText } from "@/lib/supa-error";
-import { mediaErrorKey, uploadImage } from "@/lib/media";
+import { mediaErrorKey, uploadImage, StorageImage } from "@/lib/media";
 import { ETB, formatDate } from "@/lib/format";
 import {
   OCCASIONS,
@@ -423,6 +423,13 @@ function CategoriesAdmin() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Editing an existing category. `file` replaces the image; `removeImage`
+  // clears it without uploading a replacement.
+  const [editing, setEditing] = useState<ServiceCategory | null>(null);
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const editFileRef = useRef<HTMLInputElement>(null);
+
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -461,6 +468,41 @@ function CategoriesAdmin() {
     }
     void qc.invalidateQueries({ queryKey: ["admin-service-categories"] });
     void qc.invalidateQueries({ queryKey: ["service-categories"] });
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    setBusy(true);
+    try {
+      let imageUrl = editing.image_url;
+      if (editFile) imageUrl = await uploadImage(editFile, "services/categories");
+      else if (removeImage) imageUrl = null;
+      const { error } = await supabase
+        .from("service_categories")
+        .update({
+          name: editing.name.trim(),
+          slug: slugify(editing.name),
+          tagline: editing.tagline?.trim() || null,
+          description: editing.description?.trim() || null,
+          image_url: imageUrl,
+          sort_order: Number(editing.sort_order) || 0,
+          is_active: editing.is_active,
+        } as never)
+        .eq("id", editing.id);
+      if (error) throw error;
+      setEditing(null);
+      setEditFile(null);
+      setRemoveImage(false);
+      void qc.invalidateQueries({ queryKey: ["admin-service-categories"] });
+      void qc.invalidateQueries({ queryKey: ["service-categories"] });
+      toast.success(t("sma_category_updated"));
+    } catch (err) {
+      const mediaKey = mediaErrorKey(err);
+      toast.error(mediaKey ? t(mediaKey) : supabaseErrorText(t, err));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const remove = async (id: string, name: string) => {
@@ -550,6 +592,18 @@ function CategoriesAdmin() {
                 <Button
                   size="icon"
                   variant="ghost"
+                  aria-label={t("sma_edit_named", { name: c.name })}
+                  onClick={() => {
+                    setEditing(c);
+                    setEditFile(null);
+                    setRemoveImage(false);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
                   className="text-destructive hover:text-destructive"
                   aria-label={t("sma_delete_named", { name: c.name })}
                   onClick={() => void remove(c.id, c.name)}
@@ -561,6 +615,125 @@ function CategoriesAdmin() {
           </li>
         ))}
       </ul>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-5 sm:w-full">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl font-extrabold">
+              {t("sma_edit_category")}
+            </DialogTitle>
+          </DialogHeader>
+          {editing && (
+            <form onSubmit={saveEdit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>{t("sma_name")}</Label>
+                <Input
+                  value={editing.name}
+                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t("sma_tagline")}</Label>
+                <Input
+                  value={editing.tagline ?? ""}
+                  onChange={(e) => setEditing({ ...editing, tagline: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t("sma_description")}</Label>
+                <Textarea
+                  value={editing.description ?? ""}
+                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>{t("sma_sort_order")}</Label>
+                  <Input
+                    type="number"
+                    value={editing.sort_order}
+                    onChange={(e) =>
+                      setEditing({ ...editing, sort_order: Number(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <label className="flex items-end gap-2 pb-2 text-sm">
+                  <Switch
+                    checked={editing.is_active}
+                    onCheckedChange={(v) => setEditing({ ...editing, is_active: v })}
+                  />
+                  {t("sma_active")}
+                </label>
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t("sma_main_image")}</Label>
+                {editing.image_url && !editFile && !removeImage ? (
+                  <div className="flex items-center gap-3">
+                    <StorageImage
+                      path={editing.image_url}
+                      alt={editing.name}
+                      width={240}
+                      height={135}
+                      className="h-16 w-28 rounded-md object-cover"
+                    />
+                    <div className="flex flex-col gap-1.5">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => editFileRef.current?.click()}
+                      >
+                        {t("sma_change_image")}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setRemoveImage(true)}
+                      >
+                        {t("sma_remove_image")}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      ref={editFileRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        setEditFile(e.target.files?.[0] ?? null);
+                        setRemoveImage(false);
+                      }}
+                    />
+                    {removeImage && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setRemoveImage(false)}
+                      >
+                        {t("sma_cancel")}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+                  {t("sma_cancel")}
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  {busy ? t("sma_saving") : t("sma_save_category")}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

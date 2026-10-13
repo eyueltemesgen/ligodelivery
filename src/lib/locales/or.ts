@@ -1497,6 +1497,7 @@ export const or = {
   sma_available_from: "Irraa argama",
   sma_available_to: "Hanga argama",
   sma_main_image: "Suuraa ijoo",
+  sma_remove_image: "Suuraa haqi",
   sma_gallery: "Karaa suuraa gaalerii (tokko tokkoon sarara, filannoo)",
   sma_provider: "Dhiyeessaa (suuqa)",
   sma_quote_amount: "Hamma gatii (ETB)",
