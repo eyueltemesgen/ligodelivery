@@ -40,11 +40,11 @@ import {
   ASSISTANT_REQUEST_TIMEOUT_MS,
   ASSISTANT_SESSION_LIMIT,
   ASSISTANT_SESSION_WINDOW_MS,
-  ASSISTANT_TEMPERATURE,
   assistantApiKey,
   assistantBaseUrl,
   assistantModel,
   assistantReasoningEffort,
+  assistantTemperature,
   assistantThinking,
 } from "@/lib/assistant-config";
 import type { Language } from "@/lib/i18n";
@@ -327,9 +327,11 @@ type ChatResponse = {
 async function callModel(apiKey: string, messages: ChatMessage[]): Promise<ChatMessage | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ASSISTANT_REQUEST_TIMEOUT_MS);
-  // Both of these are provider-specific and sent only when applicable:
-  // `reasoning_effort` breaks non-reasoning models, `thinking` is DeepSeek-only,
-  // and DeepSeek's V4 default of thinking-on is costly and unreliable with tools.
+  // Every one of these is provider-specific and emitted only where accepted:
+  // Lovable's gpt-5.5 rejects a custom temperature and needs reasoning off for
+  // tools; `thinking` is DeepSeek-only. Sending a field to the wrong provider
+  // fails the whole call rather than degrading, so none is unconditional.
+  const temperature = assistantTemperature();
   const reasoningEffort = assistantReasoningEffort();
   const thinking = assistantThinking();
   try {
@@ -344,7 +346,7 @@ async function callModel(apiKey: string, messages: ChatMessage[]): Promise<ChatM
         messages,
         tools: TOOLS,
         tool_choice: "auto",
-        temperature: ASSISTANT_TEMPERATURE,
+        ...(temperature !== null ? { temperature } : {}),
         ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         ...(thinking ? { thinking } : {}),
       }),

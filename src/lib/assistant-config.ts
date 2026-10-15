@@ -138,16 +138,46 @@ export function assistantConfigured(): boolean {
 }
 
 /**
- * Optional `reasoning_effort`, sent only when set. Reasoning models (e.g.
- * `gpt-5.5`) need `none` for tool calls to be emitted at all, but
- * non-reasoning models reject the field, so it must not be sent by default.
+ * Request shape is provider-specific, and getting it wrong **breaks the call
+ * outright** rather than degrading, so each field is emitted only where it is
+ * known to be accepted:
+ *
+ *  - **Lovable** (`openai/gpt-5.5`): the model **rejects a custom
+ *    `temperature`**, and tool calling on chat completions **requires**
+ *    `reasoning_effort: "none"`. Both were established by the platform's own
+ *    "Fixed AI model settings" commit, which is authoritative for this
+ *    deployment — do not "restore" a temperature here.
+ *  - **Gemini / DeepSeek**: accept `temperature` and take no `reasoning_effort`.
  */
-export function assistantReasoningEffort(): string | null {
-  return process.env["ASSISTANT_REASONING_EFFORT"]?.trim() || null;
+const DEFAULT_TEMPERATURE = 0.3;
+
+/** Temperature to send, or null for a provider that rejects a custom value. */
+export function assistantTemperature(): number | null {
+  const explicit = process.env["ASSISTANT_TEMPERATURE"]?.trim();
+  if (explicit) {
+    const parsed = Number(explicit);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  try {
+    return providerForBaseUrl(assistantBaseUrl()) === "lovable" ? null : DEFAULT_TEMPERATURE;
+  } catch {
+    return DEFAULT_TEMPERATURE;
+  }
 }
 
-/** Request shape limits, mirrored by the client in `assistant.ts`. */
-export const ASSISTANT_TEMPERATURE = 0.3;
+/**
+ * `reasoning_effort` to send, or null to omit it. Lovable's `gpt-5.5` needs
+ * `none` for tools to be emitted at all; other providers reject the field.
+ */
+export function assistantReasoningEffort(): string | null {
+  const explicit = process.env["ASSISTANT_REASONING_EFFORT"]?.trim();
+  if (explicit) return explicit;
+  try {
+    return providerForBaseUrl(assistantBaseUrl()) === "lovable" ? "none" : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Best-effort per-session cap. In-memory counters are per-instance only. */
 export const ASSISTANT_SESSION_LIMIT = 30;
