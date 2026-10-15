@@ -14,6 +14,7 @@
 import { createMiddleware } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "@/lib/public-env";
 import type { Database } from "./types";
 
 function isNewSupabaseApiKey(value: string): boolean {
@@ -59,8 +60,12 @@ function readBearerToken(request: Request | undefined): string | null {
 
 export const optionalSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
-    const SUPABASE_URL = process.env["SUPABASE_URL"];
-    const SUPABASE_PUBLISHABLE_KEY = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    // Public coordinates, with the same fallback the client uses, so a host
+    // that sets only the VITE_* pair (or nothing) still gets a working client.
+    // These are browser-safe values; the model key is read separately at call
+    // time and is never baked.
+    const SUPABASE_URL = PUBLIC_SUPABASE_URL;
+    const SUPABASE_PUBLISHABLE_KEY = PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
       // Catalogue reads are public, so an unconfigured backend is not fatal

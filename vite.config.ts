@@ -14,19 +14,20 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // request middleware instead.
 
 // Public (browser-safe) backend URL + publishable key. Published builds have
-// shipped without these env vars, blanking the site, so bake them in as a
+// shipped without these env vars, blanking the site, so they are baked in as a
 // fallback. Real env values still win when present.
-const PUBLIC_SUPABASE_URL =
-  process.env["VITE_SUPABASE_URL"] || "https://kyfyljkxijmamnkhvqaw.supabase.co";
-const PUBLIC_SUPABASE_KEY =
-  process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
-  "sb_publishable__-26UQR-hg8e3YE4RCgRiw_lIkghIy1";
+//
+// Imported from `src/lib/public-env.ts`, which the assistant's server
+// middleware also reads, so the client and server fallbacks cannot drift apart.
+import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "./src/lib/public-env.ts";
 
 export default defineConfig({
   vite: {
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(PUBLIC_SUPABASE_URL),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(PUBLIC_SUPABASE_KEY),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+        PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      ),
     },
   },
 });
