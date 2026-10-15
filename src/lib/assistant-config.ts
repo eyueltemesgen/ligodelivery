@@ -5,52 +5,52 @@
  * never read a secret at module scope: every value is either a public constant
  * or is read inside a function at call time.
  *
- * The model is provider-neutral. Defaults to **Google Gemini**
- * (`gemini-3.8-flash` via its OpenAI-compatible endpoint) because Gemini was
- * measured to be the only provider tested that both calls tools and writes
- * fluent **Amharic** and Afaan Oromo — see the AGENTS.md note. Supabase hosts
- * the data and the tools run there, but Supabase has no hosted chat-completions
- * API (its `Supabase.ai` runtime does embeddings only), so the LLM stays an
- * external provider behind this one OpenAI-compatible endpoint. Point
- * `ASSISTANT_BASE_URL` at any OpenAI-compatible gateway and set the matching
- * key; no code change is needed to switch provider.
+ * Default provider is the **Lovable AI Gateway**, which is how this project is
+ * deployed: Lovable Cloud injects `LOVABLE_API_KEY` as a project secret and
+ * billing runs through the Lovable plan, so no separate model account is needed.
+ * The gateway is OpenAI-compatible, so any other provider is a change of base
+ * URL + key here and nothing else. Supabase holds the data and runs the
+ * read-only tools; it has no hosted chat-completions API (its `Supabase.ai`
+ * runtime does embeddings only), so the LLM stays behind this one endpoint.
  *
  * Provider notes:
- *  - **Gemini**: the OpenAI-compatible shim lives at `/v1beta/openai`; use
+ *  - **Lovable** (default): `https://ai.gateway.lovable.dev/v1` with
+ *    `openai/gpt-5.5`, the model this feature originally shipped with.
+ *  - **Gemini**: OpenAI-compatible shim at `/v1beta/openai`; use
  *    `gemini-3.8-flash` (or `gemini-3.1-flash-lite`). `gemini-2.5-flash` is
- *    retired for new accounts. Free-tier quota is small (20 req/day for
- *    3.8-flash), so a production deployment needs billing.
- *  - **DeepSeek**: the legacy `deepseek-chat` / `deepseek-reasoner` names were
- *    retired on 2026-07-24 and now return errors, and the current V4 models
- *    default to thinking mode. Use `deepseek-flash` (or `deepseek-v4-pro`) and
- *    leave thinking disabled for tool calls — see `assistantThinking` below.
+ *    retired for new accounts, and the free tier is only 20 req/day.
+ *  - **DeepSeek**: `deepseek-chat` / `deepseek-reasoner` were retired on
+ *    2026-07-24 and now return errors; use `deepseek-flash` (or
+ *    `deepseek-v4-pro`) and leave thinking off for tool calls.
  */
 
-type Provider = "gemini" | "deepseek" | "custom";
+type Provider = "lovable" | "gemini" | "deepseek" | "custom";
 
+const LOVABLE_BASE_URL = "https://ai.gateway.lovable.dev/v1";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai";
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
 const DEFAULT_MODEL: Record<Provider, string> = {
+  lovable: "openai/gpt-5.5",
   gemini: "gemini-3.8-flash",
   deepseek: "deepseek-flash",
-  custom: "deepseek-flash",
+  custom: "openai/gpt-5.5",
 };
 
 /**
- * Credential sources, in priority order. A provider-specific name wins so a
- * project can hold several keys at once; the generic names are the documented
- * fallback for any other OpenAI-compatible provider. The provider implied by
- * the chosen key selects the default base URL and model, so key and endpoint
- * can never disagree.
+ * Credential sources, in priority order. `LOVABLE_API_KEY` is first because it
+ * is the one Lovable Cloud injects automatically, so a Lovable deployment works
+ * with no configuration. The provider implied by the chosen key selects the
+ * default base URL and model, so key and endpoint cannot disagree.
  */
 const KEY_SOURCES: { provider: Provider; envs: readonly string[] }[] = [
+  { provider: "lovable", envs: ["LOVABLE_API_KEY", "LOVABLE_KEY"] },
   {
     provider: "gemini",
     envs: ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"],
   },
   { provider: "deepseek", envs: ["DEEPSEEK_API_KEY"] },
-  { provider: "custom", envs: ["ASSISTANT_API_KEY", "OPENAI_API_KEY", "LOVABLE_API_KEY"] },
+  { provider: "custom", envs: ["ASSISTANT_API_KEY", "OPENAI_API_KEY"] },
 ];
 
 /** First present credential, with the provider it belongs to. */
@@ -68,6 +68,7 @@ function resolveKey(): { provider: Provider; key: string } | null {
 function providerForBaseUrl(url: string): Provider {
   try {
     const host = new URL(url).hostname;
+    if (/(^|\.)lovable\.dev$/.test(host)) return "lovable";
     if (/(^|\.)generativelanguage\.googleapis\.com$/.test(host)) return "gemini";
     if (/(^|\.)deepseek\.com$/.test(host)) return "deepseek";
   } catch {
@@ -81,7 +82,15 @@ export function assistantBaseUrl(): string {
   const raw = process.env["ASSISTANT_BASE_URL"]?.trim();
   // A trailing slash would yield `//chat/completions`, which some gateways 404.
   if (raw) return raw.replace(/\/+$/, "");
-  return resolveKey()?.provider === "gemini" ? GEMINI_BASE_URL : DEEPSEEK_BASE_URL;
+  switch (resolveKey()?.provider) {
+    case "gemini":
+      return GEMINI_BASE_URL;
+    case "deepseek":
+      return DEEPSEEK_BASE_URL;
+    default:
+      // Lovable, or no key at all: the gateway is the deployment default.
+      return LOVABLE_BASE_URL;
+  }
 }
 
 export function assistantModel(): string {
@@ -123,6 +132,11 @@ export function assistantApiKey(): string | null {
   return resolveKey()?.key ?? null;
 }
 
+/** True when the model credential is configured on this deployment. */
+export function assistantConfigured(): boolean {
+  return assistantApiKey() !== null;
+}
+
 /**
  * Optional `reasoning_effort`, sent only when set. Reasoning models (e.g.
  * `gpt-5.5`) need `none` for tool calls to be emitted at all, but
@@ -131,6 +145,9 @@ export function assistantApiKey(): string | null {
 export function assistantReasoningEffort(): string | null {
   return process.env["ASSISTANT_REASONING_EFFORT"]?.trim() || null;
 }
+
+/** Request shape limits, mirrored by the client in `assistant.ts`. */
+export const ASSISTANT_TEMPERATURE = 0.3;
 
 /** Best-effort per-session cap. In-memory counters are per-instance only. */
 export const ASSISTANT_SESSION_LIMIT = 30;

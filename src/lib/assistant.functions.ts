@@ -2,8 +2,8 @@
  * The shopping assistant's single POST endpoint.
  *
  * Shape: one server function runs a small tool-calling loop against an
- * OpenAI-compatible chat endpoint (Gemini by default; see `assistant-config.ts`).
- * The model decides *which* read-only tool
+ * OpenAI-compatible chat endpoint (the Lovable AI Gateway by default; see
+ * `assistant-config.ts`). The model decides *which* read-only tool
  * to call and how to phrase the answer; the tool results it receives are the
  * only source of prices, fees, distances and order statuses, and those results
  * are returned to the client alongside the prose so the UI renders the figures
@@ -40,6 +40,7 @@ import {
   ASSISTANT_REQUEST_TIMEOUT_MS,
   ASSISTANT_SESSION_LIMIT,
   ASSISTANT_SESSION_WINDOW_MS,
+  ASSISTANT_TEMPERATURE,
   assistantApiKey,
   assistantBaseUrl,
   assistantModel,
@@ -343,6 +344,7 @@ async function callModel(apiKey: string, messages: ChatMessage[]): Promise<ChatM
         messages,
         tools: TOOLS,
         tool_choice: "auto",
+        temperature: ASSISTANT_TEMPERATURE,
         ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         ...(thinking ? { thinking } : {}),
       }),
@@ -400,7 +402,7 @@ export const askAssistantFn = createServerFn({ method: "POST" })
     const apiKey = assistantApiKey();
     if (!apiKey) {
       console.error(
-        "[assistant] no model credential configured (set DEEPSEEK_API_KEY, OPENAI_API_KEY, ASSISTANT_API_KEY or LOVABLE_API_KEY)",
+        "[assistant] no model credential configured (set LOVABLE_API_KEY, or GEMINI_API_KEY / DEEPSEEK_API_KEY / ASSISTANT_API_KEY for another provider)",
       );
       return { reply: "", results: [{ kind: "none", noteKey: "ai_unavailable" }] };
     }
