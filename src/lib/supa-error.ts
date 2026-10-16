@@ -54,3 +54,15 @@ export function isMissingTable(err: unknown): boolean {
     /Could not find the table|relation .* does not exist/i.test(e.message ?? "")
   );
 }
+
+/**
+ * The existing order id when the database rejected a duplicate insert
+ * (`prevent_duplicate_orders` raises `DUPLICATE_ORDER:<uuid>`). Returns null for
+ * every other error, so callers can treat a duplicate as success.
+ */
+export function duplicateOrderId(err: unknown): string | null {
+  if (!err || typeof err !== "object") return null;
+  const e = err as { message?: string; details?: string };
+  const match = /DUPLICATE_ORDER:([0-9a-f-]{36})/i.exec(`${e.message ?? ""} ${e.details ?? ""}`);
+  return match?.[1] ?? null;
+}

@@ -18,6 +18,12 @@ export type AssistantShop = {
   deliveryFee: number;
   deliveryTimeMin: number;
   rating: number;
+  /**
+   * Visible review count. `shops.rating` is seeded at 4.5 for shops with no
+   * reviews, so consumers must gate the displayed score on this to avoid
+   * advertising a rating no customer has given.
+   */
+  ratingCount: number;
   categoryName: string | null;
 };
 

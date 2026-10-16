@@ -10,6 +10,7 @@ import { ETB, discounted } from "@/lib/format";
 import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
 import { useSaved } from "@/lib/saved";
 import { ProductCard } from "@/components/ligo/Cards";
+import { ShopReviews } from "@/components/account/Reviews";
 import { ProductGridSkeleton } from "@/components/ligo/Skeletons";
 import { ProductModal } from "@/components/ligo/ProductModal";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -184,7 +185,12 @@ function ShopDetail() {
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-              {shop.rating}
+              {Number(shop.rating_count) > 0
+                ? `${Number(shop.rating).toFixed(1)} (${t(
+                    Number(shop.rating_count) === 1 ? "rev_count_one" : "rev_count",
+                    { count: shop.rating_count },
+                  )})`
+                : t("common_new")}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
@@ -294,6 +300,8 @@ function ShopDetail() {
           ))
         )}
       </div>
+
+      <ShopReviews shopId={shopId} />
 
       <ProductModal
         product={selected}
