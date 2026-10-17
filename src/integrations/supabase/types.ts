@@ -2429,6 +2429,10 @@ export type Database = {
         Args: { p_code: string; p_delivery_fee: number; p_subtotal: number }
         Returns: Json
       }
+      cancel_order: {
+        Args: { _order_id: string; _reason?: string }
+        Returns: undefined
+      }
       complete_delivery: {
         Args: { _order_id: string; _pin: string }
         Returns: {

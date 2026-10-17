@@ -26,10 +26,12 @@ import { orderQuery, shopsByIdsQuery } from "@/lib/account";
 import { ETB, formatDate } from "@/lib/format";
 import { canCancelOrder, isOrderOpen } from "@/lib/orders";
 import { PROOF_BUCKET, StorageImage, uploadImage } from "@/lib/media";
+import { isMissingRpc, supabaseErrorText } from "@/lib/supa-error";
 import { publicSettingsQuery } from "@/lib/queries";
 import { useCart } from "@/lib/cart";
 import { AccountHeader } from "@/components/account/AccountShell";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
+import { OrderReviewForm } from "@/components/account/Reviews";
 import {
   StatusBadge,
   paymentLabel,
@@ -112,6 +114,8 @@ function OrderDetails() {
   const { add } = useCart();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [reasonTag, setReasonTag] = useState("");
+  const [reason, setReason] = useState("");
 
   // Live status updates while the order is open.
   useEffect(() => {
@@ -182,22 +186,40 @@ function OrderDetails() {
     toast.success(t("od_items_added"));
   };
 
-  const cancel = async () => {
-    setCancelling(true);
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "cancelled" })
-      .eq("id", order.id);
-    setCancelling(false);
-    setCancelOpen(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success(t("oc_cancelled_toast"));
+  /** Refresh everything a cancel touches. */
+  const refreshAfterCancel = () => {
     void qc.invalidateQueries({ queryKey: ["account-order", orderId] });
     void qc.invalidateQueries({ queryKey: ["account-orders"] });
     void qc.invalidateQueries({ queryKey: ["account-summary"] });
+  };
+
+  const cancel = async () => {
+    setCancelling(true);
+    // Route the cancel through the guarded RPC so the reason is recorded and
+    // the order-status guard (not the client) decides whether it is allowed.
+    const reasonParts = [reason.trim(), reasonTag].filter(Boolean).join(" — ");
+    const { error } = await supabase.rpc("cancel_order", {
+      _order_id: order.id,
+      ...(reasonParts ? { _reason: reasonParts } : {}),
+    });
+
+    // Before the pilot migration is applied the RPC does not exist. Cancelling
+    // still has to work, so fall back to the plain status write the order guard
+    // already authorises; only the reason is lost, and the column is absent
+    // anyway.
+    const finalError =
+      error && isMissingRpc(error)
+        ? (await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id)).error
+        : error;
+
+    setCancelling(false);
+    setCancelOpen(false);
+    if (finalError) {
+      toast.error(supabaseErrorText(t, finalError));
+      return;
+    }
+    toast.success(t("oc_cancelled_toast"));
+    refreshAfterCancel();
   };
 
   return (
@@ -401,6 +423,28 @@ function OrderDetails() {
             )}
           </section>
 
+          {/* Reviews — only a delivered order can be reviewed (verified purchase). */}
+          {order.status === "delivered" && user && (
+            <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+              <h2 className="font-display text-lg font-bold">{t("rev_title")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("rev_subtitle")}</p>
+              <div className="mt-4 space-y-3">
+                <OrderReviewForm orderId={orderId} userId={user.id} shopName={shop?.name} />
+                {items.map((it) =>
+                  it.product_id ? (
+                    <OrderReviewForm
+                      key={it.id}
+                      orderId={orderId}
+                      userId={user.id}
+                      productId={it.product_id}
+                      productName={it.product_name}
+                    />
+                  ) : null,
+                )}
+              </div>
+            </section>
+          )}
+
           {/* Rider */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">
             <h2 className="mb-3 font-display text-lg font-bold">{t("od_delivery")}</h2>
@@ -540,6 +584,45 @@ function OrderDetails() {
             <AlertDialogTitle>{t("od_cancel_title", { code: order.order_code })}</AlertDialogTitle>
             <AlertDialogDescription>{t("od_cancel_desc")}</AlertDialogDescription>
           </AlertDialogHeader>
+          {/* Reason is optional; it is what turns cancellations into a metric. */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="cancel-reason">
+              {t("oc_reason_label")}
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {(
+                [
+                  "oc_reason_changed_mind",
+                  "oc_reason_wrong_items",
+                  "oc_reason_too_long",
+                  "oc_reason_found_elsewhere",
+                  "oc_reason_address",
+                  "oc_reason_other",
+                ] as const
+              ).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={reasonTag === t(key)}
+                  onClick={() => setReasonTag(reasonTag === t(key) ? "" : t(key))}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    reasonTag === t(key)
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {t(key)}
+                </button>
+              ))}
+            </div>
+            <Textarea
+              id="cancel-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={t("oc_reason_placeholder")}
+              className="min-h-16 text-sm"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={cancelling}>{t("od_keep_order")}</AlertDialogCancel>
             <AlertDialogAction

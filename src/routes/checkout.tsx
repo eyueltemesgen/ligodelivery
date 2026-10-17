@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { AlertTriangle, Copy, Lock, MapPin } from "lucide-react";
@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { ETB } from "@/lib/format";
-import { supabaseErrorText } from "@/lib/supa-error";
+import { duplicateOrderId, supabaseErrorText } from "@/lib/supa-error";
 import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
 import { addressesQuery, type AddressRow } from "@/lib/account";
 import { quoteDeliveryFee, DELIVERY_FAILURE_KEY, formatDistance } from "@/lib/delivery";
@@ -67,6 +67,7 @@ function CheckoutPage() {
   const [method, setMethod] = useState("cash");
   const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
+  const submittingRef = useRef(false);
   const [fee, setFee] = useState<FeeState>({ status: "loading" });
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
@@ -198,6 +199,8 @@ function CheckoutPage() {
 
   const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Hard guard: ignore any second submit while one is in flight.
+    if (submittingRef.current) return;
     if (!isShopOpenNow(shop ?? {}, hours)) {
       toast.error(t("checkout_closed_toast"));
       return;
@@ -206,6 +209,7 @@ function CheckoutPage() {
       toast.error(t(fee.status === "error" ? fee.reason : "delivery_err_generic"));
       return;
     }
+    submittingRef.current = true;
     setBusy(true);
     try {
       // Server-side placement: prices, options, distance, fee and totals are
@@ -227,7 +231,19 @@ function CheckoutPage() {
         p_lng: lng as number,
         ...(promo ? { p_coupon_code: promo.code } : {}),
       });
-      if (error) throw error;
+      if (error) {
+        // A retried or double-tapped submit is rejected by the duplicate guard
+        // with the id of the order already created — open that one instead of
+        // showing an error, so the customer is never charged twice.
+        const existingId = duplicateOrderId(error);
+        if (existingId) {
+          clear();
+          toast.success(t("checkout_order_placed"));
+          await navigate({ to: "/orders/$orderId", params: { orderId: existingId } });
+          return;
+        }
+        throw error;
+      }
 
       clear();
       toast.success(t("checkout_order_placed"));
@@ -235,6 +251,9 @@ function CheckoutPage() {
     } catch (err) {
       toast.error(supabaseErrorText(t, err));
     } finally {
+      // Released here rather than in the success path: a failed navigation must
+      // not leave the form permanently locked.
+      submittingRef.current = false;
       setBusy(false);
     }
   };

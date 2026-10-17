@@ -22,6 +22,12 @@ export type Shop = {
   delivery_fee: number;
   delivery_time_min: number;
   rating: number;
+  /**
+   * Number of visible customer reviews. `shops.rating` ships seeded at 4.5 with
+   * no reviews behind it, so the card must gate the score on this count to avoid
+   * showing every brand-new shop a fake 4.5 star rating.
+   */
+  rating_count: number;
   is_featured: boolean;
   is_online: boolean;
   is_active: boolean;
@@ -62,7 +68,7 @@ const unwrap = <T>(res: { data: T | null; error: unknown }) => {
 
 /** Columns the storefront actually renders, so responses stay small. */
 const SHOP_COLUMNS =
-  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_featured,is_online,is_active,owner_id,lat,lng";
+  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,rating_count,is_featured,is_online,is_active,owner_id,lat,lng";
 const PRODUCT_COLUMNS =
   "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular";
 const OFFER_COLUMNS =

@@ -35,7 +35,7 @@ const SERVICE_LIMIT = 6;
 const ORDER_LIMIT = 5;
 
 const SHOP_COLUMNS =
-  "id,name,description,category_id,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_online,is_active,lat,lng";
+  "id,name,description,category_id,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,rating_count,is_online,is_active,lat,lng";
 const PRODUCT_COLUMNS = "id,shop_id,name,image_url,price,discount_percent,in_stock,is_active";
 
 /** Trims and caps free text before it reaches an `ilike` pattern. */
@@ -60,6 +60,7 @@ type ShopRow = {
   delivery_fee: number;
   delivery_time_min: number;
   rating: number;
+  rating_count: number;
   is_online: boolean;
   is_active: boolean;
   lat: number | null;
@@ -84,6 +85,7 @@ function toShop(row: ShopRow, categoryName: string | null): AssistantShop {
     deliveryFee: Number(row.delivery_fee ?? 0),
     deliveryTimeMin: Number(row.delivery_time_min ?? 0),
     rating: Number(row.rating ?? 0),
+    ratingCount: Number(row.rating_count ?? 0),
     categoryName,
   };
 }
