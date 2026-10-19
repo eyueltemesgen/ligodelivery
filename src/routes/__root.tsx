@@ -21,6 +21,8 @@ import { SavedProvider } from "@/lib/saved";
 import { SiteHeader, MobileTabBar } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ToastHost } from "@/lib/toast";
+import { InstallPrompt } from "@/components/ligo/InstallPrompt";
+import { registerServiceWorker } from "@/lib/pwa";
 import { AssistantProvider } from "@/components/assistant/AssistantProvider";
 
 // Lazy so the assistant's chunk never lands in another route's initial bundle;
@@ -147,6 +149,11 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Registered here rather than in the shell so it never runs during SSR.
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -167,6 +174,7 @@ function RootComponent() {
                   <Suspense fallback={null}>
                     <ShoppingAssistant />
                   </Suspense>
+                  <InstallPrompt />
                 </AssistantProvider>
                 <ToastHost position="top-center" richColors />
               </SavedProvider>

@@ -58,8 +58,13 @@ function friendlyError(t: (k: TranslationKey) => string, err: unknown): string {
 
 export const Route = createFileRoute("/register")({
   validateSearch: (s: Record<string, unknown>) => {
-    const out: { role?: SignupRole } = {};
+    const out: { role?: SignupRole; ref?: string } = {};
     if (["customer", "rider"].includes(String(s["role"]))) out.role = s["role"] as SignupRole;
+    // Referral code from a shared invite link (?ref=CODE).
+    const ref = String(s["ref"] ?? "")
+      .trim()
+      .toUpperCase();
+    if (ref) out.ref = ref.slice(0, 16);
     return out;
   },
   head: () => ({
@@ -78,7 +83,7 @@ export const Route = createFileRoute("/register")({
 
 function RegisterPage() {
   const { t } = useLanguage();
-  const { role: initialRole } = Route.useSearch();
+  const { role: initialRole, ref: referralCode } = Route.useSearch();
   const navigate = useNavigate();
   const [role, setRole] = useState<SignupRole>(initialRole ?? "customer");
 
@@ -143,7 +148,14 @@ function RegisterPage() {
         email: trimmedEmail,
         password,
         options: {
-          data: { full_name: fullName.trim(), phone: phone.trim(), role },
+          // The referral code rides along in the metadata so the signup trigger
+          // can link it even when email confirmation means no session exists.
+          data: {
+            full_name: fullName.trim(),
+            phone: phone.trim(),
+            role,
+            ...(referralCode ? { referral_code: referralCode } : {}),
+          },
           emailRedirectTo: window.location.origin,
         },
       });

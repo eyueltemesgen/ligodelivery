@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "የኔ Go — Fast. Local. Delivered.",
   "short_name": "የኔ Go",
   "description": "Order food, groceries and essentials from Bishoftu shops with fast local delivery.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#059669",

@@ -33,6 +33,7 @@ import { DeliveryFeesAdmin } from "@/components/admin/DeliveryFeesAdmin";
 import { ProductOptionsAdmin } from "@/components/admin/ProductOptionsAdmin";
 import { LocationPicker } from "@/components/ligo/LocationPicker";
 import { SpecialMomentsAdmin } from "@/components/admin/SpecialMomentsAdmin";
+import { RewardsAdmin } from "@/components/admin/RewardsAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const OPS_TABS = [
@@ -44,6 +45,7 @@ const OPS_TABS = [
   "products",
   "categories",
   "special-moments",
+  "rewards",
   "offers",
   "marketing",
   "banners",
@@ -114,6 +116,9 @@ function AdminPage() {
             <TabsTrigger value="special-moments" className="min-h-9">
               {t("aop_tab_special_moments")}
             </TabsTrigger>
+            <TabsTrigger value="rewards" className="min-h-9">
+              {t("rw_admin_title")}
+            </TabsTrigger>
             <TabsTrigger value="offers" className="min-h-9">
               {t("aop_tab_offers")}
             </TabsTrigger>
@@ -163,6 +168,9 @@ function AdminPage() {
         </TabsContent>
         <TabsContent value="special-moments">
           <SpecialMomentsAdmin />
+        </TabsContent>
+        <TabsContent value="rewards">
+          <RewardsAdmin />
         </TabsContent>
         <TabsContent value="offers">
           <OffersAdmin />

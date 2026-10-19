@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>የኔ Go — Offline</title>
+    <meta name="theme-color" content="#059669" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --fg: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --primary: #059669;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1220;
+          --card: #111a2b;
+          --fg: #e8eef7;
+          --muted: #93a3b8;
+          --border: #22304a;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Noto Sans Ethiopic", system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main {
+        width: 100%;
+        max-width: 26rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px 24px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
+      }
+      .mark {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 16px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 800;
+        font-size: 24px;
+      }
+      h1 { margin: 0 0 8px; font-size: 1.25rem; }
+      p { margin: 0 0 20px; color: var(--muted); font-size: 0.925rem; line-height: 1.55; }
+      button {
+        width: 100%;
+        min-height: 44px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--primary);
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:active { transform: translateY(1px); }
+      .lang { margin-top: 18px; display: flex; justify-content: center; gap: 6px; }
+      .lang button {
+        width: auto;
+        min-height: 32px;
+        padding: 0 10px;
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 0.8rem;
+      }
+      .lang button[aria-pressed="true"] { color: var(--primary); border-color: var(--primary); }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">የ</div>
+      <h1 data-i18n="title">You are offline</h1>
+      <p data-i18n="body">
+        የኔ Go needs a connection to load live prices and track your order. Check your data or Wi-Fi
+        and try again.
+      </p>
+      <button type="button" onclick="location.reload()" data-i18n="retry">Try again</button>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-lang="am" aria-pressed="false">አማርኛ</button>
+        <button type="button" data-lang="or" aria-pressed="false">Afaan Oromoo</button>
+      </div>
+    </main>
+
+    <script>
+      // Self-contained: the locale chunks are not reachable offline, so the few
+      // strings this page needs are inlined here.
+      var COPY = {
+        en: {
+          title: "You are offline",
+          body: "የኔ Go needs a connection to load live prices and track your order. Check your data or Wi-Fi and try again.",
+          retry: "Try again",
+        },
+        am: {
+          title: "ከመስመር ውጭ ነዎት",
+          body: "የኔ Go የቀጥታ ዋጋዎችን ለመጫን እና ትዕዛዝዎን ለመከታተል ግንኙነት ይፈልጋል። ዳታዎን ወይም ዋይፋይዎን አረጋግጠው እንደገና ይሞክሩ።",
+          retry: "እንደገና ይሞክሩ",
+        },
+        or: {
+          title: "Sarara ala jirta",
+          body: "የኔ Go gatii yeroo isaa fi ajaja kee hordofuuf walitti dhufeenya barbaada. Daataa yookaan Wi-Fi kee ilaaliitii irra deebi'i.",
+          retry: "Irra deebi'i",
+        },
+      };
+
+      function apply(lang) {
+        var copy = COPY[lang] || COPY.en;
+        document.documentElement.lang = lang === "or" ? "om" : lang;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var key = el.getAttribute("data-i18n");
+          if (copy[key]) el.textContent = copy[key];
+        });
+        document.querySelectorAll(".lang button").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === lang));
+        });
+      }
+
+      // Mirror the app's stored choice, then its browser-language default.
+      var stored = null;
+      try {
+        stored = localStorage.getItem("ligo-lang");
+      } catch (e) {}
+      var initial = stored;
+      if (initial !== "en" && initial !== "am" && initial !== "or") {
+        var nav = (navigator.language || "en").toLowerCase();
+        initial = nav.indexOf("am") === 0 ? "am" : nav.indexOf("om") === 0 || nav.indexOf("or") === 0 ? "or" : "en";
+      }
+      apply(initial);
+
+      document.querySelectorAll(".lang button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var lang = b.getAttribute("data-lang");
+          apply(lang);
+          try {
+            localStorage.setItem("ligo-lang", lang);
+          } catch (e) {}
+        });
+      });
+    </script>
+  </body>
+</html>

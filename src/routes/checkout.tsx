@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
-import { AlertTriangle, Copy, Lock, MapPin } from "lucide-react";
+import { AlertTriangle, Coins, Copy, Lock, MapPin } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { publicSettingsQuery, shopHoursQuery, shopQuery } from "@/lib/queries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
+import {
+  fetchLoyaltySummary,
+  LOYALTY_FALLBACK,
+  maxRedeemablePoints,
+  pointsForSubtotal,
+} from "@/lib/loyalty";
 
 const METHODS: { id: string; labelKey: TranslationKey; icon: string }[] = [
   { id: "cash", labelKey: "pay_cash", icon: "💵" },
@@ -71,6 +77,15 @@ function CheckoutPage() {
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
+  const [redeemPoints, setRedeemPoints] = useState(0);
+
+  // Rewards balance. Read-only; the server re-checks every redemption.
+  const { data: rewards = LOYALTY_FALLBACK } = useQuery({
+    queryKey: ["loyalty", "summary"],
+    queryFn: fetchLoyaltySummary,
+    staleTime: 30_000,
+    enabled: !!user,
+  });
 
   // Prefill from the customer's default saved address once it loads.
   useEffect(() => {
@@ -130,7 +145,23 @@ function CheckoutPage() {
   const deliveryFee = fee.status === "ready" ? fee.fee : 0;
   const feeUnavailable = fee.status === "error";
   const promoDiscount = promo?.discount ?? 0;
-  const total = Math.max(subtotal + deliveryFee + tip - promoDiscount, 0);
+
+  // The value the points may be spent against: goods plus delivery, after any
+  // promo. Mirrors the server cap so the slider can never overshoot.
+  const redeemableBase = Math.max(subtotal + deliveryFee - promoDiscount, 0);
+  const maxRedeem = rewards.enabled ? maxRedeemablePoints(rewards, redeemableBase) : 0;
+  const appliedRedeem = Math.min(redeemPoints, maxRedeem);
+  const redeemValue = Math.round(appliedRedeem * rewards.pointValueEtb);
+  const pointsToEarn = rewards.enabled
+    ? pointsForSubtotal(subtotal, rewards.earnPointsPer100Etb)
+    : 0;
+
+  // Keep the chosen amount valid when the cart or the promo changes.
+  useEffect(() => {
+    setRedeemPoints((p) => (p > maxRedeem ? maxRedeem : p));
+  }, [maxRedeem]);
+
+  const total = Math.max(subtotal + deliveryFee + tip - promoDiscount - redeemValue, 0);
 
   const applyPromo = async () => {
     const code = promoInput.trim();
@@ -226,6 +257,9 @@ function CheckoutPage() {
         p_lat: lat as number,
         p_lng: lng as number,
         ...(promo ? { p_coupon_code: promo.code } : {}),
+        // The server re-validates the balance and re-applies the cap; sending
+        // 0 when the customer chose nothing keeps the call shape identical.
+        p_redeem_points: appliedRedeem,
       });
       if (error) throw error;
 
@@ -257,122 +291,119 @@ function CheckoutPage() {
         <h1 className="font-display text-3xl font-extrabold">{t("checkout_heading")}</h1>
 
         <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">{t("checkout_delivery_details")}</h2>
+          <h2 className="font-display text-lg font-bold">{t("checkout_delivery_details")}</h2>
 
-            {savedAddresses.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {t("checkout_saved_addresses")}
-                  </Label>
-                  <Link
-                    to="/account/addresses"
-                    className="text-xs font-semibold text-primary hover:underline"
-                  >
-                    {t("checkout_manage")}
-                  </Link>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {savedAddresses.map((a) => {
-                    const active = selectedAddressId === a.id;
-                    return (
-                      <button
-                        type="button"
-                        key={a.id}
-                        onClick={() => chooseAddress(a)}
-                        className={`rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
-                          active
-                            ? "border-primary bg-primary-soft"
-                            : "border-border hover:border-primary/40"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase">
-                            {a.label}
-                          </span>
-                          {a.is_default && (
-                            <span className="text-[10px] font-semibold text-primary">
-                              {t("checkout_default")}
-                            </span>
-                          )}
-                        </span>
-                        <span className="mt-1 block truncate text-muted-foreground">
-                          {a.address}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="n">{t("checkout_full_name")}</Label>
-                <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="p">{t("checkout_phone")}</Label>
-                <Input id="p" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="a">{t("checkout_address")}</Label>
-              <Input
-                id="a"
-                value={address}
-                onChange={(e) => {
-                  setAddress(e.target.value);
-                  setSelectedAddressId(null);
-                }}
-                required
-                placeholder={t("checkout_address_placeholder")}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="i">{t("checkout_notes")}</Label>
-              <Textarea
-                id="i"
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder={t("checkout_notes_placeholder")}
-              />
-            </div>
-
-            <DeliveryStatus fee={fee} flatFallback={flatFallback} />
-
-            {lat == null || lng == null ? (
-              <p className="flex items-start gap-2 rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                {t("checkout_pin_hint")}
-              </p>
-            ) : null}
-
-          </section>
-
-          <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">{t("checkout_payment_method")}</h2>
-            <div className="grid grid-cols-3 gap-2">
-              {METHODS.map((m) => (
-                <button
-                  type="button"
-                  key={m.id}
-                  onClick={() => setMethod(m.id)}
-                  className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center text-xs font-semibold transition-colors ${method === m.id ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"}`}
+          {savedAddresses.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {t("checkout_saved_addresses")}
+                </Label>
+                <Link
+                  to="/account/addresses"
+                  className="text-xs font-semibold text-primary hover:underline"
                 >
-                  <span className="text-xl" aria-hidden>{m.icon}</span>
-                  {t(m.labelKey)}
-                </button>
-              ))}
+                  {t("checkout_manage")}
+                </Link>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {savedAddresses.map((a) => {
+                  const active = selectedAddressId === a.id;
+                  return (
+                    <button
+                      type="button"
+                      key={a.id}
+                      onClick={() => chooseAddress(a)}
+                      className={`rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
+                        active
+                          ? "border-primary bg-primary-soft"
+                          : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase">
+                          {a.label}
+                        </span>
+                        {a.is_default && (
+                          <span className="text-[10px] font-semibold text-primary">
+                            {t("checkout_default")}
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-1 block truncate text-muted-foreground">{a.address}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            {method === "cash" ? (
-              <p className="rounded-lg bg-primary-soft p-3 text-xs font-medium">
-                💵 {ETB(total)}
-              </p>
-            ) : (
-              <div className="space-y-2 rounded-lg bg-secondary/60 p-3 text-sm">
-                {payDetails.length > 0 ? (
-                  payDetails.map(([k, v]) => (
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="n">{t("checkout_full_name")}</Label>
+              <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="p">{t("checkout_phone")}</Label>
+              <Input id="p" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="a">{t("checkout_address")}</Label>
+            <Input
+              id="a"
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                setSelectedAddressId(null);
+              }}
+              required
+              placeholder={t("checkout_address_placeholder")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="i">{t("checkout_notes")}</Label>
+            <Textarea
+              id="i"
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              placeholder={t("checkout_notes_placeholder")}
+            />
+          </div>
+
+          <DeliveryStatus fee={fee} flatFallback={flatFallback} />
+
+          {lat == null || lng == null ? (
+            <p className="flex items-start gap-2 rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">
+              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              {t("checkout_pin_hint")}
+            </p>
+          ) : null}
+        </section>
+
+        <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+          <h2 className="font-display text-lg font-bold">{t("checkout_payment_method")}</h2>
+          <div className="grid grid-cols-3 gap-2">
+            {METHODS.map((m) => (
+              <button
+                type="button"
+                key={m.id}
+                onClick={() => setMethod(m.id)}
+                className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center text-xs font-semibold transition-colors ${method === m.id ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"}`}
+              >
+                <span className="text-xl" aria-hidden>
+                  {m.icon}
+                </span>
+                {t(m.labelKey)}
+              </button>
+            ))}
+          </div>
+          {method === "cash" ? (
+            <p className="rounded-lg bg-primary-soft p-3 text-xs font-medium">💵 {ETB(total)}</p>
+          ) : (
+            <div className="space-y-2 rounded-lg bg-secondary/60 p-3 text-sm">
+              {payDetails.length > 0
+                ? payDetails.map(([k, v]) => (
                     <div key={k} className="flex items-center justify-between gap-2">
                       <span className="text-xs capitalize text-muted-foreground">
                         {k.replace(/_/g, " ")}
@@ -386,41 +417,41 @@ function CheckoutPage() {
                       </button>
                     </div>
                   ))
-                ) : null}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">{t("checkout_total")}</span>
-                  <button
-                    type="button"
-                    onClick={() => copyText(String(total), t("checkout_total"))}
-                    className="flex items-center gap-1 font-semibold hover:text-primary"
-                  >
-                    {ETB(total)} <Copy className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">{t("checkout_payment_note")}</p>
-              </div>
-            )}
-          </section>
-
-          <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-            <h2 className="font-display text-lg font-bold">{t("checkout_rider_tip")}</h2>
-            <div className="flex flex-wrap gap-2">
-              {TIP_PRESETS.map((amount) => (
+                : null}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-muted-foreground">{t("checkout_total")}</span>
                 <button
-                  key={amount}
                   type="button"
-                  onClick={() => setTip(amount)}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                    tip === amount
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border hover:bg-secondary"
-                  }`}
+                  onClick={() => copyText(String(total), t("checkout_total"))}
+                  className="flex items-center gap-1 font-semibold hover:text-primary"
                 >
-                  {amount === 0 ? t("checkout_no_tip") : ETB(amount)}
+                  {ETB(total)} <Copy className="h-3.5 w-3.5" />
                 </button>
-              ))}
+              </div>
+              <p className="text-xs text-muted-foreground">{t("checkout_payment_note")}</p>
             </div>
-          </section>
+          )}
+        </section>
+
+        <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+          <h2 className="font-display text-lg font-bold">{t("checkout_rider_tip")}</h2>
+          <div className="flex flex-wrap gap-2">
+            {TIP_PRESETS.map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                onClick={() => setTip(amount)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                  tip === amount
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border hover:bg-secondary"
+                }`}
+              >
+                {amount === 0 ? t("checkout_no_tip") : ETB(amount)}
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
 
       <aside className="h-fit space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
@@ -467,6 +498,12 @@ function CheckoutPage() {
               <span>−{ETB(promoDiscount)}</span>
             </div>
           )}
+          {appliedRedeem > 0 && (
+            <div className="flex justify-between text-primary">
+              <span>{t("rw_redeem_line", { points: appliedRedeem })}</span>
+              <span>−{ETB(redeemValue)}</span>
+            </div>
+          )}
           <div className="mt-3 space-y-1.5">
             <Label htmlFor="promo" className="text-xs">
               {t("checkout_promo_q")}
@@ -499,6 +536,66 @@ function CheckoutPage() {
               </div>
             )}
           </div>
+          {rewards.enabled && (
+            <div className="mt-3 space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="redeem" className="flex items-center gap-1.5 text-xs">
+                  <Coins className="h-3.5 w-3.5 text-primary" />
+                  {t("rw_redeem_label", { points: rewards.points })}
+                </Label>
+                {appliedRedeem > 0 && (
+                  <button
+                    type="button"
+                    className="text-xs underline text-muted-foreground"
+                    onClick={() => setRedeemPoints(0)}
+                  >
+                    {t("checkout_remove")}
+                  </button>
+                )}
+              </div>
+
+              {maxRedeem > 0 ? (
+                <>
+                  <input
+                    id="redeem"
+                    type="range"
+                    min={0}
+                    max={maxRedeem}
+                    step={rewards.minRedeemPoints}
+                    value={appliedRedeem}
+                    onChange={(e) => {
+                      const raw = Number(e.target.value);
+                      // Snap to 0 or the minimum; nothing in between is allowed.
+                      setRedeemPoints(raw >= rewards.minRedeemPoints ? raw : 0);
+                    }}
+                    className="w-full accent-primary"
+                  />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{t("rw_redeem_max", { points: maxRedeem })}</span>
+                    {appliedRedeem > 0 && (
+                      <span className="font-semibold text-primary">
+                        {t("rw_redeem_saves", { amount: ETB(redeemValue) })}
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {rewards.points < rewards.minRedeemPoints
+                    ? t("rw_redeem_need_more", {
+                        points: rewards.minRedeemPoints - rewards.points,
+                      })
+                    : t("rw_redeem_too_small")}
+                </p>
+              )}
+
+              {pointsToEarn > 0 && (
+                <p className="border-t border-border pt-2 text-xs text-muted-foreground">
+                  {t("rw_will_earn", { points: pointsToEarn })}
+                </p>
+              )}
+            </div>
+          )}
           <div className="mt-2 flex justify-between font-display text-base font-bold">
             <span>{t("checkout_total")}</span>
             <span>{ETB(total)}</span>
@@ -511,12 +608,7 @@ function CheckoutPage() {
               {t("checkout_pay_before_fulfilment")}
             </p>
           )}
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={busy || !canProceed}
-          >
+          <Button type="submit" size="lg" className="w-full" disabled={busy || !canProceed}>
             {busy ? t("checkout_placing") : `${t("checkout_place_order")} · ${ETB(total)}`}
           </Button>
         </div>

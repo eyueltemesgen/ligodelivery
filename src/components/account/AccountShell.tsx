@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
+  Coins,
   Heart,
   HelpCircle,
   LayoutDashboard,
@@ -29,6 +30,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: "/account", labelKey: "acct_nav_overview", icon: LayoutDashboard },
   { to: "/account/orders", labelKey: "acct_orders_title", icon: Package, badgeKey: "orders" },
+  { to: "/account/rewards", labelKey: "rw_title", icon: Coins },
   { to: "/account/service-requests", labelKey: "acct_nav_special_moments", icon: Sparkles },
   { to: "/account/wishlist", labelKey: "acct_stat_saved", icon: Heart, badgeKey: "wishlist" },
   { to: "/account/addresses", labelKey: "acct_stat_addresses", icon: MapPin },

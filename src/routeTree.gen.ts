@@ -28,6 +28,7 @@ import { Route as AccountAddressesRouteImport } from './routes/account.addresses
 import { Route as AccountHelpRouteImport } from './routes/account.help'
 import { Route as AccountNotificationsRouteImport } from './routes/account.notifications'
 import { Route as AccountProfileRouteImport } from './routes/account.profile'
+import { Route as AccountRewardsRouteImport } from './routes/account.rewards'
 import { Route as AccountWishlistRouteImport } from './routes/account.wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
@@ -147,6 +148,11 @@ const AccountNotificationsRoute = AccountNotificationsRouteImport.update({
 const AccountProfileRoute = AccountProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountRewardsRoute = AccountRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
   getParentRoute: () => AccountRoute,
 } as any)
 const AccountWishlistRoute = AccountWishlistRouteImport.update({
@@ -298,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/account/help': typeof AccountHelpRoute
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/profile': typeof AccountProfileRoute
+  '/account/rewards': typeof AccountRewardsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -342,6 +349,7 @@ export interface FileRoutesByTo {
   '/account/help': typeof AccountHelpRoute
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/profile': typeof AccountProfileRoute
+  '/account/rewards': typeof AccountRewardsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -389,6 +397,7 @@ export interface FileRoutesById {
   '/account/help': typeof AccountHelpRoute
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/profile': typeof AccountProfileRoute
+  '/account/rewards': typeof AccountRewardsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/account/help'
     | '/account/notifications'
     | '/account/profile'
+    | '/account/rewards'
     | '/account/wishlist'
     | '/admin/financials'
     | '/admin/login'
@@ -481,6 +491,7 @@ export interface FileRouteTypes {
     | '/account/help'
     | '/account/notifications'
     | '/account/profile'
+    | '/account/rewards'
     | '/account/wishlist'
     | '/admin/financials'
     | '/admin/login'
@@ -527,6 +538,7 @@ export interface FileRouteTypes {
     | '/account/help'
     | '/account/notifications'
     | '/account/profile'
+    | '/account/rewards'
     | '/account/wishlist'
     | '/admin/financials'
     | '/admin/login'
@@ -718,6 +730,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountProfileRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/rewards': {
+      id: '/account/rewards'
+      path: '/rewards'
+      fullPath: '/account/rewards'
+      preLoaderRoute: typeof AccountRewardsRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/account/wishlist': {
       id: '/account/wishlist'
       path: '/wishlist'
@@ -901,6 +920,7 @@ interface AccountRouteChildren {
   AccountHelpRoute: typeof AccountHelpRoute
   AccountNotificationsRoute: typeof AccountNotificationsRoute
   AccountProfileRoute: typeof AccountProfileRoute
+  AccountRewardsRoute: typeof AccountRewardsRoute
   AccountWishlistRoute: typeof AccountWishlistRoute
   AccountIndexRoute: typeof AccountIndexRoute
   AccountOrdersOrderIdRoute: typeof AccountOrdersOrderIdRoute
@@ -914,6 +934,7 @@ const AccountRouteChildren: AccountRouteChildren = {
   AccountHelpRoute: AccountHelpRoute,
   AccountNotificationsRoute: AccountNotificationsRoute,
   AccountProfileRoute: AccountProfileRoute,
+  AccountRewardsRoute: AccountRewardsRoute,
   AccountWishlistRoute: AccountWishlistRoute,
   AccountIndexRoute: AccountIndexRoute,
   AccountOrdersOrderIdRoute: AccountOrdersOrderIdRoute,

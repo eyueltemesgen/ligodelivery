@@ -2341,6 +2341,14 @@ export type Database = {
         }
       }
       accept_service_quote: { Args: { p_request: string }; Returns: undefined }
+      admin_adjust_loyalty: {
+        Args: { p_note?: string; p_points: number; p_user_id: string }
+        Returns: number
+      }
+      admin_loyalty_overview: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
       ad_stats: {
         Args: never
         Returns: {
@@ -2544,7 +2552,21 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_approved_merchant: { Args: { _uid: string }; Returns: boolean }
+      loyalty_lookup_code: { Args: { p_code: string }; Returns: Json }
       merchant_commission_percent: { Args: { _uid: string }; Returns: number }
+      my_loyalty: { Args: never; Returns: Json }
+      my_loyalty_ledger: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          order_id: string | null
+          points: number
+          user_id: string
+        }[]
+      }
       owns_shop: { Args: { _shop: string }; Returns: boolean }
       place_order: {
         Args: {
@@ -2558,6 +2580,7 @@ export type Database = {
           p_lat?: number
           p_lng?: number
           p_payment_method: string
+          p_redeem_points?: number
           p_road_distance_km?: number
           p_shop_id: string
           p_tip?: number
