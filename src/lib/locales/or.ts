@@ -176,6 +176,8 @@ export const or = {
   checkout_pay_before_fulfilment:
     "Suuqi ajaja kee qopheessuu fi erguu irra dura kaffaltii kee mirkaneessina.",
   checkout_place_order: "Ajaja galchi",
+  checkout_proof_failed:
+    "Ajajni kee galmeeffameera, garuu ragaan kaffaltii walitti qabamuu hin dandeenye. Fuula ajaja irraa ol kaa'i.",
   checkout_placing: "Ajaja galchaa jira…",
   checkout_pay_cash_hint: "Ajajni kee yeroo gahu ogeessaaf maallaqa harkaa kenni.",
   checkout_pay_online: "Onlaayinii kaffali",
@@ -1429,6 +1431,7 @@ export const or = {
   aop_offer_created: "Dhiyeessiin uumame",
   aop_account_name: "Maqaa herregaa",
   aop_account_number: "Lakkoofsa herregaa",
+  aop_payment_instructions: "Qajeelfama kaffaltii maamiltootaaf mul'atu",
   aop_save: "Olkaa'i",
   aop_saved: "Olkaa'ame",
   aop_save_all_text: "Barruu hunda olkaa'i",

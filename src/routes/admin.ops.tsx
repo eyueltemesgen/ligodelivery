@@ -1619,16 +1619,23 @@ function SettingsAdmin() {
     queryKey: ["admin-settings"],
     queryFn: async () => {
       const { data } = await supabase.from("settings").select("key,value");
-      const map: Record<string, Record<string, string>> = {};
-      for (const row of data ?? []) map[row.key] = row.value as Record<string, string>;
+      const map: Record<string, Record<string, unknown>> = {};
+      for (const row of data ?? []) map[row.key] = row.value as Record<string, unknown>;
       return map;
     },
   });
 
-  const save = async (key: string, value: Record<string, string>) => {
-    const { error } = await supabase
-      .from("settings")
-      .upsert({ key, value, is_public: false }, { onConflict: "key" });
+  const save = async (key: string, value: Record<string, unknown>) => {
+    // Merge into the stored object: the display layer reads `account`,
+    // `holder`, `enabled` and `instructions`, so replacing the whole value
+    // would silently drop the keys this form does not edit.
+    const merged = { ...(settings[key] ?? {}), ...value } as never;
+    const { error } = await supabase.from("settings").upsert(
+      { key, value: merged, is_public: false },
+      {
+        onConflict: "key",
+      },
+    );
     if (error) {
       toast.error(error.message);
       return;
@@ -1641,9 +1648,11 @@ function SettingsAdmin() {
     <div className="mt-6 grid gap-4 md:grid-cols-3">
       {PAYMENT_KEYS.map((p) => (
         <PaymentSetting
-          key={p.key}
+          // Remount once the settings query resolves so the fields initialise
+          // from the stored value instead of the pre-load empty object.
+          key={`${p.key}:${settings[p.key] ? "loaded" : "empty"}`}
           label={t(p.labelKey)}
-          value={(settings[p.key] ?? {}) as Record<string, string>}
+          value={(settings[p.key] ?? {}) as Record<string, unknown>}
           onSave={(v) => void save(p.key, v)}
         />
       ))}
@@ -1657,29 +1666,39 @@ function PaymentSetting({
   onSave,
 }: {
   label: string;
-  value: Record<string, string>;
-  onSave: (v: Record<string, string>) => void;
+  value: Record<string, unknown>;
+  onSave: (v: Record<string, unknown>) => void;
 }) {
   const { t } = useLanguage();
-  const [accountName, setAccountName] = useState(value["account_name"] ?? "");
-  const [accountNumber, setAccountNumber] = useState(value["account_number"] ?? "");
+  const [enabled, setEnabled] = useState(value["enabled"] !== false);
+  const [holder, setHolder] = useState(String(value["holder"] ?? ""));
+  const [account, setAccount] = useState(String(value["account"] ?? ""));
+  const [instructions, setInstructions] = useState(String(value["instructions"] ?? ""));
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        onSave({ account_name: accountName, account_number: accountNumber });
+        // `enabled` stays a JSON boolean; the reader compares it to `false`.
+        onSave({ enabled, holder, account, instructions });
       }}
       className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-card"
     >
-      <h3 className="font-display font-bold">{label}</h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-display font-bold">{label}</h3>
+        <Switch checked={enabled} onCheckedChange={setEnabled} aria-label={t("aop_active")} />
+      </div>
       <div className="space-y-1.5">
         <Label>{t("aop_account_name")}</Label>
-        <Input value={accountName} onChange={(e) => setAccountName(e.target.value)} />
+        <Input value={holder} onChange={(e) => setHolder(e.target.value)} />
       </div>
       <div className="space-y-1.5">
         <Label>{t("aop_account_number")}</Label>
-        <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
+        <Input value={account} onChange={(e) => setAccount(e.target.value)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>{t("aop_payment_instructions")}</Label>
+        <Textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={3} />
       </div>
       <Button type="submit" size="sm">
         {t("aop_save")}

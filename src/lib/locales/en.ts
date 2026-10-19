@@ -175,6 +175,8 @@ export const en = {
   checkout_pay_before_fulfilment:
     "We verify your payment before the shop prepares and dispatches your order.",
   checkout_place_order: "Place order",
+  checkout_proof_failed:
+    "Your order was placed, but the receipt could not be attached. Upload it from the order page.",
   checkout_placing: "Placing order…",
   checkout_pay_cash_hint: "Pay the rider in cash when your order arrives.",
   checkout_pay_online: "Pay online",
@@ -1417,6 +1419,7 @@ export const en = {
   aop_offer_created: "Offer created",
   aop_account_name: "Account name",
   aop_account_number: "Account number",
+  aop_payment_instructions: "Payment instructions shown to customers",
   aop_save: "Save",
   aop_saved: "Saved",
   aop_save_all_text: "Save all text",

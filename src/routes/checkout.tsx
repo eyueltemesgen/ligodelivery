@@ -2,10 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
-import { AlertTriangle, Coins, Copy, Lock, MapPin } from "lucide-react";
+import { AlertTriangle, Coins, Copy, Lock, MapPin, Upload } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { PROOF_BUCKET, uploadImage } from "@/lib/media";
 
 import { ETB } from "@/lib/format";
 import { supabaseErrorText } from "@/lib/supa-error";
@@ -71,6 +72,7 @@ function CheckoutPage() {
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [method, setMethod] = useState("cash");
+  const [step, setStep] = useState<1 | 2>(1);
   const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
   const [fee, setFee] = useState<FeeState>({ status: "loading" });
@@ -78,6 +80,10 @@ function CheckoutPage() {
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
   const [redeemPoints, setRedeemPoints] = useState(0);
+  // Receipt the customer attaches during checkout. Uploaded only after the order
+  // exists, because payment_proofs.order_id is a foreign key to it.
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofRef, setProofRef] = useState("");
 
   // Rewards balance. Read-only; the server re-checks every redemption.
   const { data: rewards = LOYALTY_FALLBACK } = useQuery({
@@ -189,6 +195,23 @@ function CheckoutPage() {
   const shopLoaded = !shopId || !!shop;
   const shopOpen = shopLoaded ? isShopOpenNow(shop ?? {}, hours) : false;
 
+  // A method with no configured account details cannot be paid, so hide it
+  // instead of offering a dead option. Cash is always available.
+  const isMethodEnabled = (id: string) => {
+    if (id === "cash") return true;
+    const cfg = publicSettings?.[`payment_${id}`] as Record<string, unknown> | undefined;
+    if (!cfg) return false;
+    if (cfg["enabled"] === false) return false;
+    return !!String(cfg["account"] ?? "").trim();
+  };
+
+  // If the selected online method becomes unavailable (e.g. the admin disables
+  // it), fall back to cash so an unpayable order cannot be placed.
+  useEffect(() => {
+    if (!isMethodEnabled(method)) setMethod("cash");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicSettings, method]);
+
   if (!user)
     return (
       <div className="container-ligo py-16 text-center">
@@ -229,6 +252,11 @@ function CheckoutPage() {
 
   const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    // A stray Enter in step 1 must not place an order before payment is chosen.
+    if (step === 1) {
+      if (canProceed) setStep(2);
+      return;
+    }
     if (!isShopOpenNow(shop ?? {}, hours)) {
       toast.error(t("checkout_closed_toast"));
       return;
@@ -263,6 +291,25 @@ function CheckoutPage() {
       });
       if (error) throw error;
 
+      // Attach the receipt now that the order (and its FK target) exists. A
+      // failure here must not lose the order, so it is reported, not thrown.
+      if (proofFile && user && method !== "cash") {
+        try {
+          const path = await uploadImage(proofFile, `${user.id}/${orderId}`, PROOF_BUCKET);
+          const { error: proofError } = await supabase.from("payment_proofs").insert({
+            order_id: orderId as string,
+            user_id: user.id,
+            method,
+            reference: proofRef.trim() || null,
+            image_url: path,
+            amount: total,
+          });
+          if (proofError) throw proofError;
+        } catch {
+          toast.error(t("checkout_proof_failed"));
+        }
+      }
+
       clear();
       toast.success(t("checkout_order_placed"));
       await navigate({ to: "/orders/$orderId", params: { orderId: orderId as string } });
@@ -277,6 +324,12 @@ function CheckoutPage() {
   const payDetails = Object.entries(
     (publicSettings?.[`payment_${method}`] ?? {}) as Record<string, unknown>,
   ).filter(([k, v]) => k !== "enabled" && k !== "instructions" && v != null && v !== "");
+
+  const methods = METHODS.filter((m) => isMethodEnabled(m.id));
+
+  const methodConfig = (publicSettings?.[`payment_${method}`] ?? {}) as Record<string, unknown>;
+  const methodInstructions = String(methodConfig["instructions"] ?? "").trim();
+
   const copyText = (value: string, label: string) => {
     void navigator.clipboard?.writeText(value);
     toast.success(t("od_copied", { label }));
@@ -290,168 +343,254 @@ function CheckoutPage() {
       <div className="space-y-6">
         <h1 className="font-display text-3xl font-extrabold">{t("checkout_heading")}</h1>
 
-        <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold">{t("checkout_delivery_details")}</h2>
+        {/* Step indicator. Two steps so payment is decided before the order is
+            placed, instead of being deferred to the order page. */}
+        <ol className="flex items-center gap-2 text-sm font-semibold">
+          <li
+            className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${
+              step === 1
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            {t("checkout_step1")}
+          </li>
+          <li aria-hidden className="h-px w-4 bg-border" />
+          <li
+            className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${
+              step === 2
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            {t("checkout_step2")}
+          </li>
+        </ol>
 
-          {savedAddresses.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {t("checkout_saved_addresses")}
-                </Label>
-                <Link
-                  to="/account/addresses"
-                  className="text-xs font-semibold text-primary hover:underline"
-                >
-                  {t("checkout_manage")}
-                </Link>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {savedAddresses.map((a) => {
-                  const active = selectedAddressId === a.id;
-                  return (
-                    <button
-                      type="button"
-                      key={a.id}
-                      onClick={() => chooseAddress(a)}
-                      className={`rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
-                        active
-                          ? "border-primary bg-primary-soft"
-                          : "border-border hover:border-primary/40"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase">
-                          {a.label}
-                        </span>
-                        {a.is_default && (
-                          <span className="text-[10px] font-semibold text-primary">
-                            {t("checkout_default")}
-                          </span>
-                        )}
-                      </span>
-                      <span className="mt-1 block truncate text-muted-foreground">{a.address}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+        <div className={step === 1 ? "space-y-6" : "hidden"}>
+          <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-card">
+            <h2 className="font-display text-lg font-bold">{t("checkout_delivery_details")}</h2>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="n">{t("checkout_full_name")}</Label>
-              <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="p">{t("checkout_phone")}</Label>
-              <Input id="p" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="a">{t("checkout_address")}</Label>
-            <Input
-              id="a"
-              value={address}
-              onChange={(e) => {
-                setAddress(e.target.value);
-                setSelectedAddressId(null);
-              }}
-              required
-              placeholder={t("checkout_address_placeholder")}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="i">{t("checkout_notes")}</Label>
-            <Textarea
-              id="i"
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              placeholder={t("checkout_notes_placeholder")}
-            />
-          </div>
-
-          <DeliveryStatus fee={fee} flatFallback={flatFallback} />
-
-          {lat == null || lng == null ? (
-            <p className="flex items-start gap-2 rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">
-              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              {t("checkout_pin_hint")}
-            </p>
-          ) : null}
-        </section>
-
-        <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold">{t("checkout_payment_method")}</h2>
-          <div className="grid grid-cols-3 gap-2">
-            {METHODS.map((m) => (
-              <button
-                type="button"
-                key={m.id}
-                onClick={() => setMethod(m.id)}
-                className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center text-xs font-semibold transition-colors ${method === m.id ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"}`}
-              >
-                <span className="text-xl" aria-hidden>
-                  {m.icon}
-                </span>
-                {t(m.labelKey)}
-              </button>
-            ))}
-          </div>
-          {method === "cash" ? (
-            <p className="rounded-lg bg-primary-soft p-3 text-xs font-medium">💵 {ETB(total)}</p>
-          ) : (
-            <div className="space-y-2 rounded-lg bg-secondary/60 p-3 text-sm">
-              {payDetails.length > 0
-                ? payDetails.map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between gap-2">
-                      <span className="text-xs capitalize text-muted-foreground">
-                        {k.replace(/_/g, " ")}
-                      </span>
+            {savedAddresses.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {t("checkout_saved_addresses")}
+                  </Label>
+                  <Link
+                    to="/account/addresses"
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    {t("checkout_manage")}
+                  </Link>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {savedAddresses.map((a) => {
+                    const active = selectedAddressId === a.id;
+                    return (
                       <button
                         type="button"
-                        onClick={() => copyText(String(v), k.replace(/_/g, " "))}
-                        className="flex items-center gap-1 font-semibold hover:text-primary"
+                        key={a.id}
+                        onClick={() => chooseAddress(a)}
+                        className={`rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
+                          active
+                            ? "border-primary bg-primary-soft"
+                            : "border-border hover:border-primary/40"
+                        }`}
                       >
-                        {String(v)} <Copy className="h-3.5 w-3.5" />
+                        <span className="flex items-center gap-2">
+                          <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase">
+                            {a.label}
+                          </span>
+                          {a.is_default && (
+                            <span className="text-[10px] font-semibold text-primary">
+                              {t("checkout_default")}
+                            </span>
+                          )}
+                        </span>
+                        <span className="mt-1 block truncate text-muted-foreground">
+                          {a.address}
+                        </span>
                       </button>
-                    </div>
-                  ))
-                : null}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">{t("checkout_total")}</span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="n">{t("checkout_full_name")}</Label>
+                <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="p">{t("checkout_phone")}</Label>
+                <Input id="p" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="a">{t("checkout_address")}</Label>
+              <Input
+                id="a"
+                value={address}
+                onChange={(e) => {
+                  setAddress(e.target.value);
+                  setSelectedAddressId(null);
+                }}
+                required
+                placeholder={t("checkout_address_placeholder")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="i">{t("checkout_notes")}</Label>
+              <Textarea
+                id="i"
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder={t("checkout_notes_placeholder")}
+              />
+            </div>
+
+            <DeliveryStatus fee={fee} flatFallback={flatFallback} />
+
+            {lat == null || lng == null ? (
+              <p className="flex items-start gap-2 rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                {t("checkout_pin_hint")}
+              </p>
+            ) : null}
+          </section>
+        </div>
+
+        <div className={step === 2 ? "space-y-6" : "hidden"}>
+          <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+            <h2 className="font-display text-lg font-bold">{t("checkout_payment_method")}</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {methods.map((m) => (
                 <button
                   type="button"
-                  onClick={() => copyText(String(total), t("checkout_total"))}
-                  className="flex items-center gap-1 font-semibold hover:text-primary"
+                  key={m.id}
+                  onClick={() => {
+                    setMethod(m.id);
+                    // Cash settles in person, so a receipt attached for an online
+                    // method must not carry over to a cash order.
+                    if (m.id === "cash") {
+                      setProofFile(null);
+                      setProofRef("");
+                    }
+                  }}
+                  className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center text-xs font-semibold transition-colors ${method === m.id ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"}`}
                 >
-                  {ETB(total)} <Copy className="h-3.5 w-3.5" />
+                  <span className="text-xl" aria-hidden>
+                    {m.icon}
+                  </span>
+                  {t(m.labelKey)}
                 </button>
-              </div>
-              <p className="text-xs text-muted-foreground">{t("checkout_payment_note")}</p>
+              ))}
             </div>
-          )}
-        </section>
+            {method === "cash" ? (
+              <p className="rounded-lg bg-primary-soft p-3 text-xs font-medium">
+                💵 {t("checkout_pay_cash_hint")} · {ETB(total)}
+              </p>
+            ) : (
+              <div className="space-y-3 rounded-lg bg-secondary/60 p-3 text-sm">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {t("checkout_pay_online_choose")}
+                </p>
+                {methodInstructions ? (
+                  <p className="rounded-lg bg-card p-2 text-xs text-muted-foreground">
+                    {methodInstructions}
+                  </p>
+                ) : null}
+                {payDetails.length > 0 ? (
+                  <div className="space-y-2">
+                    {payDetails.map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between gap-2">
+                        <span className="text-xs capitalize text-muted-foreground">
+                          {k.replace(/_/g, " ")}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => copyText(String(v), k.replace(/_/g, " "))}
+                          className="flex items-center gap-1 font-semibold hover:text-primary"
+                        >
+                          {String(v)} <Copy className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{t("od_payment_details_soon")}</p>
+                )}
+                <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
+                  <span className="text-xs font-semibold">
+                    {t("od_amount_to_send", { amount: ETB(total) })}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={t("checkout_total")}
+                    onClick={() => copyText(String(total), t("checkout_total"))}
+                    className="flex items-center gap-1 font-semibold hover:text-primary"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </div>
 
-        <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="font-display text-lg font-bold">{t("checkout_rider_tip")}</h2>
-          <div className="flex flex-wrap gap-2">
-            {TIP_PRESETS.map((amount) => (
-              <button
-                key={amount}
-                type="button"
-                onClick={() => setTip(amount)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  tip === amount
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border hover:bg-secondary"
-                }`}
-              >
-                {amount === 0 ? t("checkout_no_tip") : ETB(amount)}
-              </button>
-            ))}
-          </div>
-        </section>
+                {/* Attach the receipt now; it is uploaded right after the order is
+                  created, since payment_proofs.order_id references it. */}
+                <div className="space-y-2 border-t border-border pt-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="co-proof-ref" className="text-xs">
+                      {t("od_proof_ref")}
+                    </Label>
+                    <Input
+                      id="co-proof-ref"
+                      value={proofRef}
+                      onChange={(e) => setProofRef(e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="co-proof-file" className="text-xs">
+                      {t("od_proof_file")}
+                    </Label>
+                    <Input
+                      id="co-proof-file"
+                      type="file"
+                      accept="image/*"
+                      className="h-9 text-xs"
+                      onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+                    />
+                  </div>
+                  <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                    <Upload className="mt-0.5 h-3 w-3 shrink-0" />
+                    {t("od_proof_attach")}
+                  </p>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
+            <h2 className="font-display text-lg font-bold">{t("checkout_rider_tip")}</h2>
+            <div className="flex flex-wrap gap-2">
+              {TIP_PRESETS.map((amount) => (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() => setTip(amount)}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                    tip === amount
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:bg-secondary"
+                  }`}
+                >
+                  {amount === 0 ? t("checkout_no_tip") : ETB(amount)}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
 
       <aside className="h-fit space-y-3 rounded-xl border border-border bg-card p-5 shadow-card">
@@ -602,15 +741,38 @@ function CheckoutPage() {
           </div>
         </div>
         <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-border bg-card p-4 lg:static lg:m-0 lg:border-0 lg:p-0">
-          {/* Payment is verified before fulfilment, so tell the customer up front. */}
-          {method !== "cash" && (
-            <p className="mb-3 rounded-lg bg-surface p-3 text-xs text-muted-foreground">
-              {t("checkout_pay_before_fulfilment")}
-            </p>
+          {step === 1 ? (
+            <Button
+              type="button"
+              size="lg"
+              className="w-full"
+              disabled={!canProceed}
+              onClick={() => setStep(2)}
+            >
+              {t("checkout_continue_payment")}
+            </Button>
+          ) : (
+            <>
+              {/* Payment is verified before fulfilment, so tell the customer up front. */}
+              {method !== "cash" && (
+                <p className="mb-3 rounded-lg bg-surface p-3 text-xs text-muted-foreground">
+                  {t("checkout_pay_before_fulfilment")}
+                </p>
+              )}
+              <Button type="submit" size="lg" className="w-full" disabled={busy || !canProceed}>
+                {busy ? t("checkout_placing") : `${t("checkout_place_order")} · ${ETB(total)}`}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mt-2 w-full"
+                onClick={() => setStep(1)}
+              >
+                {t("checkout_back")}
+              </Button>
+            </>
           )}
-          <Button type="submit" size="lg" className="w-full" disabled={busy || !canProceed}>
-            {busy ? t("checkout_placing") : `${t("checkout_place_order")} · ${ETB(total)}`}
-          </Button>
         </div>
       </aside>
     </form>
