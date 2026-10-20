@@ -91,6 +91,8 @@ export const am = {
   search_hint: "ከላይ ባለው የፍለጋ አሞሌ ውስጥ ይጻፉ።",
   search_showing: "ለ“{q}” የተገኙ ውጤቶች",
   search_none: "ከፍለጋዎ ጋር የሚዛመድ ነገር አልተገኘም።",
+  search_no_description: "መግለጫ የለም",
+  search_categories: "ምድቦች",
 
   // Cards
   cards_save_shop: "{name} ከምርጫዎች ላይ ያስቀምጡ",

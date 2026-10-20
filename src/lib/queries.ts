@@ -188,29 +188,64 @@ export const offersQuery = {
     ),
 };
 
+/**
+ * A term is interpolated into a PostgREST `or=(...)` filter, which is its own
+ * little grammar: a bare comma splits the tree and a bare parenthesis ends it,
+ * so the value is double-quoted. A literal quote or backslash would escape the
+ * quoting and the LIKE wildcards (`%`, `_`, `*`) would over-match, so those are
+ * dropped from the pattern. Commas and parentheses are left alone — they are
+ * safe once quoted, and `Sambusa (5 pcs)` should still match `Sambusa (5`.
+ */
+const SEARCH_PATTERN_STRIP = /["\\%_*]/g;
+
+function likeTerm(term: string): string {
+  return term.replace(SEARCH_PATTERN_STRIP, "").trim();
+}
+
+/** Products carry their shop's name so a result can say where to order it. */
+export type ProductWithShop = Product & { shops: { name: string } | null };
+
+export type SearchResults = {
+  shops: Shop[];
+  products: ProductWithShop[];
+  categories: Category[];
+};
+
 export const searchQuery = (term: string) => ({
   queryKey: ["search", term],
   staleTime: 2 * 60_000,
-  queryFn: async () => {
-    if (!term.trim()) return { shops: [] as Shop[], products: [] as Product[] };
-    const like = `%${term.trim()}%`;
-    const [s, p] = await Promise.all([
-      supabase
-        .from("shops")
-        .select(SHOP_COLUMNS)
-        .eq("is_active", true)
-        .ilike("name", like)
-        .limit(12),
+  queryFn: async (): Promise<SearchResults> => {
+    const cleaned = likeTerm(term);
+    if (!cleaned) return { shops: [], products: [], categories: [] };
+
+    // Quoted so a comma or parenthesis cannot split the logic tree. PostgREST
+    // values are double-quoted; the outer parentheses are added by `.or()`
+    // itself, so they must not be written here. `categories` has no description
+    // column, so it gets a name-only filter.
+    const or = `name.ilike."*${cleaned}*",description.ilike."*${cleaned}*"`;
+    const nameOr = `name.ilike."*${cleaned}*"`;
+    const [s, p, c] = await Promise.all([
+      supabase.from("shops").select(SHOP_COLUMNS).eq("is_active", true).or(or).limit(12),
       supabase
         .from("products")
-        .select(PRODUCT_COLUMNS)
+        .select(`${PRODUCT_COLUMNS},shops(name)`)
         .eq("is_active", true)
-        .ilike("name", like)
+        .or(or)
+        .order("is_popular", { ascending: false })
+        .order("name")
         .limit(24),
+      supabase
+        .from("categories")
+        .select("id,name,slug,image_url,sort_order")
+        .eq("is_active", true)
+        .or(nameOr)
+        .order("sort_order")
+        .limit(6),
     ]);
     return {
       shops: (s.data ?? []) as unknown as Shop[],
-      products: (p.data ?? []) as Product[],
+      products: (p.data ?? []) as unknown as ProductWithShop[],
+      categories: (c.data ?? []) as unknown as Category[],
     };
   },
 });

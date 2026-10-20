@@ -91,6 +91,8 @@ export const en = {
   search_hint: "Type something in the search bar above.",
   search_showing: "Showing matches for “{q}”",
   search_none: "Nothing matched your search.",
+  search_no_description: "No description",
+  search_categories: "Categories",
 
   // Cards
   cards_save_shop: "Save {name} to favorites",

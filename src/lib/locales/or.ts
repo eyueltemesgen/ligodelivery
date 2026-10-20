@@ -91,6 +91,8 @@ export const or = {
   search_hint: "Sarara barbaacha olii keessatti waan tokko barreessi.",
   search_showing: "Bu'aalee “{q}”",
   search_none: "Barbaacha keetiin wal simu hin argamne.",
+  search_no_description: "Ibsi hin jiru",
+  search_categories: "Ramaddiiwwan",
 
   // Cards
   cards_save_shop: "{name} filannoo keessatti olkaa'i",

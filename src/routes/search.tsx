@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { searchQuery } from "@/lib/queries";
 import { ProductCard, ShopCard } from "@/components/ligo/Cards";
+import { StorageImage } from "@/lib/media";
 import { ProductGridSkeleton, ShopGridSkeleton } from "@/components/ligo/Skeletons";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations } from "@/lib/i18n";
@@ -27,6 +28,11 @@ function SearchPage() {
   const { data, isLoading } = useQuery(searchQuery(q));
   const { t } = useLanguage();
 
+  const shops = data?.shops ?? [];
+  const products = data?.products ?? [];
+  const categories = data?.categories ?? [];
+  const hasResults = shops.length + products.length + categories.length > 0;
+
   return (
     <div className="container-ligo py-10">
       <h1 className="font-display text-3xl font-extrabold">{t("search_heading")}</h1>
@@ -41,27 +47,51 @@ function SearchPage() {
       )}
       {data && (
         <>
-          {data.shops.length > 0 && (
+          {categories.length > 0 && (
+            <section className="mt-8">
+              <h2 className="font-display text-xl font-bold">{t("search_categories")}</h2>
+              <div className="mt-4 flex flex-wrap gap-3">
+                {categories.map((c) => (
+                  <Link
+                    key={c.id}
+                    to="/shops"
+                    search={{ category: c.id }}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-2 pr-4 shadow-card transition-transform hover:-translate-y-0.5"
+                  >
+                    <StorageImage
+                      path={c.image_url}
+                      alt={c.name}
+                      width={96}
+                      height={96}
+                      className="h-10 w-10 rounded-lg object-cover"
+                    />
+                    <span className="text-sm font-semibold">{c.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+          {shops.length > 0 && (
             <section className="mt-8">
               <h2 className="font-display text-xl font-bold">{t("common_shops")}</h2>
               <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {data.shops.map((s) => (
+                {shops.map((s) => (
                   <ShopCard key={s.id} shop={s} />
                 ))}
               </div>
             </section>
           )}
-          {data.products.length > 0 && (
+          {products.length > 0 && (
             <section className="mt-8">
               <h2 className="font-display text-xl font-bold">{t("common_products")}</h2>
               <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                {data.products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                {products.map((p) => (
+                  <ProductCard key={p.id} product={p} shopName={p.shops?.name} />
                 ))}
               </div>
             </section>
           )}
-          {q && data.shops.length === 0 && data.products.length === 0 && (
+          {q && !hasResults && (
             <p className="mt-8 text-sm text-muted-foreground">{t("search_none")}</p>
           )}
         </>

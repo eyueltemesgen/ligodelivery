@@ -95,7 +95,7 @@ export function ProductCard({
   onSelect,
 }: {
   product: Product;
-  shopName?: string;
+  shopName?: string | undefined;
   orderingDisabled?: boolean;
   onSelect?: (product: Product) => void;
 }) {
@@ -141,13 +141,18 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
         <h4 className="line-clamp-1 text-sm font-semibold">{product.name}</h4>
+        {shopName && (
+          <p className="line-clamp-1 text-[11px] font-medium text-muted-foreground">{shopName}</p>
+        )}
         {Number(product.rating_count ?? 0) > 0 && (
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Star className="h-3 w-3 fill-warning text-warning" />
             {Number(product.rating ?? 0).toFixed(1)} ({product.rating_count})
           </span>
         )}
-        <p className="line-clamp-2 text-xs text-muted-foreground">{product.description}</p>
+        <p className="line-clamp-2 text-xs text-muted-foreground">
+          {product.description || t("search_no_description")}
+        </p>
         <div className="mt-auto flex items-center justify-between gap-2">
           <div>
             <span className="text-sm font-bold text-foreground">{ETB(price)}</span>
