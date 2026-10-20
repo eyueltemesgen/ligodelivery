@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
@@ -14,6 +14,7 @@ import {
   PackageCheck,
   Pencil,
   Phone,
+  Smartphone,
   Star,
   Store,
   User,
@@ -25,6 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
 import { RiderGate } from "@/components/auth/guards";
+import { isNativeApp } from "@/lib/native";
 import { ETB, formatDate } from "@/lib/format";
 import { uploadImage } from "@/lib/media";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
@@ -72,6 +74,63 @@ function RiderPortalPage() {
     <RiderGate>
       <RiderPortal />
     </RiderGate>
+  );
+}
+
+/**
+ * Nudge approved riders to install the Android app. Hidden inside the packaged
+ * app itself, and hidden entirely until a release has been published, so it
+ * never shows a dead link.
+ */
+function RiderAppPrompt() {
+  const { t } = useLanguage();
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof localStorage === "undefined") return false;
+    return localStorage.getItem("rider-app-prompt-dismissed") === "1";
+  });
+  const { data: release } = useQuery({
+    queryKey: ["rider-app-release"],
+    staleTime: 5 * 60_000,
+    enabled: !isNativeApp() && !dismissed,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "rider_app")
+        .maybeSingle();
+      return (data?.value ?? null) as { version?: string } | null;
+    },
+  });
+
+  if (dismissed || isNativeApp() || !release?.version) return null;
+
+  const dismiss = () => {
+    localStorage.setItem("rider-app-prompt-dismissed", "1");
+    setDismissed(true);
+  };
+
+  return (
+    <div className="border-b border-border bg-primary-soft px-4 py-3">
+      <div className="flex items-start gap-3">
+        <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-accent-foreground">{t("rd_app_heading")}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("rd_app_intro")}</p>
+          <div className="mt-2 flex items-center gap-3">
+            <Button asChild size="sm">
+              <Link to="/rider/download">{t("rd_app_download")}</Link>
+            </Button>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+            >
+              {t("ui_close")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -517,6 +576,7 @@ function RiderPortal() {
 
   return (
     <div className="mx-auto min-h-screen max-w-lg bg-surface pb-24">
+      <RiderAppPrompt />
       <header className="sticky top-0 z-20 border-b border-border bg-card px-4 pb-3 pt-3">
         <div className="flex items-center gap-3">
           <RiderAvatar path={profile?.avatar_url} name={profile?.full_name} size="lg" />

@@ -2523,4 +2523,30 @@ export const en = {
   rv_admin_filter_all: "All",
   rv_admin_filter_hidden: "Hidden",
   rv_admin_filter_visible: "Visible",
+  rd_app_meta_title: "Get the rider app — የኔ Go",
+  rd_app_meta_desc: "Download the የኔ Go rider app for Android.",
+  rd_app_heading: "Rider app",
+  rd_app_intro:
+    "The app keeps you online with the screen off and notifies you the moment a delivery is dispatched near you.",
+  rd_app_download: "Download for Android",
+  rd_app_downloading: "Preparing your download…",
+  rd_app_version: "Version {version}",
+  rd_app_unavailable:
+    "The app file isn't available yet. Please check back shortly or ask the team.",
+  rd_app_not_approved_title: "Your application is under review",
+  rd_app_not_approved_body:
+    "You can download the app as soon as your rider application is approved.",
+  rd_app_installed_title: "You're all set",
+  rd_app_installed_body: "Open the app, sign in with this same account and go online.",
+  rd_app_steps_title: "Installing the app",
+  rd_app_step1: "Tap Download and wait for the file to finish.",
+  rd_app_step2: "Open the downloaded file from your notifications.",
+  rd_app_step3: "If Android asks, allow installing from this source — it is a one-time permission.",
+  rd_app_step4: "Tap Install, then open የኔ Go Rider and sign in.",
+  rd_app_warning_title: "Android will show a warning",
+  rd_app_warning_body:
+    "Because the app is not distributed through Google Play, Android shows a “scan” or “unsafe” notice. Tap Install anyway. Play Protect may also offer to scan the file, which is safe to accept.",
+  rd_app_update_title: "Update available",
+  rd_app_update_body: "A newer version is ready. Install it to keep tracking working.",
+  rd_app_help: "Need help? Contact the team",
 } as const;

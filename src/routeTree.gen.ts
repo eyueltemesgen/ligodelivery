@@ -42,6 +42,7 @@ import { Route as MerchantLoginRouteImport } from './routes/merchant.login'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
 import { Route as RiderIndexRouteImport } from './routes/rider.index'
+import { Route as RiderDownloadRouteImport } from './routes/rider.download'
 import { Route as RiderJoinRouteImport } from './routes/rider.join'
 import { Route as RiderLoginRouteImport } from './routes/rider.login'
 import { Route as ShopsIndexRouteImport } from './routes/shops.index'
@@ -220,6 +221,11 @@ const RiderIndexRoute = RiderIndexRouteImport.update({
   path: '/rider/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RiderDownloadRoute = RiderDownloadRouteImport.update({
+  id: '/rider/download',
+  path: '/rider/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RiderJoinRoute = RiderJoinRouteImport.update({
   id: '/rider/join',
   path: '/rider/join',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/rider/download': typeof RiderDownloadRoute
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/rider/download': typeof RiderDownloadRoute
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/merchant/join': typeof MerchantJoinRoute
   '/merchant/login': typeof MerchantLoginRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/rider/download': typeof RiderDownloadRoute
   '/rider/join': typeof RiderJoinRoute
   '/rider/login': typeof RiderLoginRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
@@ -457,6 +466,7 @@ export interface FileRouteTypes {
     | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
+    | '/rider/download'
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
+    | '/rider/download'
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/merchant/join'
     | '/merchant/login'
     | '/orders/$orderId'
+    | '/rider/download'
     | '/rider/join'
     | '/rider/login'
     | '/shops/$shopId'
@@ -583,6 +595,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
+  RiderDownloadRoute: typeof RiderDownloadRoute
   RiderJoinRoute: typeof RiderJoinRoute
   RiderLoginRoute: typeof RiderLoginRoute
   ShopsShopIdRoute: typeof ShopsShopIdRoute
@@ -828,6 +841,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rider/download': {
+      id: '/rider/download'
+      path: '/rider/download'
+      fullPath: '/rider/download'
+      preLoaderRoute: typeof RiderDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rider/join': {
       id: '/rider/join'
       path: '/rider/join'
@@ -998,6 +1018,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
+  RiderDownloadRoute: RiderDownloadRoute,
   RiderJoinRoute: RiderJoinRoute,
   RiderLoginRoute: RiderLoginRoute,
   ShopsShopIdRoute: ShopsShopIdRoute,
