@@ -37,6 +37,7 @@ import {
   paymentStatusLabelKey,
 } from "@/components/account/OrderCard";
 import { AccountState, ErrorState, ListSkeleton } from "@/components/account/States";
+import { OrderRatingPanel } from "@/components/reviews/OrderRatingPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -295,6 +296,18 @@ function OrderDetails() {
               ))}
             </ul>
           </section>
+
+          {/* Ratings. Only after delivery: submit_review rejects anything else. */}
+          {order.status === "delivered" && (
+            <OrderRatingPanel
+              orderId={order.id}
+              shopName={shop?.name}
+              riderId={order.rider_id}
+              items={items
+                .filter((it) => it.product_id)
+                .map((it) => ({ productId: it.product_id as string, name: it.product_name }))}
+            />
+          )}
 
           {/* Payment */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-card">

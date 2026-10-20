@@ -72,6 +72,9 @@ export function ShopCard({ shop }: { shop: Shop }) {
           <span className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
             <Star className="h-3 w-3 fill-warning text-warning" />
             {Number(shop.rating) > 0 ? Number(shop.rating).toFixed(1) : t("common_new")}
+            {Number(shop.rating_count ?? 0) > 0 && (
+              <span className="font-normal text-muted-foreground">({shop.rating_count})</span>
+            )}
           </span>
           <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
             <Truck className="h-3 w-3" />
@@ -138,6 +141,12 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
         <h4 className="line-clamp-1 text-sm font-semibold">{product.name}</h4>
+        {Number(product.rating_count ?? 0) > 0 && (
+          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Star className="h-3 w-3 fill-warning text-warning" />
+            {Number(product.rating ?? 0).toFixed(1)} ({product.rating_count})
+          </span>
+        )}
         <p className="line-clamp-2 text-xs text-muted-foreground">{product.description}</p>
         <div className="mt-auto flex items-center justify-between gap-2">
           <div>

@@ -22,6 +22,8 @@ export type Shop = {
   delivery_fee: number;
   delivery_time_min: number;
   rating: number;
+  /** Present once the reviews migration is applied; 0 means "no reviews yet". */
+  rating_count?: number;
   is_featured: boolean;
   is_online: boolean;
   is_active: boolean;
@@ -41,6 +43,9 @@ export type Product = {
   in_stock: boolean;
   is_featured: boolean;
   is_popular: boolean;
+  /** Present once the reviews migration is applied; hidden until count > 0. */
+  rating?: number;
+  rating_count?: number;
 };
 export type Offer = {
   id: string;
@@ -62,9 +67,9 @@ const unwrap = <T>(res: { data: T | null; error: unknown }) => {
 
 /** Columns the storefront actually renders, so responses stay small. */
 const SHOP_COLUMNS =
-  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_featured,is_online,is_active,owner_id,lat,lng";
+  "id,name,description,category_id,phone,address,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,rating_count,is_featured,is_online,is_active,owner_id,lat,lng";
 const PRODUCT_COLUMNS =
-  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular";
+  "id,shop_id,category_id,name,description,price,discount_percent,image_url,in_stock,is_featured,is_popular,rating,rating_count";
 const OFFER_COLUMNS =
   "id,title,description,image_url,discount_type,discount_value,shop_id,product_id,starts_at,ends_at";
 

@@ -12,6 +12,8 @@ import { useSaved } from "@/lib/saved";
 import { ProductCard } from "@/components/ligo/Cards";
 import { ProductGridSkeleton } from "@/components/ligo/Skeletons";
 import { ProductModal } from "@/components/ligo/ProductModal";
+import { ReviewList } from "@/components/reviews/ReviewUI";
+import { shopReviewsQuery } from "@/lib/reviews";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +41,7 @@ function ShopDetail() {
   const { data: products = [] } = useQuery(shopProductsQuery(shopId));
   const { data: hours = [] } = useQuery(shopHoursQuery(shopId));
   const { data: allCategories = [] } = useQuery(categoriesQuery);
+  const { data: shopReviews = [] } = useQuery(shopReviewsQuery(shopId));
   const { isFavoriteShop, toggleShop } = useSaved();
   const [selected, setSelected] = useState<Product | null>(null);
   const [term, setTerm] = useState("");
@@ -184,7 +187,9 @@ function ShopDetail() {
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-              {shop.rating}
+              {Number(shop.rating_count ?? 0) > 0
+                ? `${Number(shop.rating).toFixed(1)} (${shop.rating_count ?? 0})`
+                : shop.rating}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
@@ -293,6 +298,10 @@ function ShopDetail() {
             </section>
           ))
         )}
+
+        <div className="pt-8">
+          <ReviewList reviews={shopReviews} title={t("rv_shop_reviews")} />
+        </div>
       </div>
 
       <ProductModal

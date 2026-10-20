@@ -4,6 +4,7 @@ import { Minus, Plus } from "lucide-react";
 import { toast } from "@/lib/toast";
 import type { Product, ProductOptionGroup } from "@/lib/queries";
 import { productOptionsQuery } from "@/lib/queries";
+import { productReviewsQuery } from "@/lib/reviews";
 import { ETB, discounted } from "@/lib/format";
 import { StorageImage } from "@/lib/media";
 import { cartLineId, useCart, type CartOption } from "@/lib/cart";
@@ -11,6 +12,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { ReviewList } from "@/components/reviews/ReviewUI";
 
 /**
  * Product customization dialog. Options come from the database
@@ -36,6 +38,7 @@ export function ProductModal({
   const [picked, setPicked] = useState<Record<string, string[]>>({});
 
   const { data: groups = [] } = useQuery(productOptionsQuery(product?.id ?? ""));
+  const { data: reviews = [] } = useQuery(productReviewsQuery(product?.id ?? ""));
 
   const price = useMemo(
     () => (product ? discounted(Number(product.price), product.discount_percent) : 0),
@@ -224,6 +227,12 @@ export function ProductModal({
                 : t("pm_add_to_order", { total: ETB(unitPrice * qty) })}
           </Button>
         </div>
+
+        {product.id && (
+          <div className="border-t border-border pt-4">
+            <ReviewList reviews={reviews} title={t("rv_title")} emptyText={t("rv_no_reviews")} />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
