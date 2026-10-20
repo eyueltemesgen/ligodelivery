@@ -493,6 +493,7 @@ export const en = {
   acct_view_orders: "View my orders",
   acct_notif_update_failed: "Could not update notifications",
   acct_unread: "Unread",
+  hd_notif_unread: "{count} unread notifications",
   acct_mark_all_read: "Mark all read",
 
   // Order timeline

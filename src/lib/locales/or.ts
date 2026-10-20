@@ -496,6 +496,7 @@ export const or = {
   acct_view_orders: "Ajajoota koo ilaali",
   acct_notif_update_failed: "Beeksisa haaromsuu hin dandeenye",
   acct_unread: "Hin dubbifamne",
+  hd_notif_unread: "Beeksisa {count} hin dubbifamne",
   acct_mark_all_read: "Hunda dubbifame godhi",
 
   // Order timeline

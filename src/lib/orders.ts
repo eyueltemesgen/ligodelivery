@@ -175,3 +175,23 @@ export async function notify(
     order_id: orderId ?? null,
   });
 }
+
+/**
+ * Tell a customer their order moved on. A shop owner or rider is not the
+ * customer, so the direct insert above is refused by RLS (`user_id = auth.uid()`)
+ * and — because the caller cannot see another user's rows — the rejection is
+ * silent. This goes through the `notify_order_status` RPC, which checks the
+ * caller owns the shop or is the assigned rider before writing.
+ */
+export async function notifyOrderStatus(
+  orderId: string,
+  title: string,
+  body: string,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc("notify_order_status", {
+    _order_id: orderId,
+    _title: title,
+    _body: body,
+  });
+  return { error: error ? error.message : null };
+}

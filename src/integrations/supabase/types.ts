@@ -2555,6 +2555,10 @@ export type Database = {
       loyalty_lookup_code: { Args: { p_code: string }; Returns: Json }
       merchant_commission_percent: { Args: { _uid: string }; Returns: number }
       my_loyalty: { Args: never; Returns: Json }
+      notify_order_status: {
+        Args: { _order_id: string; _title: string; _body: string }
+        Returns: undefined
+      }
       my_loyalty_ledger: {
         Args: { p_limit?: number }
         Returns: {

@@ -480,6 +480,7 @@ export const am = {
   acct_view_orders: "የእኔን ትዕዛዞች ይመልከቱ",
   acct_notif_update_failed: "ማሳወቂያዎችን ማዘመን አልተቻለም",
   acct_unread: "ያልተነበበ",
+  hd_notif_unread: "{count} ያልተነበቡ ማሳወቂያዎች",
   acct_mark_all_read: "ሁሉንም እንደተነበበ ምልክት አድርግ",
 
   // Order timeline

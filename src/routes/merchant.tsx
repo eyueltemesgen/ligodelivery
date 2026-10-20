@@ -21,7 +21,7 @@ import { translations, type TranslationKey } from "@/lib/i18n";
 import { isShopOpenNow } from "@/lib/hours";
 import { categoriesQuery, type Product, type Shop } from "@/lib/queries";
 import { ETB } from "@/lib/format";
-import { STATUS_LABEL, STATUS_LABEL_KEY, type OrderStatus } from "@/lib/orders";
+import { STATUS_LABEL, STATUS_LABEL_KEY, notifyOrderStatus, type OrderStatus } from "@/lib/orders";
 import { paymentLabelKey, paymentStatusLabelKey } from "@/components/account/OrderCard";
 import { sounds } from "@/lib/audio";
 import { uploadImage } from "@/lib/media";
@@ -290,12 +290,19 @@ function MerchantDashboard() {
   }, [delivered]);
   void bestSellers;
 
-  const advance = async (orderId: string, next: OrderStatus) => {
+  const advance = async (orderId: string, next: OrderStatus, orderCode: string) => {
     const { error } = await supabase.from("orders").update({ status: next }).eq("id", orderId);
     if (error) {
       toast.error(error.message);
       return;
     }
+    // Best effort: the status change is what matters, so a notification failure
+    // must not be reported as a failed update.
+    await notifyOrderStatus(
+      orderId,
+      t("rd_notify_order_updated", { code: orderCode }),
+      t(STATUS_LABEL_KEY[next]),
+    );
     void qc.invalidateQueries({ queryKey: ["merchant-orders"] });
     toast.success(t("md_order_moved", { status: t(STATUS_LABEL_KEY[next]) }));
   };
@@ -419,7 +426,7 @@ function MerchantDashboard() {
                     <div className="flex flex-col items-end gap-2">
                       <span className="font-display text-lg font-bold">{ETB(o.total)}</span>
                       {next ? (
-                        <Button size="sm" onClick={() => void advance(o.id, next.to)}>
+                        <Button size="sm" onClick={() => void advance(o.id, next.to, o.order_code)}>
                           {t(NEXT_LABEL_KEY[next.to] ?? "md_accept_prepare")}
                         </Button>
                       ) : (

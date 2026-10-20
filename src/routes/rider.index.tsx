@@ -30,7 +30,7 @@ import { uploadImage } from "@/lib/media";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
 import { TierBadge } from "@/components/ligo/TierBadge";
 import { publicSettingsQuery } from "@/lib/queries";
-import { STATUS_LABEL, STATUS_LABEL_KEY, notify, type OrderStatus } from "@/lib/orders";
+import { STATUS_LABEL, STATUS_LABEL_KEY, notifyOrderStatus, type OrderStatus } from "@/lib/orders";
 import { paymentLabelKey, paymentStatusLabelKey } from "@/components/account/OrderCard";
 import { sounds, loadAudioSettings, primeAudio } from "@/lib/audio";
 import { Button } from "@/components/ui/button";
@@ -458,14 +458,19 @@ function RiderPortal() {
     void qc.invalidateQueries({ queryKey: ["rider-me"] });
   };
 
-  const acceptOrder = async (orderId: string) => {
-    const { error } = await supabase.rpc("accept_order", { _order_id: orderId });
+  const acceptOrder = async (order: OrderRow) => {
+    const { error } = await supabase.rpc("accept_order", { _order_id: order.id });
     setOffer(null);
     if (error) {
       toast.error(t("rd_too_late"));
       void qc.invalidateQueries({ queryKey: ["rider-available"] });
       return;
     }
+    await notifyOrderStatus(
+      order.id,
+      t("rd_notify_order_updated", { code: order.order_code }),
+      t(STATUS_LABEL_KEY.accepted),
+    );
     sounds.newOrder();
     toast.success(t("rd_accepted"));
     setTab("home");
@@ -491,12 +496,10 @@ function RiderPortal() {
       toast.error(error.message);
       return;
     }
-    await notify(
-      order.customer_id,
+    await notifyOrderStatus(
+      order.id,
       t("rd_notify_order_updated", { code: order.order_code }),
       t(STATUS_LABEL_KEY[status]),
-      "order",
-      order.id,
     );
     sounds.statusUpdate();
     void qc.invalidateQueries({ queryKey: ["rider-orders"] });
@@ -631,7 +634,7 @@ function RiderPortal() {
       {offer && (
         <IncomingOrderModal
           order={offer}
-          onAccept={() => void acceptOrder(offer.id)}
+          onAccept={() => void acceptOrder(offer)}
           onDecline={() => void declineOrder(offer.id)}
         />
       )}
@@ -877,6 +880,11 @@ function DeliveryFlow({
       toast.error(error.message);
       return;
     }
+    await notifyOrderStatus(
+      order.id,
+      t("rd_notify_order_updated", { code: order.order_code }),
+      t(STATUS_LABEL_KEY.delivered),
+    );
     toast.success(t("rd_delivered"));
     setPin("");
   };

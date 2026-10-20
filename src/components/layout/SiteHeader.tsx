@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bell,
   Heart,
@@ -26,8 +26,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/lib/cart";
 import { CartDrawer, CartTrigger } from "@/components/ligo/CartDrawer";
 import { useAssistant } from "@/components/assistant/AssistantProvider";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { siteContentQuery } from "@/lib/content";
+import { accountSummaryQuery } from "@/lib/account";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,12 +50,32 @@ const NAV = [
 export function SiteHeader() {
   const { user, profile, isAdmin, isRider, isMerchant, signOut } = useAuth();
   const { data: content } = useQuery(siteContentQuery);
+  const { data: summary } = useQuery(accountSummaryQuery(user?.id));
+  const unread = summary?.unreadNotifications ?? 0;
+  const qc = useQueryClient();
   const { t } = useLanguage();
   const { setOpen: setAssistantOpen } = useAssistant();
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+
+  // A new notification should light the badge without a reload, since the whole
+  // point is to reach a customer who is not sitting on the notifications page.
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`header-notifications-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => void qc.invalidateQueries({ queryKey: ["account-summary", user.id] }),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user?.id, qc]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,8 +168,21 @@ export function SiteHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/account/notifications">
-                    <Bell className="mr-2 h-4 w-4" />
+                    <span className="relative mr-2">
+                      <Bell className="h-4 w-4" />
+                      {unread > 0 ? (
+                        <span
+                          aria-hidden
+                          className="absolute -right-1.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold leading-none text-destructive-foreground"
+                        >
+                          {unread > 9 ? "9+" : unread}
+                        </span>
+                      ) : null}
+                    </span>
                     {t("notifications")}
+                    {unread > 0 ? (
+                      <span className="sr-only">{t("hd_notif_unread", { count: unread })}</span>
+                    ) : null}
                   </Link>
                 </DropdownMenuItem>
                 {isRider && (
