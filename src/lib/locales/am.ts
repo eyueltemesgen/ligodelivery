@@ -2457,6 +2457,8 @@ export const am = {
   rv_admin_filter_all: "ሁሉም",
   rv_admin_filter_hidden: "የተደበቁ",
   rv_admin_filter_visible: "የሚታዩ",
+  rd_tracking_title: "ኦንላይን ነዎት",
+  rd_tracking_body: "አቅራቢያዎ ያሉ ዴሊቨሪዎች እንዲደርሱዎት የአካባቢ መጋራት በርቷል።",
   rd_app_meta_title: "የሪደር መተግበሪያ ያግኙ — የኔ Go",
   rd_app_meta_desc: "የኔ Go የሪደር መተግበሪያን ለ Android ያውርዱ።",
   rd_app_heading: "የሪደር መተግበሪያ",

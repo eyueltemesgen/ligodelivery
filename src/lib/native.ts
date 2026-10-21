@@ -36,15 +36,20 @@ export type WatchedPosition = {
 };
 
 /**
- * Stream GPS while `onFix` is supplied. Uses the native plugin when packaged
- * (which keeps reporting while the app is backgrounded) and falls back to the
- * browser `watchPosition` otherwise.
+ * Stream GPS while `onFix` is supplied.
+ *
+ * When packaged this runs through the background-geolocation plugin, which
+ * starts an Android foreground service — that is what keeps fixes arriving
+ * once the screen locks. The plugin needs a notification (see `options`) or the
+ * OS suspends updates as soon as the app leaves the foreground. In a browser it
+ * falls back to `watchPosition`, which is foreground-only.
  *
  * Returns a stop function; always call it on unmount.
  */
 export function watchPosition(
   onFix: (fix: WatchedPosition) => void,
   onError?: (err: unknown) => void,
+  options?: { notificationTitle?: string; notificationBody?: string },
 ): () => void {
   if (!isNativeApp()) {
     if (typeof navigator === "undefined" || !navigator.geolocation) return () => undefined;
@@ -63,36 +68,44 @@ export function watchPosition(
   }
 
   let stopped = false;
-  let remove: (() => void) | undefined;
+  let stopNative: (() => void) | undefined;
 
-  void import("@capacitor/geolocation")
-    .then(async ({ Geolocation }) => {
-      const id = await Geolocation.watchPosition(
-        { enableHighAccuracy: true, maximumAge: 4000, timeout: 15000 },
-        (pos, err) => {
-          if (err) {
-            onError?.(err);
+  void import("@capgo/background-geolocation")
+    .then(async ({ BackgroundGeolocation }) => {
+      await BackgroundGeolocation.start(
+        {
+          backgroundTitle: options?.notificationTitle ?? "የኔ Go Rider",
+          backgroundMessage: options?.notificationBody ?? "You are online and receiving requests.",
+          requestPermissions: true,
+          stale: false,
+          // 0 keeps reporting while the rider is stationary, so a parked rider
+          // does not drop off the dispatch map.
+          distanceFilter: 0,
+        },
+        (position, error) => {
+          if (error) {
+            onError?.(error);
             return;
           }
-          if (!pos) return;
+          if (!position) return;
           onFix({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            speed: pos.coords.speed,
-            accuracy: pos.coords.accuracy,
+            lat: position.latitude,
+            lng: position.longitude,
+            speed: position.speed,
+            accuracy: position.accuracy,
           });
         },
       );
-      remove = () => {
-        void Geolocation.clearWatch({ id });
+      stopNative = () => {
+        void BackgroundGeolocation.stop();
       };
-      if (stopped) remove();
+      if (stopped) stopNative();
     })
     .catch((err) => onError?.(err));
 
   return () => {
     stopped = true;
-    remove?.();
+    stopNative?.();
   };
 }
 
@@ -100,16 +113,56 @@ export function watchPosition(
  * Ask for location permission up front. Resolves `true` when granted, and also
  * resolves `true` in a browser (where the permission prompt is deferred to the
  * first fix) so callers do not have to special-case the web.
+ *
+ * Background location is a deliberate two-step flow on Android 11+: asking for
+ * it in the same request as foreground is refused outright. Foreground plus the
+ * notification permission is what the foreground service needs; background
+ * ("Allow all the time") is requested separately afterwards, and a refusal
+ * leaves a working foreground-only app rather than failing.
  */
 export async function requestLocationPermission(): Promise<boolean> {
   if (!isNativeApp()) return true;
   try {
-    const { Geolocation } = await import("@capacitor/geolocation");
-    const status = await Geolocation.requestPermissions();
-    return status.location === "granted" || status.coarseLocation === "granted";
+    const { BackgroundGeolocation } = await import("@capgo/background-geolocation");
+    const first = await BackgroundGeolocation.requestPermissions({
+      permissions: ["location", "notification"],
+    });
+    if (first.location !== "granted") return false;
+    try {
+      await BackgroundGeolocation.requestPermissions({ permissions: ["backgroundLocation"] });
+    } catch {
+      // Background is optional; tracking still works with the screen on.
+    }
+    return true;
   } catch {
     return false;
   }
+}
+
+/**
+ * Run an HTTP request through the native stack when packaged.
+ *
+ * Android throttles requests initiated by the WebView after roughly five
+ * minutes in the background, which would silently freeze a rider's position
+ * while the app still reports them online. Native HTTP is not throttled that
+ * way, so position writes go through here. On the web it is plain `fetch`.
+ */
+export async function nativeRequest(
+  url: string,
+  init: { method: string; headers: Record<string, string>; body?: string },
+): Promise<{ ok: boolean; status: number }> {
+  if (!isNativeApp()) {
+    const res = await fetch(url, init);
+    return { ok: res.ok, status: res.status };
+  }
+  const { CapacitorHttp } = await import("@capacitor/core");
+  const res = await CapacitorHttp.request({
+    url,
+    method: init.method,
+    headers: init.headers,
+    data: init.body ? JSON.parse(init.body) : undefined,
+  });
+  return { ok: res.status >= 200 && res.status < 300, status: res.status };
 }
 
 /**

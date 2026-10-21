@@ -2547,6 +2547,8 @@ export const or = {
   rv_admin_filter_all: "Hunda",
   rv_admin_filter_hidden: "Dhokate",
   rv_admin_filter_visible: "Mul'ata",
+  rd_tracking_title: "Onlaayinii jirta",
+  rd_tracking_body: "Daawwacha naannoo kee jiran si ga'uuf bakka qooduun banaadha.",
   rd_app_meta_title: "Appii raayidaraa argadhu — የኔ Go",
   rd_app_meta_desc: "Appii raayidaraa የኔ Go Android irratti buufadhu.",
   rd_app_heading: "Appii raayidaraa",

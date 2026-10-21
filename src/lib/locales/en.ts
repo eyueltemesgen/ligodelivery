@@ -2523,6 +2523,8 @@ export const en = {
   rv_admin_filter_all: "All",
   rv_admin_filter_hidden: "Hidden",
   rv_admin_filter_visible: "Visible",
+  rd_tracking_title: "You are online",
+  rd_tracking_body: "Location sharing is on so nearby deliveries reach you.",
   rd_app_meta_title: "Get the rider app — የኔ Go",
   rd_app_meta_desc: "Download the የኔ Go rider app for Android.",
   rd_app_heading: "Rider app",

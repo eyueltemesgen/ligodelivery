@@ -19,6 +19,11 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: false,
+    // The background-geolocation plugin delivers fixes through the bridge while
+    // the app is backgrounded. With the default (non-legacy) bridge those
+    // callbacks stop after roughly five minutes in the background, so the rider
+    // silently drops off the map. This is the plugin's documented Android fix.
+    useLegacyBridge: true,
   },
   plugins: {
     PushNotifications: {

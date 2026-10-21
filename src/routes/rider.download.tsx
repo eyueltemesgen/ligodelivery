@@ -24,10 +24,10 @@ const APK_TTL_SECONDS = 600;
  * `public-env.ts`. An admin-authored row overrides it field by field.
  */
 const DEFAULT_RELEASE = {
-  version: "1.0",
-  version_code: 1,
+  version: "1.1",
+  version_code: 2,
   apk_url:
-    "https://github.com/eyueltemesgen/ligodelivery/releases/download/rider-v1.0/yene-go-rider-1.0.apk",
+    "https://github.com/eyueltemesgen/ligodelivery/releases/download/rider-v1.1/yene-go-rider-1.1.apk",
 } satisfies Release;
 
 type Release = {

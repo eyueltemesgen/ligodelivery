@@ -26,7 +26,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
 import { RiderGate } from "@/components/auth/guards";
-import { isNativeApp } from "@/lib/native";
+import { isNativeApp, watchPosition as watchNativePosition, nativeRequest } from "@/lib/native";
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from "@/lib/public-env";
 import { ETB, formatDate } from "@/lib/format";
 import { uploadImage } from "@/lib/media";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
@@ -464,36 +465,60 @@ function RiderPortal() {
     };
   }, [user, rider?.is_approved, qc, t]);
 
-  // Stream GPS (speed + battery) to the platform every ~5 seconds while online
+  // Stream GPS (speed + battery) to the platform every ~5 seconds while online.
+  //
+  // Packaged, this goes through the background-geolocation plugin so fixes keep
+  // arriving once the screen locks, and the write goes out over native HTTP:
+  // Android throttles WebView-initiated requests after ~5 minutes in the
+  // background, which would leave the rider "online" with a frozen position.
+  // In a browser both calls degrade to the plain foreground equivalents.
   useEffect(() => {
-    if (!user || !rider?.is_online || !navigator.geolocation) return;
+    if (!user || !rider?.is_online) return;
     let batteryLevel: number | null = null;
     const nav = navigator as Navigator & { getBattery?: () => Promise<{ level: number }> };
     void nav.getBattery?.().then((b) => {
       batteryLevel = Math.round(b.level * 100);
     });
+
     let lastWrite = 0;
-    const id = navigator.geolocation.watchPosition(
-      (pos) => {
-        const now = Date.now();
-        if (now - lastWrite < 5000) return;
-        lastWrite = now;
-        void supabase
-          .from("riders")
-          .update({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            speed: pos.coords.speed,
-            battery: batteryLevel,
-            location_updated_at: new Date().toISOString(),
-          })
-          .eq("id", user.id);
-      },
-      () => undefined,
-      { enableHighAccuracy: true, maximumAge: 4000 },
-    );
-    return () => navigator.geolocation.clearWatch(id);
-  }, [user, rider?.is_online]);
+    const writePosition = (fix: { lat: number; lng: number; speed: number | null }) => {
+      const now = Date.now();
+      if (now - lastWrite < 5000) return;
+      lastWrite = now;
+      const payload = JSON.stringify({
+        lat: fix.lat,
+        lng: fix.lng,
+        speed: fix.speed,
+        battery: batteryLevel,
+        location_updated_at: new Date().toISOString(),
+      });
+      void (async () => {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+        try {
+          await nativeRequest(`${PUBLIC_SUPABASE_URL}/rest/v1/riders?id=eq.${user.id}`, {
+            method: "PATCH",
+            headers: {
+              apikey: PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              Prefer: "return=minimal",
+            },
+            body: payload,
+          });
+        } catch {
+          // A dropped fix is not worth interrupting the rider over; the next one
+          // is ~5 s away.
+        }
+      })();
+    };
+
+    return watchNativePosition(writePosition, () => undefined, {
+      notificationTitle: t("rd_tracking_title"),
+      notificationBody: t("rd_tracking_body"),
+    });
+  }, [user, rider?.is_online, t]);
 
   if (!user || !isRider)
     return <div className="py-16 text-center text-muted-foreground">{t("common_loading")}</div>;
