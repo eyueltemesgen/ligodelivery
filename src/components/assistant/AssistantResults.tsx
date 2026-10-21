@@ -50,7 +50,7 @@ function ShopRow({ shop }: { shop: AssistantShop }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{shop.name}</p>
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          {shop.rating > 0 && (
+          {shop.ratingCount > 0 && (
             <span className="inline-flex items-center gap-0.5">
               <Star className="h-3 w-3 fill-current" />
               {shop.rating.toFixed(1)}

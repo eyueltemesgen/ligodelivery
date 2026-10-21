@@ -71,9 +71,13 @@ export function ShopCard({ shop }: { shop: Shop }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
             <Star className="h-3 w-3 fill-warning text-warning" />
-            {Number(shop.rating) > 0 ? Number(shop.rating).toFixed(1) : t("common_new")}
-            {Number(shop.rating_count ?? 0) > 0 && (
-              <span className="font-normal text-muted-foreground">({shop.rating_count})</span>
+            {Number(shop.rating_count ?? 0) > 0 ? (
+              <>
+                {Number(shop.rating).toFixed(1)}
+                <span className="font-normal text-muted-foreground">({shop.rating_count})</span>
+              </>
+            ) : (
+              t("common_new")
             )}
           </span>
           <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">

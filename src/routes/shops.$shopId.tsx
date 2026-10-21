@@ -189,7 +189,7 @@ function ShopDetail() {
               <Star className="h-3.5 w-3.5 fill-warning text-warning" />
               {Number(shop.rating_count ?? 0) > 0
                 ? `${Number(shop.rating).toFixed(1)} (${shop.rating_count ?? 0})`
-                : shop.rating}
+                : t("common_new")}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />

@@ -35,7 +35,7 @@ const SERVICE_LIMIT = 6;
 const ORDER_LIMIT = 5;
 
 const SHOP_COLUMNS =
-  "id,name,description,category_id,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,is_online,is_active,lat,lng";
+  "id,name,description,category_id,image_url,cover_url,opens_at,closes_at,delivery_fee,delivery_time_min,rating,rating_count,is_online,is_active,lat,lng";
 const PRODUCT_COLUMNS = "id,shop_id,name,image_url,price,discount_percent,in_stock,is_active";
 
 /** Trims and caps free text before it reaches an `ilike` pattern. */
@@ -60,6 +60,7 @@ type ShopRow = {
   delivery_fee: number;
   delivery_time_min: number;
   rating: number;
+  rating_count: number;
   is_online: boolean;
   is_active: boolean;
   lat: number | null;
@@ -77,13 +78,18 @@ type ProductRow = {
 };
 
 function toShop(row: ShopRow, categoryName: string | null): AssistantShop {
+  const ratingCount = Number(row.rating_count ?? 0);
   return {
     id: row.id,
     name: row.name,
     imageUrl: row.image_url ?? row.cover_url ?? null,
     deliveryFee: Number(row.delivery_fee ?? 0),
     deliveryTimeMin: Number(row.delivery_time_min ?? 0),
-    rating: Number(row.rating ?? 0),
+    // The column carried a seeded 4.5 for shops nobody had reviewed. Gate on
+    // the count rather than trusting the value, so the model is never handed a
+    // rating to quote that no customer gave.
+    rating: ratingCount > 0 ? Number(row.rating ?? 0) : 0,
+    ratingCount,
     categoryName,
   };
 }
@@ -139,6 +145,7 @@ export async function searchCatalogue(
     .or(`name.ilike.${like},description.ilike.${like}`)
     .order("is_featured", { ascending: false })
     .order("rating", { ascending: false })
+    .order("rating_count", { ascending: false })
     .limit(SHOP_LIMIT);
 
   const productsRequest = shopsOnly
@@ -189,7 +196,11 @@ export async function findShop(
   const request = shopId
     ? base.eq("id", shopId).limit(1)
     : term.length >= 2
-      ? base.ilike("name", `%${term}%`).order("rating", { ascending: false }).limit(SHOP_LIMIT)
+      ? base
+          .ilike("name", `%${term}%`)
+          .order("rating", { ascending: false })
+          .order("rating_count", { ascending: false })
+          .limit(SHOP_LIMIT)
       : null;
 
   if (!request) return { kind: "none", noteKey: "ai_need_shop" };
@@ -216,7 +227,11 @@ export async function getShopHours(
   const request = shopId
     ? base.eq("id", shopId).limit(1)
     : name.length >= 2
-      ? base.ilike("name", `%${name}%`).order("rating", { ascending: false }).limit(1)
+      ? base
+          .ilike("name", `%${name}%`)
+          .order("rating", { ascending: false })
+          .order("rating_count", { ascending: false })
+          .limit(1)
       : null;
   if (!request) return { kind: "none", noteKey: "ai_need_shop" };
 
@@ -310,7 +325,11 @@ export async function estimateDeliveryFee(
   const request = shopId
     ? base.eq("id", shopId).limit(1)
     : name.length >= 2
-      ? base.ilike("name", `%${name}%`).order("rating", { ascending: false }).limit(1)
+      ? base
+          .ilike("name", `%${name}%`)
+          .order("rating", { ascending: false })
+          .order("rating_count", { ascending: false })
+          .limit(1)
       : null;
   if (!request) return { kind: "none", noteKey: "ai_need_shop" };
 

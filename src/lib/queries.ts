@@ -105,6 +105,7 @@ export const shopsQuery = (categoryId?: string | null, limit = SHOP_PAGE_SIZE) =
       .eq("is_active", true)
       .order("is_featured", { ascending: false })
       .order("rating", { ascending: false })
+      .order("rating_count", { ascending: false })
       .limit(limit);
     if (categoryId) q = q.eq("category_id", categoryId);
     return unwrap<Shop[]>(await q);

@@ -174,6 +174,19 @@
 - Verify the RPC's authorization with `scripts/verify/notify-rpc-sql.mjs` (PGlite runs the real migration on real Postgres) — a SECURITY DEFINER guard cannot be checked by a stubbed browser test. Browser wiring: `scripts/verify/merchant-notify.mjs` and `rider-notify.mjs`.
 - Harness gotcha: a harness that stubs a fake session in `localStorage` poisons the shared browser profile — every later request 401s and unrelated harnesses fail confusingly. Run stub-session harnesses in their own `Target.createBrowserContext`, or clear the profile between runs.
 
+## Honest shop ratings
+- `shops.rating` shipped as `numeric(2,1) NOT NULL DEFAULT 4.5` — a placeholder no customer could influence. `20261005150000_reviews.sql` added real aggregates but kept the seed as a fallback (`COALESCE(avg, s.rating)`), which was reasonable while `reviews` was empty and is not now: on the live DB **6 of 7 shops advertised "4.5" from `rating_count = 0`**. A fabricated star rating is the most damaging thing on the storefront — a customer who learns the stars are fake stops believing the reviews we just shipped.
+- `20261006110000_honest_shop_ratings.sql` clears the seed for shops with no reviews, sets the column default to 0 (products already did this), and changes the aggregate fallback from `s.rating` to `0` so deleting a shop's last review no longer resurrects a stale average. Additive/idempotent.
+- **Always gate a rating on `rating_count > 0`, never on `rating > 0`.** The seed made `rating > 0` true for shops with zero reviews. `shops.$shopId.tsx` rendered the bare seeded number on its `else` branch, and `AssistantResults.tsx` gated on `shop.rating > 0` — both showed 4.5 for unreviewed shops. Products were already correct because `products.rating` defaults to 0.
+- The fabricated constant also corrupted **ranking**: `queries.ts` and `assistant.server.ts` sort by `rating DESC`, so unreviewed shops outranked shops with a real (lower) average. Ordering now carries a `rating_count DESC` tiebreaker, and the migration makes the stored value honest so the first key means something. Keep the tiebreaker whenever you touch that sort.
+- The assistant must not be handed an unearned number: `toShop` in `assistant.server.ts` gates `rating` on `ratingCount > 0`, so the value in the tool JSON is 0 rather than 4.5. That keeps the no-invented-numbers guarantee independent of whether the migration has been applied yet.
+- UI copy: an unrated shop reads "New" (`common_new`), which already existed in all three locales — no new i18n keys were needed for this one.
+- Harnesses: `scripts/verify/ratings-sql.mjs` (PGlite: seed cleared, real average kept, last-review deletion leaves 0, idempotent) and `scripts/verify/ratings.mjs` (live DB: reads the rows, then asserts the page matches them).
+
+## Harness environment
+- Run the app with `npx vite dev --port 4173`, **not** `vite preview`. The build targets Cloudflare and emits `.output/server/index.mjs`; `vite preview` looks for `dist/server/server.js` and returns 500 for every route, which looks like a broken app rather than a broken preview.
+- `@electric-sql/pglite` is a devDependency now, so the SQL harnesses run without a local Postgres or root. `/tmp` is wiped between sessions — keep durable harnesses in `scripts/verify/`.
+
 ## Root error boundary must not throw
 - `useLanguage()` returns an English fallback instead of throwing when there is no provider. TanStack renders the root `errorComponent`/`notFoundComponent` *above* `LanguageProvider`, so throwing there replaced every real route error with a misleading "useLanguage must be used inside LanguageProvider" and hid the actual cause. Keep the fallback.
 

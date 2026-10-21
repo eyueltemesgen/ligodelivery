@@ -18,6 +18,7 @@ export type AssistantShop = {
   deliveryFee: number;
   deliveryTimeMin: number;
   rating: number;
+  ratingCount: number;
   categoryName: string | null;
 };
 
