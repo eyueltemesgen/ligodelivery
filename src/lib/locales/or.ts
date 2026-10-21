@@ -2549,6 +2549,10 @@ export const or = {
   rv_admin_filter_visible: "Mul'ata",
   rd_tracking_title: "Onlaayinii jirta",
   rd_tracking_body: "Daawwacha naannoo kee jiran si ga'uuf bakka qooduun banaadha.",
+  rd_bg_loc_warn_title: "Bakka duumessa dhaabbateera",
+  rd_bg_loc_warn_body:
+    'Androodni "yeroo hunda" Qindoomina irraa qofa hayyama. Hanga sana godhutti, bilbilli bilbila kee keessa jiruun si hin ga\'u.',
+  rd_bg_loc_warn_action: "Qindoomina bani",
   rd_app_meta_title: "Appii raayidaraa argadhu — የኔ Go",
   rd_app_meta_desc: "Appii raayidaraa የኔ Go Android irratti buufadhu.",
   rd_app_heading: "Appii raayidaraa",

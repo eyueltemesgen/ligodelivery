@@ -149,6 +149,43 @@ export async function requestLocationPermission(): Promise<boolean> {
 }
 
 /**
+ * True when the app appears to hold "Allow all the time" location access.
+ *
+ * Android 11+ (API 30) **ignores** a programmatic request for
+ * `ACCESS_BACKGROUND_LOCATION` — the OS only shows it in Settings, and
+ * requesting it can land the user on a screen that offers "While using" and
+ * nothing more. So tracking that survives the phone being pocketed needs this
+ * checked and the rider pointed at Settings, not just a permission call.
+ *
+ * Only a *known* negative state counts as missing: if the plugin cannot be
+ * loaded or reports something unrecognised we report `true` and stay quiet,
+ * because nagging a rider whose permission is actually fine is worse than a
+ * missed prompt.
+ */
+export async function hasBackgroundLocationPermission(): Promise<boolean> {
+  if (!isNativeApp()) return true;
+  try {
+    const { BackgroundGeolocation } = await import("@capgo/background-geolocation");
+    const status = await BackgroundGeolocation.checkPermissions();
+    const value = status.backgroundLocation;
+    return !(value === "denied" || value === "prompt" || value === "when_in_use");
+  } catch {
+    return true;
+  }
+}
+
+/** Send the rider to this app's system settings page (for "Allow all the time"). */
+export async function openAppSettings(): Promise<void> {
+  if (!isNativeApp()) return;
+  try {
+    const { BackgroundGeolocation } = await import("@capgo/background-geolocation");
+    await BackgroundGeolocation.openSettings();
+  } catch {
+    // Nothing useful to do if the settings intent cannot be launched.
+  }
+}
+
+/**
  * Run an HTTP request through the native stack when packaged.
  *
  * Android throttles requests initiated by the WebView after roughly five

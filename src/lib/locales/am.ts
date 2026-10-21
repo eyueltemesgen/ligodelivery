@@ -2459,6 +2459,10 @@ export const am = {
   rv_admin_filter_visible: "የሚታዩ",
   rd_tracking_title: "ኦንላይን ነዎት",
   rd_tracking_body: "አቅራቢያዎ ያሉ ዴሊቨሪዎች እንዲደርሱዎት የአካባቢ መጋራት በርቷል።",
+  rd_bg_loc_warn_title: "የበስተጀርባ አካባቢ መጋራት ጠፍቷል",
+  rd_bg_loc_warn_body:
+    "አንድሮይድ «ሁልጊዜ» ከቅንብሮች ውስጥ ብቻ ነው የሚፈቅደው። እስክሚፈቅዱ ድረስ ስልክዎ ኪስዎ ውስጥ እያለ ደሊቨሮዎች አይደርሱዎትም።",
+  rd_bg_loc_warn_action: "ቅንብሮችን ክፈት",
   rd_app_meta_title: "የሪደር መተግበሪያ ያግኙ — የኔ Go",
   rd_app_meta_desc: "የኔ Go የሪደር መተግበሪያን ለ Android ያውርዱ።",
   rd_app_heading: "የሪደር መተግበሪያ",

@@ -2525,6 +2525,10 @@ export const en = {
   rv_admin_filter_visible: "Visible",
   rd_tracking_title: "You are online",
   rd_tracking_body: "Location sharing is on so nearby deliveries reach you.",
+  rd_bg_loc_warn_title: "Background location is off",
+  rd_bg_loc_warn_body:
+    'Android only lets you allow "all the time" from Settings. Until you do, deliveries stop reaching you while your phone is in your pocket.',
+  rd_bg_loc_warn_action: "Open settings",
   rd_app_meta_title: "Get the rider app — የኔ Go",
   rd_app_meta_desc: "Download the የኔ Go rider app for Android.",
   rd_app_heading: "Rider app",

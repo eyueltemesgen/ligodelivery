@@ -26,7 +26,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
 import { RiderGate } from "@/components/auth/guards";
-import { isNativeApp, watchPosition as watchNativePosition, nativeRequest } from "@/lib/native";
+import {
+  isNativeApp,
+  watchPosition as watchNativePosition,
+  nativeRequest,
+  hasBackgroundLocationPermission,
+  openAppSettings,
+} from "@/lib/native";
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from "@/lib/public-env";
 import { ETB, formatDate } from "@/lib/format";
 import { uploadImage } from "@/lib/media";
@@ -276,6 +282,7 @@ function RiderPortal() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("home");
   const [offer, setOffer] = useState<OrderRow | null>(null);
+  const [needsBackgroundLocation, setNeedsBackgroundLocation] = useState(false);
   const seenOfferIds = useRef(new Set<string>());
 
   const { data: rider } = useQuery({
@@ -523,6 +530,31 @@ function RiderPortal() {
     // on every token refresh, and that would tear down the GPS watch mid-shift.
   }, [user?.id, rider?.is_online, t]);
 
+  // Android 11+ only grants "Allow all the time" from Settings, so the rider
+  // gets a nudge with a shortcut to it rather than silently losing tracking
+  // when the phone goes in a pocket. Re-checked whenever they return to the app.
+  useEffect(() => {
+    if (!isNativeApp() || !rider?.is_online) {
+      setNeedsBackgroundLocation(false);
+      return;
+    }
+    let cancelled = false;
+    const check = () => {
+      void hasBackgroundLocationPermission().then((granted) => {
+        if (!cancelled) setNeedsBackgroundLocation(!granted);
+      });
+    };
+    check();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [rider?.is_online]);
+
   if (!user || !isRider)
     return <div className="py-16 text-center text-muted-foreground">{t("common_loading")}</div>;
 
@@ -656,6 +688,22 @@ function RiderPortal() {
       {dispatchPaused && (
         <div className="mx-4 mt-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs font-medium">
           {t("rd_dispatch_paused")}
+        </div>
+      )}
+
+      {needsBackgroundLocation && (
+        <div className="mx-4 mt-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs">
+          <p className="font-semibold">{t("rd_bg_loc_warn_title")}</p>
+          <p className="mt-1 text-muted-foreground">{t("rd_bg_loc_warn_body")}</p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="mt-2"
+            onClick={() => void openAppSettings()}
+          >
+            {t("rd_bg_loc_warn_action")}
+          </Button>
         </div>
       )}
 
