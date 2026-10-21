@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
@@ -14,6 +14,7 @@ import {
   PackageCheck,
   Pencil,
   Phone,
+  Smartphone,
   Star,
   Store,
   User,
@@ -25,6 +26,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
 import { RiderGate } from "@/components/auth/guards";
+import {
+  isNativeApp,
+  watchPosition as watchNativePosition,
+  nativeRequest,
+  hasBackgroundLocationPermission,
+  openAppSettings,
+} from "@/lib/native";
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from "@/lib/public-env";
 import { ETB, formatDate } from "@/lib/format";
 import { uploadImage } from "@/lib/media";
 import { IdentityAvatar } from "@/components/ligo/IdentityAvatar";
@@ -72,6 +81,63 @@ function RiderPortalPage() {
     <RiderGate>
       <RiderPortal />
     </RiderGate>
+  );
+}
+
+/**
+ * Nudge approved riders to install the Android app. Hidden inside the packaged
+ * app itself, and hidden entirely until a release has been published, so it
+ * never shows a dead link.
+ */
+function RiderAppPrompt() {
+  const { t } = useLanguage();
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof localStorage === "undefined") return false;
+    return localStorage.getItem("rider-app-prompt-dismissed") === "1";
+  });
+  const { data: release } = useQuery({
+    queryKey: ["rider-app-release"],
+    staleTime: 5 * 60_000,
+    enabled: !isNativeApp() && !dismissed,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "rider_app")
+        .maybeSingle();
+      return (data?.value ?? null) as { version?: string } | null;
+    },
+  });
+
+  if (dismissed || isNativeApp() || !release?.version) return null;
+
+  const dismiss = () => {
+    localStorage.setItem("rider-app-prompt-dismissed", "1");
+    setDismissed(true);
+  };
+
+  return (
+    <div className="border-b border-border bg-primary-soft px-4 py-3">
+      <div className="flex items-start gap-3">
+        <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-accent-foreground">{t("rd_app_heading")}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("rd_app_intro")}</p>
+          <div className="mt-2 flex items-center gap-3">
+            <Button asChild size="sm">
+              <Link to="/rider/download">{t("rd_app_download")}</Link>
+            </Button>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+            >
+              {t("ui_close")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -216,6 +282,7 @@ function RiderPortal() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("home");
   const [offer, setOffer] = useState<OrderRow | null>(null);
+  const [needsBackgroundLocation, setNeedsBackgroundLocation] = useState(false);
   const seenOfferIds = useRef(new Set<string>());
 
   const { data: rider } = useQuery({
@@ -405,36 +472,88 @@ function RiderPortal() {
     };
   }, [user, rider?.is_approved, qc, t]);
 
-  // Stream GPS (speed + battery) to the platform every ~5 seconds while online
+  // Stream GPS (speed + battery) to the platform every ~5 seconds while online.
+  //
+  // Packaged, this goes through the background-geolocation plugin so fixes keep
+  // arriving once the screen locks, and the write goes out over native HTTP:
+  // Android throttles WebView-initiated requests after ~5 minutes in the
+  // background, which would leave the rider "online" with a frozen position.
+  // In a browser both calls degrade to the plain foreground equivalents.
   useEffect(() => {
-    if (!user || !rider?.is_online || !navigator.geolocation) return;
+    const riderId = user?.id;
+    if (!riderId || !rider?.is_online) return;
     let batteryLevel: number | null = null;
     const nav = navigator as Navigator & { getBattery?: () => Promise<{ level: number }> };
     void nav.getBattery?.().then((b) => {
       batteryLevel = Math.round(b.level * 100);
     });
+
     let lastWrite = 0;
-    const id = navigator.geolocation.watchPosition(
-      (pos) => {
-        const now = Date.now();
-        if (now - lastWrite < 5000) return;
-        lastWrite = now;
-        void supabase
-          .from("riders")
-          .update({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            speed: pos.coords.speed,
-            battery: batteryLevel,
-            location_updated_at: new Date().toISOString(),
-          })
-          .eq("id", user.id);
-      },
-      () => undefined,
-      { enableHighAccuracy: true, maximumAge: 4000 },
-    );
-    return () => navigator.geolocation.clearWatch(id);
-  }, [user, rider?.is_online]);
+    const writePosition = (fix: { lat: number; lng: number; speed: number | null }) => {
+      const now = Date.now();
+      if (now - lastWrite < 5000) return;
+      lastWrite = now;
+      const payload = JSON.stringify({
+        lat: fix.lat,
+        lng: fix.lng,
+        speed: fix.speed,
+        battery: batteryLevel,
+        location_updated_at: new Date().toISOString(),
+      });
+      void (async () => {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+        try {
+          await nativeRequest(`${PUBLIC_SUPABASE_URL}/rest/v1/riders?id=eq.${riderId}`, {
+            method: "PATCH",
+            headers: {
+              apikey: PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              Prefer: "return=minimal",
+            },
+            body: payload,
+          });
+        } catch {
+          // A dropped fix is not worth interrupting the rider over; the next one
+          // is ~5 s away.
+        }
+      })();
+    };
+
+    return watchNativePosition(writePosition, () => undefined, {
+      notificationTitle: t("rd_tracking_title"),
+      notificationBody: t("rd_tracking_body"),
+    });
+    // Keyed on the id, not the `user` object: Supabase hands back a new object
+    // on every token refresh, and that would tear down the GPS watch mid-shift.
+  }, [user?.id, rider?.is_online, t]);
+
+  // Android 11+ only grants "Allow all the time" from Settings, so the rider
+  // gets a nudge with a shortcut to it rather than silently losing tracking
+  // when the phone goes in a pocket. Re-checked whenever they return to the app.
+  useEffect(() => {
+    if (!isNativeApp() || !rider?.is_online) {
+      setNeedsBackgroundLocation(false);
+      return;
+    }
+    let cancelled = false;
+    const check = () => {
+      void hasBackgroundLocationPermission().then((granted) => {
+        if (!cancelled) setNeedsBackgroundLocation(!granted);
+      });
+    };
+    check();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [rider?.is_online]);
 
   if (!user || !isRider)
     return <div className="py-16 text-center text-muted-foreground">{t("common_loading")}</div>;
@@ -520,6 +639,7 @@ function RiderPortal() {
 
   return (
     <div className="mx-auto min-h-screen max-w-lg bg-surface pb-24">
+      <RiderAppPrompt />
       <header className="sticky top-0 z-20 border-b border-border bg-card px-4 pb-3 pt-3">
         <div className="flex items-center gap-3">
           <RiderAvatar path={profile?.avatar_url} name={profile?.full_name} size="lg" />
@@ -571,6 +691,22 @@ function RiderPortal() {
       {dispatchPaused && (
         <div className="mx-4 mt-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs font-medium">
           {t("rd_dispatch_paused")}
+        </div>
+      )}
+
+      {needsBackgroundLocation && (
+        <div className="mx-4 mt-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs">
+          <p className="font-semibold">{t("rd_bg_loc_warn_title")}</p>
+          <p className="mt-1 text-muted-foreground">{t("rd_bg_loc_warn_body")}</p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="mt-2"
+            onClick={() => void openAppSettings()}
+          >
+            {t("rd_bg_loc_warn_action")}
+          </Button>
         </div>
       )}
 
