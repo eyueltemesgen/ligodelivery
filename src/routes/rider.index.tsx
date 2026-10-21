@@ -473,7 +473,8 @@ function RiderPortal() {
   // background, which would leave the rider "online" with a frozen position.
   // In a browser both calls degrade to the plain foreground equivalents.
   useEffect(() => {
-    if (!user || !rider?.is_online) return;
+    const riderId = user?.id;
+    if (!riderId || !rider?.is_online) return;
     let batteryLevel: number | null = null;
     const nav = navigator as Navigator & { getBattery?: () => Promise<{ level: number }> };
     void nav.getBattery?.().then((b) => {
@@ -497,7 +498,7 @@ function RiderPortal() {
         const token = data.session?.access_token;
         if (!token) return;
         try {
-          await nativeRequest(`${PUBLIC_SUPABASE_URL}/rest/v1/riders?id=eq.${user.id}`, {
+          await nativeRequest(`${PUBLIC_SUPABASE_URL}/rest/v1/riders?id=eq.${riderId}`, {
             method: "PATCH",
             headers: {
               apikey: PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -518,7 +519,9 @@ function RiderPortal() {
       notificationTitle: t("rd_tracking_title"),
       notificationBody: t("rd_tracking_body"),
     });
-  }, [user, rider?.is_online, t]);
+    // Keyed on the id, not the `user` object: Supabase hands back a new object
+    // on every token refresh, and that would tear down the GPS watch mid-shift.
+  }, [user?.id, rider?.is_online, t]);
 
   if (!user || !isRider)
     return <div className="py-16 text-center text-muted-foreground">{t("common_loading")}</div>;
