@@ -81,6 +81,10 @@ export function watchPosition(
           // 0 keeps reporting while the rider is stationary, so a parked rider
           // does not drop off the dispatch map.
           distanceFilter: 0,
+          // Bounds the native request rate. Without this the plugin asks for a
+          // fix every second, which the portal then throws away because it only
+          // writes every 5 s. Matching the two avoids the wasted wake-ups.
+          minIntervalMs: 5_000,
         },
         (position, error) => {
           if (error) {
