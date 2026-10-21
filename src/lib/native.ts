@@ -72,6 +72,11 @@ export function watchPosition(
 
   void import("@capgo/background-geolocation")
     .then(async ({ BackgroundGeolocation }) => {
+      // The plugin's own auto-request asks only for foreground location and the
+      // notification, and the plugin's start path does not request background
+      // location at all. On Android 11+ that leaves tracking dead once the phone
+      // is pocketed, so the two-step request is issued here before starting.
+      await requestLocationPermission();
       await BackgroundGeolocation.start(
         {
           backgroundTitle: options?.notificationTitle ?? "የኔ Go Rider",
