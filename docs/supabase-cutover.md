@@ -142,6 +142,27 @@ node scripts/verify/blank-project-sql.mjs   # schema-level check, local
 Then confirm on the new project that `public` has 36 tables and that the
 storage buckets `ligo-media` and `ligo-proofs` exist.
 
+### If a migration half-applies
+
+A single pass over a blank database is clean, but the set is **not fully
+idempotent**: 7 older files (`20260813201511`, `20260813201602`,
+`20260813201705`, `20260817105403`, `20260819181500`, `20260819193000`,
+`20260905143155`) use a bare `CREATE POLICY`/`CREATE TYPE`/seed `INSERT` with no
+guard, so running them a second time fails with "already exists". A normal
+first-time cutover never hits this. It matters only if you re-run after a
+partial failure.
+
+If you do hit it, do not re-run blindly — check what actually applied and
+either skip the completed files or apply the remainder by hand. The failure is
+harmless in itself (Postgres aborts that file, not the database), but guessing
+about which statements landed is how a project ends up with half a schema.
+
+```bash
+node scripts/verify/migrations-idempotent.mjs   # applies everything twice
+```
+
+That harness lists those 7 as known and fails if a **new** file joins them.
+
 ### About the seeded demo data
 
 The migrations **seed demo content**: 6 shops, 8 categories, ~19 products,

@@ -100,6 +100,7 @@ CREATE POLICY earnings_update ON public.rider_earnings FOR UPDATE TO authenticat
 DROP POLICY IF EXISTS earnings_insert_admin ON public.rider_earnings;
 CREATE POLICY earnings_insert_admin ON public.rider_earnings FOR INSERT TO authenticated
   WITH CHECK (public.is_admin());
+DROP TRIGGER IF EXISTS rider_earnings_updated ON public.rider_earnings;
 CREATE TRIGGER rider_earnings_updated BEFORE UPDATE ON public.rider_earnings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
