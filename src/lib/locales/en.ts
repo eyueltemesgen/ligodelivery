@@ -172,6 +172,12 @@ export const en = {
   checkout_promo_applied: "{code} applied",
   checkout_remove: "Remove",
   checkout_promo_placeholder: "ENTER CODE",
+  checkout_promo_err_empty: "Enter a promo code",
+  checkout_promo_err_invalid: "That promo code is not valid",
+  checkout_promo_err_not_started: "That promo code is not active yet",
+  checkout_promo_err_expired: "That promo code has expired",
+  checkout_promo_err_exhausted: "That promo code has been fully used",
+  checkout_promo_err_min_order: "Your order is below this promo minimum",
   checkout_apply: "Apply",
   checkout_total: "Total",
   checkout_pay_before_fulfilment:

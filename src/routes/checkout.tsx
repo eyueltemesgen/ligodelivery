@@ -35,6 +35,21 @@ const METHODS: { id: string; labelKey: TranslationKey; icon: string }[] = [
 
 const TIP_PRESETS = [0, 10, 20, 30, 50];
 
+/**
+ * `check_coupon` returns a stable `reason`; map it to a translation key so the
+ * promo toast is translated. A reason this build does not recognise falls back
+ * to the server's English `message`, so a newer migration cannot produce a
+ * blank toast.
+ */
+const PROMO_ERROR_KEYS: Record<string, TranslationKey> = {
+  empty: "checkout_promo_err_empty",
+  invalid: "checkout_promo_err_invalid",
+  not_started: "checkout_promo_err_not_started",
+  expired: "checkout_promo_err_expired",
+  exhausted: "checkout_promo_err_exhausted",
+  min_order: "checkout_promo_err_min_order",
+};
+
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
@@ -183,10 +198,20 @@ function CheckoutPage() {
       toast.error(supabaseErrorText(t, error));
       return;
     }
-    const r = data as { valid: boolean; message: string; code?: string; discount?: number };
+    const r = data as {
+      valid: boolean;
+      reason?: string;
+      message: string;
+      code?: string;
+      discount?: number;
+    };
     if (!r.valid) {
       setPromo(null);
-      toast.error(r.message);
+      // The RPC returns a stable `reason`; translate it. Falling back to the
+      // server's English `message` covers a reason this build does not know
+      // (e.g. one added by a newer migration) instead of showing a blank toast.
+      const key = PROMO_ERROR_KEYS[r.reason ?? ""];
+      toast.error(key ? t(key) : r.message);
       return;
     }
     setPromo({ code: r.code ?? code, discount: Number(r.discount ?? 0) });

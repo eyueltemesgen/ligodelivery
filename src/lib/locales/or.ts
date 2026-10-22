@@ -173,6 +173,12 @@ export const or = {
   checkout_promo_applied: "{code} hojiirra oole",
   checkout_remove: "Haqi",
   checkout_promo_placeholder: "KOODII GALCHI",
+  checkout_promo_err_empty: "Koodii piroomooshinii galchi",
+  checkout_promo_err_invalid: "Koodiin piroomooshinii kun sirrii miti",
+  checkout_promo_err_not_started: "Koodiin piroomooshinii kun ammallee hin eegalle",
+  checkout_promo_err_expired: "Koodiin piroomooshinii kun yeroon isaa darbeera",
+  checkout_promo_err_exhausted: "Koodiin piroomooshinii kun guutummaatti fayyadameera",
+  checkout_promo_err_min_order: "Ajajni kee hamma gadi aanaa piroomooshinii kanaa gadi ta'a",
   checkout_apply: "Hojiirra oolchi",
   checkout_total: "Waliigala",
   checkout_pay_before_fulfilment:
