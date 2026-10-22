@@ -8,6 +8,61 @@ Budget about an hour, plus download/upload time for the storage objects.
 
 ---
 
+## Decide first: copy the data, or start fresh?
+
+The live project is small and not yet trading, so both paths are realistic.
+Measure it yourself before choosing:
+
+```bash
+# counts (publishable key can read the catalogue tables)
+curl -s "$U/rest/v1/shops?select=*&limit=1" -I -H "apikey: $K" | grep -i content-range
+```
+
+What is actually in the project today:
+
+| Table | Rows | Notes |
+| --- | --- | --- |
+| `shops` | 7 | 5 are seeded demo shops; `hora burger` and `lina bakery` are real, hand-entered |
+| `products` | 19 | includes real ones, e.g. `spcial burger` under `hora burger` |
+| `categories` | 7 | just the seeded set (restaurants, cafes, grocery, …) |
+| `banners` | 7 | real, with uploaded images |
+| `settings` | 5 | **real config**, not reproducible from migrations — see below |
+| `reviews` | 2 | real |
+| `orders` | ≥1 | real, but not readable with the publishable key |
+| `service_categories` | 5 | seeded |
+| `delivery_fee_rules` | 4 | seeded |
+
+**`settings` is the part you cannot get back from migrations.** It holds
+`site_content` (brand name, contact phone, company name, hero copy),
+`platform` (commission %, delivery fee), `delivery` (pricing method, per-km
+rate, free-over threshold) and `loyalty` (points, redemption rules). The
+migrations seed *default* rows, so a fresh project gets placeholder values and
+you would have to re-enter your real ones by hand.
+
+**Path A — copy everything (recommended).** Follow all the steps below. Needs
+the current project's service-role key, because `orders`, `loyalty_ledger` and
+friends are not readable with the publishable key. Images come across
+automatically: the export downloads them and the import re-uploads them.
+
+**Path B — start fresh.** Apply the migrations, then re-enter the catalogue by
+hand and re-upload the images. Skip steps 3–5 and delete the seeded demo rows
+instead. Choose this only if you are happy retyping the settings above and the
+shop/product list; it is more manual work, not less, because the seed data is
+placeholder content you would then have to replace.
+
+### Why re-uploading images works either way
+
+Image columns store **relative paths**, not full URLs — e.g.
+`shops/9982b08b-7bb1-4016-83ac-cdbde6d886d2.jfif`, `branding/6bf2e79e-….jfif`.
+`StorageImage` signs that path against whichever project is currently
+configured (`src/lib/media.tsx`). So if you upload a file to the **same path**
+in the new project, every row that references it keeps working with **no
+database edit at all**. Path A does this for you; if you do it by hand, keep
+the exact filename and folder.
+
+---
+
+
 ## What actually depends on Lovable
 
 The audit found the coupling is small and mostly harmless, which is why this is
@@ -128,10 +183,20 @@ To rehearse without downloading images, add `--skip-storage`.
 
 ## Step 4 — Move the users
 
-**This is the step people get wrong.** Rows reference `auth.users` ids
-(`shops.owner_id`, `profiles.id`, `orders.customer_id`). If those user ids do
-not exist in the new project, the import fails on foreign keys — and you cannot
-invent the ids, because they must match exactly.
+**This is the step people get wrong.** Only three columns have a real foreign
+key to `auth.users`:
+
+- `profiles.id` → `auth.users(id)` (ON DELETE CASCADE)
+- `shops.owner_id` → `auth.users(id)` (ON DELETE SET NULL)
+- `report_history.generated_by` → `auth.users(id)` (ON DELETE SET NULL)
+
+Those are the ones that will make the import fail. Note that
+`orders.customer_id`, `reviews.customer_id`, `user_roles.user_id` and
+`riders.id` are **plain uuids with no foreign key**, so they import fine on
+their own — but if the referenced account does not exist in the new project,
+that customer can no longer sign in to see their order, and any code that
+looks the profile up finds nothing. Copy the users anyway; it is cheap and
+avoids a confusing half-broken state.
 
 `auth.users` is not part of the REST API, so the scripts cannot copy it. Create
 the users in the new project first, preserving their ids:
@@ -147,17 +212,26 @@ the users in the new project first, preserving their ids:
      -d '{"id":"<same-uuid-as-old>","email":"user@example.com","email_confirm":true}'
    ```
 
-   Passing `id` explicitly is what keeps `owner_id` and `customer_id` valid.
+   Passing `id` explicitly is what keeps `owner_id`, `profiles.id` and
+   `customer_id` pointing at the right people.
 
 2. Do **not** rely on users signing up again — a new signup gets a new uuid and
    will not own their old shop or orders.
 
-3. `public.admin_bootstrap` is copied by the export. Keep it. It is the one-time
+3. In the current project every `shops.owner_id` is NULL and `profiles` is
+   empty, so for the catalogue you only really need **your own admin account**
+   plus whoever placed the existing order. Check with:
+
+   ```bash
+   curl -s "$U/rest/v1/shops?select=name,owner_id" -H "apikey: $K"
+   ```
+
+4. `public.admin_bootstrap` is copied by the export. Keep it. It is the one-time
    flag that stops the *first* signup on a fresh project from being granted
    `admin` automatically (`handle_new_user`). If it is missing, the next person
    to register becomes an admin.
 
-4. Recreate your own admin account, and confirm `user_roles` has your admin row
+5. Recreate your own admin account, and confirm `user_roles` has your admin row
    after the import.
 
 ---
