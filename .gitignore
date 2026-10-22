@@ -50,3 +50,7 @@ android/app/src/main/assets/capacitor.plugins.json
 *.aab
 *.keystore
 !android/app/debug.keystore
+
+# Supabase cutover exports hold real customer data (orders, phone numbers,
+# payment-proof images). Never commit them.
+supabase-export/

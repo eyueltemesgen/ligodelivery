@@ -33,10 +33,13 @@ GRANT SELECT ON public.shop_hours TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.shop_hours TO authenticated;
 GRANT ALL ON public.shop_hours TO service_role;
 ALTER TABLE public.shop_hours ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS shop_hours_public_read ON public.shop_hours;
 CREATE POLICY shop_hours_public_read ON public.shop_hours FOR SELECT TO public USING (true);
+DROP POLICY IF EXISTS shop_hours_manage ON public.shop_hours;
 CREATE POLICY shop_hours_manage ON public.shop_hours FOR ALL TO authenticated
   USING (public.is_admin() OR EXISTS (SELECT 1 FROM public.shops s WHERE s.id = shop_id AND s.owner_id = auth.uid()))
   WITH CHECK (public.is_admin() OR EXISTS (SELECT 1 FROM public.shops s WHERE s.id = shop_id AND s.owner_id = auth.uid()));
+DROP TRIGGER IF EXISTS shop_hours_updated ON public.shop_hours;
 CREATE TRIGGER shop_hours_updated BEFORE UPDATE ON public.shop_hours
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -54,12 +57,16 @@ CREATE TABLE IF NOT EXISTS public.payout_requests (
 GRANT SELECT, INSERT, UPDATE ON public.payout_requests TO authenticated;
 GRANT ALL ON public.payout_requests TO service_role;
 ALTER TABLE public.payout_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS payouts_select ON public.payout_requests;
 CREATE POLICY payouts_select ON public.payout_requests FOR SELECT TO authenticated
   USING (rider_id = auth.uid() OR public.is_admin());
+DROP POLICY IF EXISTS payouts_insert_own ON public.payout_requests;
 CREATE POLICY payouts_insert_own ON public.payout_requests FOR INSERT TO authenticated
   WITH CHECK (rider_id = auth.uid());
+DROP POLICY IF EXISTS payouts_update_admin ON public.payout_requests;
 CREATE POLICY payouts_update_admin ON public.payout_requests FOR UPDATE TO authenticated
   USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP TRIGGER IF EXISTS payout_requests_updated ON public.payout_requests;
 CREATE TRIGGER payout_requests_updated BEFORE UPDATE ON public.payout_requests
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -83,11 +90,14 @@ CREATE TABLE IF NOT EXISTS public.rider_earnings (
 GRANT SELECT, INSERT, UPDATE ON public.rider_earnings TO authenticated;
 GRANT ALL ON public.rider_earnings TO service_role;
 ALTER TABLE public.rider_earnings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS earnings_select ON public.rider_earnings;
 CREATE POLICY earnings_select ON public.rider_earnings FOR SELECT TO authenticated
   USING (rider_id = auth.uid() OR public.is_admin());
+DROP POLICY IF EXISTS earnings_update ON public.rider_earnings;
 CREATE POLICY earnings_update ON public.rider_earnings FOR UPDATE TO authenticated
   USING (rider_id = auth.uid() OR public.is_admin())
   WITH CHECK (rider_id = auth.uid() OR public.is_admin());
+DROP POLICY IF EXISTS earnings_insert_admin ON public.rider_earnings;
 CREATE POLICY earnings_insert_admin ON public.rider_earnings FOR INSERT TO authenticated
   WITH CHECK (public.is_admin());
 CREATE TRIGGER rider_earnings_updated BEFORE UPDATE ON public.rider_earnings
@@ -106,8 +116,10 @@ CREATE TABLE IF NOT EXISTS public.rider_ratings (
 GRANT SELECT, INSERT ON public.rider_ratings TO authenticated;
 GRANT ALL ON public.rider_ratings TO service_role;
 ALTER TABLE public.rider_ratings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS ratings_select ON public.rider_ratings;
 CREATE POLICY ratings_select ON public.rider_ratings FOR SELECT TO authenticated
   USING (customer_id = auth.uid() OR rider_id = auth.uid() OR public.is_admin());
+DROP POLICY IF EXISTS ratings_insert_own ON public.rider_ratings;
 CREATE POLICY ratings_insert_own ON public.rider_ratings FOR INSERT TO authenticated
   WITH CHECK (customer_id = auth.uid()
     AND EXISTS (SELECT 1 FROM public.orders o WHERE o.id = order_id AND o.customer_id = auth.uid()));
@@ -123,8 +135,10 @@ CREATE TABLE IF NOT EXISTS public.rider_offer_events (
 GRANT SELECT, INSERT ON public.rider_offer_events TO authenticated;
 GRANT ALL ON public.rider_offer_events TO service_role;
 ALTER TABLE public.rider_offer_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS offer_events_select ON public.rider_offer_events;
 CREATE POLICY offer_events_select ON public.rider_offer_events FOR SELECT TO authenticated
   USING (rider_id = auth.uid() OR public.is_admin());
+DROP POLICY IF EXISTS offer_events_insert_own ON public.rider_offer_events;
 CREATE POLICY offer_events_insert_own ON public.rider_offer_events FOR INSERT TO authenticated
   WITH CHECK (rider_id = auth.uid());
 

@@ -19,6 +19,14 @@ CREATE POLICY orders_select_dispatch_pool ON public.orders FOR SELECT TO authent
     AND EXISTS (SELECT 1 FROM public.riders r WHERE r.id = auth.uid() AND r.is_approved)
   );
 
+-- These three RPCs were created earlier returning `public.orders`. A later
+-- migration restores that shape, but `CREATE OR REPLACE` cannot change a return
+-- type, so the intermediate `void` version must be dropped first. Without these
+-- DROPs a from-scratch apply aborts with "cannot change return type".
+DROP FUNCTION IF EXISTS public.approve_and_dispatch(uuid);
+DROP FUNCTION IF EXISTS public.accept_order(uuid);
+DROP FUNCTION IF EXISTS public.complete_delivery(uuid, text);
+
 -- admin dispatch
 CREATE OR REPLACE FUNCTION public.approve_and_dispatch(_order_id uuid)
 RETURNS void
