@@ -154,6 +154,8 @@ export const en = {
 
   // Checkout
   checkout_sign_in_title: "Sign in to place your order",
+  checkout_sign_in_desc:
+    "Your cart is saved. Sign in to confirm your delivery address and pay, or create an account in under a minute.",
   checkout_closed_title: "{shop} is closed right now",
   checkout_closed_note: "{reason} Checkout is locked until the shop reopens — your cart is saved.",
   checkout_closed_toast: "This shop is closed right now — checkout is locked.",
@@ -307,6 +309,8 @@ export const en = {
   oc_cancel_order: "Cancel order",
   oc_cancelling: "Cancelling…",
   oc_cancelled_toast: "Order cancelled",
+  oc_cancel_failed: "Could not cancel this order. Please try again or call support.",
+  oc_cancel_not_allowed: "This order can no longer be cancelled. Call support and we will help.",
   od_not_found: "Order not found",
   od_not_found_desc: "This order doesn't exist or isn't linked to your account.",
   od_back_orders: "Back to my orders",
@@ -2139,6 +2143,17 @@ export const en = {
   od_delivery_time: "Driving time",
   shop_search_placeholder: "Search this menu…",
   shop_cat_all: "All",
+  // Product-category names, keyed by `categories.slug`. The DB row is
+  // admin-authored in English, so a non-English reader saw English chips on an
+  // otherwise translated page. These are the seven seeded categories; an admin
+  // who adds a new one falls back to the stored name (see `categoryName`).
+  cat_restaurants: "Restaurants",
+  cat_cafes: "Cafes",
+  cat_grocery: "Grocery",
+  cat_supermarket: "Supermarket",
+  cat_bakery: "Bakery",
+  cat_pharmacy: "Pharmacy",
+  cat_electronics: "Electronics",
   shop_section_results: "Results",
   shop_no_results: "No items match “{term}”.",
   // Home page content — admin-editable copy from site_content, with these

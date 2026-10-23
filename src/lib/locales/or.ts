@@ -154,6 +154,8 @@ export const or = {
 
   // Checkout
   checkout_sign_in_title: "Ajaja galchuuf seeni",
+  checkout_sign_in_desc:
+    "Gaarii kee ni olkaa'ame. Teessoo geessuu mirkaneessuuf fi kaffaluuf seeni, yookaan daqiiqaa tokko keessatti herrega uumi.",
   checkout_closed_title: "{shop} amma cufaa dha",
   checkout_closed_note:
     "{reason} Dukkaanichi hanga banamutti kaffaltiin cufaa jira — gaariin kee olkaa'ameera.",
@@ -308,6 +310,9 @@ export const or = {
   oc_cancel_order: "Ajaja haqi",
   oc_cancelling: "Haqaa jira…",
   oc_cancelled_toast: "Ajajni haqameera",
+  oc_cancel_failed:
+    "Ajaja kana haquu hin danda'amne. Maaloo irra deebi'i yookaan deeggarsa bilbili.",
+  oc_cancel_not_allowed: "Ajajni kun amma haquu hin danda'u. Deeggarsa qunnami; ni gargaarru.",
   od_not_found: "Ajajni hin argamne",
   od_not_found_desc: "Ajajni kun hin jiru ykn herrega kee waliin hin hidhamne.",
   od_back_orders: "Gara ajajoota kootii deebi'i",
@@ -2160,6 +2165,16 @@ export const or = {
   od_delivery_time: "Yeroo karaa",
   shop_search_placeholder: "Menu kana barbaadi…",
   shop_cat_all: "Hunda",
+  // Maqaa ramaddii oomishaa (fayyidaa `categories.slug`). Tarreen DB
+  // Ingiliffaan barreeffamaa waan ta'eef, fuulli Afaan Oromoo chaappaa
+  // Ingiliffaa agarsiisa ture. Ramaddiin haaraa dabalame maqaa DB fayyadama.
+  cat_restaurants: "Mana nyaataa",
+  cat_cafes: "Cafee",
+  cat_grocery: "Dukkaana",
+  cat_supermarket: "Suuparamaarkeetii",
+  cat_bakery: "Mana daaboo",
+  cat_pharmacy: "Qoricha",
+  cat_electronics: "Elektirooniksii",
   shop_section_results: "Bu'aawwan",
   shop_no_results: "“{term}” waliin kan walsimu hin jiru.",
   content_hero_badge: "Bishooftuu guutuutti ni geessina",

@@ -220,6 +220,9 @@ export function SiteHeader() {
           ) : (
             <div className="flex items-center gap-2">
               <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <Link to="/help">{t("help_title")}</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
                 <Link to="/login">{t("login")}</Link>
               </Button>
               <Button asChild size="sm">

@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Bike, Clock, ListChecks, ShieldCheck, Search, Store } from "lucide-react";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
-import { isConciergeSlug, splitCategories } from "@/lib/service-catalog";
+import { isConciergeSlug, splitCategories, categoryName } from "@/lib/service-catalog";
 import { ServiceCategoryBanner } from "@/components/special-moments/ServiceCards";
 import {
   FALLBACK_CATEGORIES,
@@ -221,12 +221,12 @@ function Home() {
               >
                 <StorageImage
                   path={c.image_url}
-                  alt={c.name}
+                  alt={categoryName(t, c)}
                   width={320}
                   height={160}
                   className="h-20 w-full object-cover"
                 />
-                <p className="p-2 text-xs font-semibold">{c.name}</p>
+                <p className="p-2 text-xs font-semibold">{categoryName(t, c)}</p>
               </Link>
             ))}
           </div>
@@ -255,7 +255,7 @@ function Home() {
                   : "border-border bg-card hover:border-primary/50"
               }`}
             >
-              {cat.name}
+              {categoryName(t, cat)}
             </button>
           ))}
           {quickCategory && (

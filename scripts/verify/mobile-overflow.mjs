@@ -19,6 +19,8 @@ const ROUTES = [
   "/orders",
   "/notifications",
   "/account/help",
+  "/help",
+  "/categories",
 ];
 
 const target = await (await fetch(`${CDP}/json/new?about:blank`, { method: "PUT" })).json();

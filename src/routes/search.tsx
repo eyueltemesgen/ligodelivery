@@ -5,6 +5,7 @@ import { ProductCard, ShopCard } from "@/components/ligo/Cards";
 import { StorageImage } from "@/lib/media";
 import { ProductGridSkeleton, ShopGridSkeleton } from "@/components/ligo/Skeletons";
 import { useLanguage } from "@/hooks/useLanguage";
+import { categoryName } from "@/lib/service-catalog";
 import { translations } from "@/lib/i18n";
 
 export const Route = createFileRoute("/search")({
@@ -60,12 +61,12 @@ function SearchPage() {
                   >
                     <StorageImage
                       path={c.image_url}
-                      alt={c.name}
+                      alt={categoryName(t, c)}
                       width={96}
                       height={96}
                       className="h-10 w-10 rounded-lg object-cover"
                     />
-                    <span className="text-sm font-semibold">{c.name}</span>
+                    <span className="text-sm font-semibold">{categoryName(t, c)}</span>
                   </Link>
                 ))}
               </div>

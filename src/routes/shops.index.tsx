@@ -7,6 +7,7 @@ import { ShopCard } from "@/components/ligo/Cards";
 import { ShopGridSkeleton } from "@/components/ligo/Skeletons";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useShopDistances } from "@/hooks/useShopDistances";
+import { categoryName } from "@/lib/service-catalog";
 import { translations } from "@/lib/i18n";
 
 export const Route = createFileRoute("/shops/")({
@@ -54,7 +55,7 @@ function ShopsPage() {
             search={{ category: c.id }}
             className={`rounded-full border px-3 py-1.5 text-sm ${category === c.id ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
           >
-            {c.name}
+            {categoryName(t, c)}
           </Link>
         ))}
       </div>

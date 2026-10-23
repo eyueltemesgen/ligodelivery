@@ -60,7 +60,7 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link to="/account/help" className="hover:text-foreground">
+              <Link to="/help" className="hover:text-foreground">
                 {t("footer_help")}
               </Link>
             </li>

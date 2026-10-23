@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery } from "@/lib/queries";
 import { CategoryCardSkeleton } from "@/components/ligo/Skeletons";
 import { StorageImage } from "@/lib/media";
+import { categoryName } from "@/lib/service-catalog";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations } from "@/lib/i18n";
 
@@ -47,12 +48,12 @@ function CategoriesPage() {
             >
               <StorageImage
                 path={c.image_url}
-                alt={c.name}
+                alt={categoryName(t, c)}
                 width={480}
                 height={168}
                 className="h-28 w-full object-cover"
               />
-              <div className="p-3 text-sm font-semibold">{c.name}</div>
+              <div className="p-3 text-sm font-semibold">{categoryName(t, c)}</div>
             </Link>
           ))}
         </div>

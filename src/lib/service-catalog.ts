@@ -133,6 +133,32 @@ export const categoryMeta = (slug: string): ServiceCategoryMeta => META[slug] ??
 
 type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
+/**
+ * Product-category names (`categories` table) keyed by slug.
+ *
+ * The DB row is admin-authored in English, so a translated page rendered
+ * English chips. A category the admin adds later has no key here and falls back
+ * to the stored name, which is why this returns the DB value rather than a
+ * generic label — an unknown category must still be identifiable.
+ */
+const PRODUCT_CATEGORY_KEYS: Record<string, TranslationKey> = {
+  restaurants: "cat_restaurants",
+  cafes: "cat_cafes",
+  grocery: "cat_grocery",
+  supermarket: "cat_supermarket",
+  bakery: "cat_bakery",
+  pharmacy: "cat_pharmacy",
+  electronics: "cat_electronics",
+};
+
+export function categoryName(
+  t: Translate,
+  category: { slug?: string | null; name?: string | null } | undefined,
+): string {
+  const key = category?.slug ? PRODUCT_CATEGORY_KEYS[category.slug] : undefined;
+  return key ? t(key) : (category?.name ?? "");
+}
+
 type CategoryRow = {
   slug: string;
   name?: string | null;

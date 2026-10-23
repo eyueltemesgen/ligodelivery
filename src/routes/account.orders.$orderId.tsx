@@ -192,7 +192,11 @@ function OrderDetails() {
     setCancelling(false);
     setCancelOpen(false);
     if (error) {
-      toast.error(error.message);
+      // The guard trigger refuses a cancellation the customer is not allowed to
+      // make (e.g. the order already left the shop). Show a translated message
+      // instead of the raw Postgres text, which is English-only.
+      const denied = /permission|policy|denied|not allowed|check/i.test(error.message);
+      toast.error(t(denied ? "oc_cancel_not_allowed" : "oc_cancel_failed"));
       return;
     }
     toast.success(t("oc_cancelled_toast"));

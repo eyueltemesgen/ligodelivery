@@ -241,9 +241,20 @@ function CheckoutPage() {
     return (
       <div className="container-ligo py-16 text-center">
         <h1 className="font-display text-2xl font-extrabold">{t("checkout_sign_in_title")}</h1>
-        <Button asChild className="mt-6">
-          <Link to="/login">{t("auth_sign_in")}</Link>
-        </Button>
+        <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
+          {t("checkout_sign_in_desc")}
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <Button asChild>
+            <Link to="/login">{t("auth_sign_in")}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/register">{t("auth_create_account")}</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link to="/cart">{t("cart_title")}</Link>
+          </Button>
+        </div>
       </div>
     );
 
