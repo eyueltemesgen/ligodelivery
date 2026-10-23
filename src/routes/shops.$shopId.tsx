@@ -7,6 +7,8 @@ import { categoriesQuery, shopHoursQuery, shopProductsQuery, shopQuery } from "@
 import type { Product } from "@/lib/queries";
 import { StorageImage } from "@/lib/media";
 import { ETB, discounted } from "@/lib/format";
+import { formatDistance } from "@/lib/delivery";
+import { useShopDistances } from "@/hooks/useShopDistances";
 import { closedReasonKey, isShopOpenNow } from "@/lib/hours";
 import { useSaved } from "@/lib/saved";
 import { ProductCard } from "@/components/ligo/Cards";
@@ -48,6 +50,17 @@ function ShopDetail() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeSection, setActiveSection] = useState("all");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  // The detail header must quote the same fee the checkout will charge. Without
+  // this it showed the shop's flat `delivery_fee` while the card and the
+  // checkout used the distance-based engine — three numbers for one order.
+  const shopIds = useMemo(() => (shop ? [shop.id] : []), [shop]);
+  const { distances } = useShopDistances(shopIds);
+  const shopDistance = shop ? distances[shop.id] : undefined;
+  const effectiveFee =
+    shopDistance?.ok && shopDistance.deliveryFee != null
+      ? shopDistance.deliveryFee
+      : shop?.delivery_fee;
 
   const categoryById = useMemo(() => {
     const map = new Map(allCategories.map((c) => [c.id, c]));
@@ -193,8 +206,14 @@ function ShopDetail() {
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              {t("shop_delivery", { min: shop.delivery_time_min, fee: ETB(shop.delivery_fee) })}
+              {t("shop_delivery", { min: shop.delivery_time_min, fee: ETB(effectiveFee ?? 0) })}
             </span>
+            {shopDistance?.ok && shopDistance.distance != null && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {formatDistance(shopDistance.distance)}
+              </span>
+            )}
             {shop.address && (
               <span className="flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
