@@ -66,6 +66,8 @@ export const en = {
   home_what_cta: "Explore",
   home_what_shops_count: "shops",
   home_what_services_count: "services",
+  home_footer_tagline:
+    "የኔ Go delivers food, groceries and essentials across Bishoftu — fast, local and reliable.",
 
   // Common
   common_back: "Back",

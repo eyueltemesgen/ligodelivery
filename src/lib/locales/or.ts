@@ -66,6 +66,8 @@ export const or = {
   home_what_cta: "Sakatta'i",
   home_what_shops_count: "dukkaanota",
   home_what_services_count: "tajaajilaawwan",
+  home_footer_tagline:
+    "የኔ Go nyaata, qalqalloo fi waan barbaachisaa Bishooftuu keessatti ni geeffa — saffisaa, naannoo fi amanamaa.",
 
   // Common
   common_back: "Deebi'i",

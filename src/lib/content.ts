@@ -89,6 +89,7 @@ export function localizedContent(
     how_step2_text: t("home_how_step2_text"),
     how_step3_title: t("home_how_step3_title"),
     how_step3_text: t("home_how_step3_text"),
+    footer_tagline: t("home_footer_tagline"),
   };
 }
 
