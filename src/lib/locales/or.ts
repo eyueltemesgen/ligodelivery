@@ -835,6 +835,8 @@ export const or = {
   smd_included: "Maal dabalata",
   smd_hours_value: "sa'aatii {hours}",
   smd_step_1: "Ayyaana, guyyaa, bakka fi jijjiirama kamiyyuu qoodi.",
+  smd_step_1_concierge:
+    "Hojii, teessoo fi yoom akka barbaachisu nutti himi. Gatii sirriitti kennuuf gargaaru kamiyyuu ida'i.",
   smd_step_2_quote: "Gareen keenya gatii mirkaneessee gatii fudhachuu dandeessu erga.",
   smd_step_2_fixed: "Bal'ina kee mirkaneessii gara tarkaanfii kaffaltii nagaa itti fufi.",
   smd_step_3_quote: "Gatii fudhattee booda kaffali, sana booda tajaajila kee qopheessina.",
@@ -842,8 +844,11 @@ export const or = {
   smd_free_request: "Gaafachuuf bilisa",
   smd_pay_after: "Bal'ina mirkaneessii booda kaffali",
   smd_tell_occasion: "Ayyaana fi keessummoota nutti himi",
+  smd_tell_job: "Hojii fi teessoo nutti himi",
   smd_add_custom: "Jijjiirama fi ergaa ida'i",
+  smd_add_details: "Gatii shallaguuf gargaaru ida'i",
   smd_pick_date: "Guyyaa fi sa'aatii kee filadhu",
+  smd_pick_when: "Yoom akka si barbaachisu filadhu",
   smd_more_in: "Dabalata {category} keessatti",
   cd_from_shop: "{shop} irraa",
   cd_add_start: "Jalqabuuf dukkaana irraa meeshaalee muraasa ida'i.",
@@ -2386,6 +2391,71 @@ export const or = {
   smcat_parcels_tagline: "Waan kamiyyuu {city} keessa ergi",
   smcat_parcels_desc:
     "Sanadoota, parcelii xixiqqaa, wantoota caccaban fi fe'umsa guddaa, balbala keessan irraa fudhatamanii guyyaa sana magaalaa keessatti geejjibamu.",
+  nav_concierge: "Hojiiwwan fi Billii",
+  cch_meta_title: "Hojiiwwan, Kaffaltii Billii fi Parcelii Bishooftuu — የኔ Go",
+  cch_meta_desc:
+    "Hojii dursee ogeessa ergi, billii ibsaa, bishaan yookaan bilbila keessan mana keessanii ba'uu malee kaffalaa, yookaan parcelii Bishooftuu keessa ergi. Hojii nutti himi; duraanuu gatii sitti himna.",
+  cch_badge: "Tajaajila",
+  cch_title: "Hojiiwwan, billii fi parcelii",
+  cch_subtitle:
+    "Waan ofii keessan hojjechuu hin barbaadne kamiyyuu, {city} keessatti. Hojii dursee ogeessa ergi, billii mana keessanii ba'uu malee kaffalaa, yookaan parcelii magaalaa keessa ergi — duraanuu gatii sitti himna.",
+  cch_browse: "Ilaali",
+  cch_services_title: "Maal siif gochuu dandeenya",
+  cch_services_sub:
+    "Hojii nutti himi; gatii siif ergina. Kaffaltii gatiin erga fudhatte booda qofa.",
+  cch_empty_title: "Tajaajilli qophaa'aa jira",
+  cch_empty_text:
+    "Hojiiwwan, kaffaltiin billii fi parceliin yeroma ba'an asitti mul'atu. Yeroo kana wantoota biroo nuun geejjibaman ilaali.",
+  cch_how_title: "Akkamitti hojjeta",
+  cch_how_text:
+    "Hojii ibsi; gatii siif ergina; erga fudhatte booda kaffali. Gaaffiin kamiyyuu nama dhugaa garee keenyaa keessa jiruun hojjatama.",
+  cch_how_cta: "Tajaajila hunda ilaali",
+  cch_cross_link: "Hojiiwwan, kaffaltii billii fi parcelii",
+  csvc_errand_grocery_run_name: "Imala gabaa",
+  csvc_errand_grocery_run_desc:
+    "Tarree bittaa keessan nuuf ergi; gabaa yookaan suuparamaarkii Bishooftuu kamiyyuu irraa bitnaa balbala keessaniitti geessina. Gatii meeshaa fi kaffaltii tajaajilaa kaffaltu.",
+  csvc_errand_queue_standing_name: "Tartiiba eeguu",
+  csvc_errand_queue_standing_desc:
+    "Bakka keessan tartiiba eegna — baankii, waajjira mootummaa, gabaa tikkeetii — wanti isin barbaaddan fudhachuun deebina.",
+  csvc_errand_document_pickup_name: "Sanada fudhachuu fi geessuu",
+  csvc_errand_document_pickup_desc:
+    "Sanada teessoo tokko Bishooftuu irraa fudhachuun guyyaa sana teessoo biraatti geessina.",
+  csvc_errand_pharmacy_run_name: "Imala faarmaasii",
+  csvc_errand_pharmacy_run_desc:
+    "Ajaja hakiima yookaan maqaa qoricha nuuf ergi; faarmaasii Bishooftuu irraa fudhachuun sitti fidna.",
+  csvc_errand_custom_name: "Hojii dhuunfaa",
+  csvc_errand_custom_desc:
+    "Waan ofii keessan hojjechuu hin barbaadne biraa kamiyyuu. Hojii ibsi; duraanuu gatii sitti himna.",
+  csvc_bill_electric_name: "Billii ibsaa",
+  csvc_bill_electric_desc:
+    "Lakkoofsa meetirii yookaan herrega keessan fi hanga isaa nuuf qoodi; billii ibsaa keessan kaffalnaa nagahee sitti fidna.",
+  csvc_bill_water_name: "Billii bishaan",
+  csvc_bill_water_desc:
+    "Billii bishaan keessan waajjira Bishooftuutti kaffalnaa nagahee chaappaa qabu sitti geessina.",
+  csvc_bill_telephone_name: "Bilbila fi interneedii",
+  csvc_bill_telephone_desc:
+    "Kaffaltii Ethio Telecom, Safaricom fi interneedii; siif kaffalamee nagaheen walitti qabama.",
+  csvc_bill_school_fees_name: "Kaffaltii barnootaa",
+  csvc_bill_school_fees_desc:
+    "Kaffaltii mana barnootaa yookaan kolleejjii waajjira maallaqaatti kaffalnaa nagahee seeraa fidna.",
+  csvc_bill_other_name: "Kaffaltii biraa",
+  csvc_bill_other_desc:
+    "Kiraa, mirga waldaa, galmee TV yookaan kaffaltii biraa bakka keessan raawwatamuu qabu kamiyyuu.",
+  csvc_parcel_document_name: "Geessituu sanadaa",
+  csvc_parcel_document_desc:
+    "Eenvaloopii tokko yookaan faayilii sanadaa; balbala keessan irraa fudhatamee guyyaa sana Bishooftuu keessatti bakka kamiyyuutti geessa.",
+  csvc_parcel_small_package_name: "Parcelii xixiqqaa",
+  csvc_parcel_small_package_desc:
+    "Saanduqa yookaan boorsaa hanga 5 kg; fudhatamee magaalaa keessatti geessa.",
+  csvc_parcel_fragile_name: "Meeshaa caccabu",
+  csvc_parcel_fragile_desc:
+    "Buraa, elektirooniksii, saanduqa keekii fi waan eegumsa barbaadu kamiyyuu. Meeshaa ilaallee gatii kennina.",
+  csvc_parcel_food_name: "Parcelii nyaataa",
+  csvc_parcel_food_desc:
+    "Nyaata bilchaataa yookaan parcelii nyaataa maatii yookaan hiriyaa Bishooftuu keessa jiruuf ho'aa ta'ee akka geessu ergi.",
+  csvc_parcel_bulk_name: "Parcelii baay'ee",
+  csvc_parcel_bulk_desc:
+    "Parcelii baay'ee yookaan fe'umsa ulfaataa tokko. Lakkoofsa nutti himi; bakka bu'aan gatii kennina.",
   smd_gallery: "Suuraawwan",
   smd_gallery_aria: "Suuraawwan tajaajilaa",
   smd_photo_n: "{name} — suuraa {n}",

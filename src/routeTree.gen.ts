@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ConciergeRouteImport } from './routes/concierge'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -89,6 +90,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConciergeRoute = ConciergeRouteImport.update({
+  id: '/concierge',
+  path: '/concierge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -299,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/concierge': typeof ConciergeRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/concierge': typeof ConciergeRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/concierge': typeof ConciergeRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -444,6 +453,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/concierge'
     | '/login'
     | '/merchant'
     | '/notifications'
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/concierge'
     | '/login'
     | '/merchant'
     | '/notifications'
@@ -538,6 +549,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/concierge'
     | '/login'
     | '/merchant'
     | '/notifications'
@@ -587,6 +599,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
+  ConciergeRoute: typeof ConciergeRoute
   LoginRoute: typeof LoginRoute
   MerchantRoute: typeof MerchantRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
@@ -657,6 +670,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/concierge': {
+      id: '/concierge'
+      path: '/concierge'
+      fullPath: '/concierge'
+      preLoaderRoute: typeof ConciergeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1010,6 +1030,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
+  ConciergeRoute: ConciergeRoute,
   LoginRoute: LoginRoute,
   MerchantRoute: MerchantRouteWithChildren,
   NotificationsRoute: NotificationsRoute,

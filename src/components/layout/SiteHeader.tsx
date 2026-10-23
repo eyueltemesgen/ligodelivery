@@ -42,6 +42,7 @@ import {
 const NAV = [
   { to: "/categories", key: "nav_categories" },
   { to: "/shops", key: "nav_shops" },
+  { to: "/concierge", key: "nav_concierge" },
   { to: "/special-moments", key: "nav_special_moments" },
   { to: "/offers", key: "nav_offers" },
   { to: "/account/orders", key: "nav_track_order" },

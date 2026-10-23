@@ -19,6 +19,7 @@ import {
 import { ETB } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
+import { serviceCopy } from "@/lib/service-catalog";
 import type { TranslationKey } from "@/lib/i18n";
 import { supabaseErrorText } from "@/lib/supa-error";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,8 @@ export function ServiceRequestDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { user, profile } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const svc = serviceCopy(t, service, language);
   const navigate = useNavigate();
   const isQuote = service.pricing_type === "quote";
   const { data: addons = [] } = useQuery(serviceAddonsQuery(service.id));
@@ -203,7 +205,7 @@ export function ServiceRequestDialog({
             {isQuote ? t("srd_title_quote") : t("srd_title_book")}
           </DialogTitle>
           <DialogDescription>
-            {service.name} · {isQuote ? t("srd_desc_quote") : t("srd_desc_book")}
+            {svc.name} · {isQuote ? t("srd_desc_quote") : t("srd_desc_book")}
           </DialogDescription>
         </DialogHeader>
 

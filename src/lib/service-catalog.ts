@@ -97,6 +97,29 @@ const FALLBACK_META: ServiceCategoryMeta = {
   descKey: "smcat_special_moments_blurb",
 };
 
+/**
+ * Categories that belong to the concierge hub (errands, bills, parcels) rather
+ * than to Special Moments gifting.
+ *
+ * The database holds one flat `service_categories` table and the Special Moments
+ * hub rendered every row, so adding bill payments put them under a heading that
+ * promises gifts and celebrations. This is the split: `/concierge` shows these,
+ * `/special-moments` shows the rest. A new category with a slug nobody has
+ * classified yet stays on Special Moments, so nothing silently disappears.
+ */
+export const CONCIERGE_SLUGS = ["errands", "bill-payments", "parcels"] as const;
+
+export const isConciergeSlug = (slug: string) =>
+  (CONCIERGE_SLUGS as readonly string[]).includes(slug);
+
+/** Split a mixed category list into [specialMoments, concierge], preserving order. */
+export function splitCategories<T extends { slug: string }>(categories: T[]) {
+  return {
+    specialMoments: categories.filter((c) => !isConciergeSlug(c.slug)),
+    concierge: categories.filter((c) => isConciergeSlug(c.slug)),
+  };
+}
+
 export const categoryMeta = (slug: string): ServiceCategoryMeta => META[slug] ?? FALLBACK_META;
 
 type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
@@ -109,6 +132,25 @@ type CategoryRow = {
 };
 
 /**
+ * Localized spelling for the cities we operate in.
+ *
+ * `site_content.city` is admin-authored in English ("Bishoftu"), so injecting it
+ * raw into Amharic copy produced `በBishoftu ውስጥ` — a Latin word inside an Ethiopic
+ * sentence, which reads as broken to an Amharic speaker. Only known cities are
+ * translated; anything else (an admin renaming the city, or adding a new one)
+ * passes through unchanged, so we never invent a transliteration.
+ */
+const CITY_NAMES: Record<string, Partial<Record<Language, string>>> = {
+  Bishoftu: { am: "ቢሾፍቱ", or: "Bishooftuu" },
+};
+
+export function localizedCity(city: string | null | undefined, language: Language): string {
+  const value = city || "Bishoftu";
+  if (language === "en") return value;
+  return CITY_NAMES[value]?.[language] ?? value;
+}
+
+/**
  * The database holds a single copy of each category, authored in English. For
  * Amharic and Oromo we prefer the curated i18n copy so the taxonomy is not left
  * half-translated; in English the stored value wins so admins can rename a
@@ -118,16 +160,82 @@ export function categoryCopy(
   t: Translate,
   category: CategoryRow | undefined,
   language: Language,
+  vars?: Record<string, string | number>,
 ): { name: string; tagline: string; description: string } {
   const meta = categoryMeta(category?.slug ?? "");
   const localized = language !== "en";
+  // Several localized category strings interpolate `{city}`. Passing no vars
+  // renders the placeholder literally ("Waan kamiyyuu {city} keessa ergi"), so
+  // every call must supply a value; the DB `site_content.city` wins where the
+  // caller has it, with the same Bishoftu default the Special Moments hub uses.
+  const placeholders = { city: localizedCity("Bishoftu", language), ...vars };
   return {
-    name: localized ? t(meta.nounKey) : category?.name || t(meta.nounKey),
-    tagline: localized ? t(meta.taglineKey) : category?.tagline || t(meta.blurbKey),
+    name: localized ? t(meta.nounKey, placeholders) : category?.name || t(meta.nounKey),
+    tagline: localized ? t(meta.taglineKey, placeholders) : category?.tagline || t(meta.blurbKey),
     description: localized
-      ? t(meta.descKey)
+      ? t(meta.descKey, placeholders)
       : category?.description || category?.tagline || t(meta.blurbKey),
   };
+}
+
+/**
+ * Curated, translatable copy for the concierge catalogue.
+ *
+ * Services are platform-authored content (the migration seeds them), unlike shop
+ * and product names which are merchant data we must leave as written. So these
+ * get real translations; a slug with no entry falls back to the stored row, so
+ * an admin adding a service still sees it in English rather than a blank card.
+ */
+const SERVICE_COPY: Record<string, { nameKey: TranslationKey; descKey: TranslationKey }> = {
+  "errand-grocery-run": {
+    nameKey: "csvc_errand_grocery_run_name",
+    descKey: "csvc_errand_grocery_run_desc",
+  },
+  "errand-queue-standing": {
+    nameKey: "csvc_errand_queue_standing_name",
+    descKey: "csvc_errand_queue_standing_desc",
+  },
+  "errand-document-pickup": {
+    nameKey: "csvc_errand_document_pickup_name",
+    descKey: "csvc_errand_document_pickup_desc",
+  },
+  "errand-pharmacy-run": {
+    nameKey: "csvc_errand_pharmacy_run_name",
+    descKey: "csvc_errand_pharmacy_run_desc",
+  },
+  "errand-custom": { nameKey: "csvc_errand_custom_name", descKey: "csvc_errand_custom_desc" },
+  "bill-electric": { nameKey: "csvc_bill_electric_name", descKey: "csvc_bill_electric_desc" },
+  "bill-water": { nameKey: "csvc_bill_water_name", descKey: "csvc_bill_water_desc" },
+  "bill-telephone": { nameKey: "csvc_bill_telephone_name", descKey: "csvc_bill_telephone_desc" },
+  "bill-school-fees": {
+    nameKey: "csvc_bill_school_fees_name",
+    descKey: "csvc_bill_school_fees_desc",
+  },
+  "bill-other": { nameKey: "csvc_bill_other_name", descKey: "csvc_bill_other_desc" },
+  "parcel-document": { nameKey: "csvc_parcel_document_name", descKey: "csvc_parcel_document_desc" },
+  "parcel-small-package": {
+    nameKey: "csvc_parcel_small_package_name",
+    descKey: "csvc_parcel_small_package_desc",
+  },
+  "parcel-fragile": { nameKey: "csvc_parcel_fragile_name", descKey: "csvc_parcel_fragile_desc" },
+  "parcel-food": { nameKey: "csvc_parcel_food_name", descKey: "csvc_parcel_food_desc" },
+  "parcel-bulk": { nameKey: "csvc_parcel_bulk_name", descKey: "csvc_parcel_bulk_desc" },
+};
+
+/**
+ * Localized name/description for a service. In English (or for an unknown slug)
+ * the stored row wins, so admin edits and new services are never hidden.
+ */
+export function serviceCopy(
+  t: Translate,
+  service: { slug?: string | null; name: string; description?: string | null },
+  language: Language,
+): { name: string; description: string } {
+  const entry = service.slug ? SERVICE_COPY[service.slug] : undefined;
+  if (language === "en" || !entry) {
+    return { name: service.name, description: service.description ?? "" };
+  }
+  return { name: t(entry.nameKey), description: t(entry.descKey) };
 }
 
 export const pricingLabel = (

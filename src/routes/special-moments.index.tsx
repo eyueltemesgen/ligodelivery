@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { ArrowRight, Compass, Gift, Sparkles, UtensilsCrossed } from "lucide-react";
+import { ArrowRight, Compass, Gift, ListChecks, Sparkles, UtensilsCrossed } from "lucide-react";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
 import { ServiceCard, ServiceCategoryBanner } from "@/components/special-moments/ServiceCards";
 import { RotatingRow, RotatingSlides } from "@/components/ligo/RotatingCarousel";
@@ -11,6 +11,7 @@ import { StorageImage } from "@/lib/media";
 import { siteContentQuery, bannersQuery } from "@/lib/content";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, type TranslationKey } from "@/lib/i18n";
+import { localizedCity, splitCategories } from "@/lib/service-catalog";
 
 export const Route = createFileRoute("/special-moments/")({
   head: () => ({
@@ -37,12 +38,24 @@ const HIGHLIGHTS: { icon: typeof Gift; titleKey: TranslationKey; textKey: Transl
 ];
 
 function SpecialMomentsHub() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: categories = [] } = useQuery(serviceCategoriesQuery);
   const { data: services = [], isLoading } = useQuery(servicesQuery());
   const { data: content } = useQuery(siteContentQuery);
   const { data: smBanners = [] } = useQuery(bannersQuery("special_moments"));
   const heroImages = smBanners.filter((b) => b.image_url);
+
+  // Errands, bills and parcels live on /concierge. They share the same
+  // `service_categories` table, so without this split the gifting hub would
+  // advertise "Bill Payments" under a heading about celebrations.
+  const { specialMoments: smCategories, concierge: conciergeCategories } = useMemo(
+    () => splitCategories(categories),
+    [categories],
+  );
+  const conciergeIds = useMemo(
+    () => new Set(conciergeCategories.map((c) => c.id)),
+    [conciergeCategories],
+  );
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -52,8 +65,15 @@ function SpecialMomentsHub() {
     return map;
   }, [services]);
 
-  const featured = services.filter((s) => s.is_featured).slice(0, 8);
-  const showcase = featured.length > 0 ? featured : services.slice(0, 8);
+  // Featured/showcase must not surface a bill payment on the gifting hub either.
+  const smServices = useMemo(
+    () =>
+      services.filter((s) => !s.service_category_id || !conciergeIds.has(s.service_category_id)),
+    [services, conciergeIds],
+  );
+
+  const featured = smServices.filter((s) => s.is_featured).slice(0, 8);
+  const showcase = featured.length > 0 ? featured : smServices.slice(0, 8);
   const giftsCategory = categories.find((c) => c.slug === "gifts");
 
   return (
@@ -118,7 +138,7 @@ function SpecialMomentsHub() {
           ) : categories.length > 0 ? (
             <ServiceCategoryBanner
               ariaLabel={t("smi_show_categories")}
-              categories={categories.slice(0, 4)}
+              categories={smCategories.slice(0, 4)}
             />
           ) : (
             <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 lg:h-96">
@@ -138,12 +158,32 @@ function SpecialMomentsHub() {
             {t("smi_search_all")}
           </Link>
         </div>
-        {categories.length === 0 ? (
+        {conciergeCategories.length > 0 && (
+          <Link
+            to="/concierge"
+            className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/40"
+          >
+            <span className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-primary">
+                <ListChecks className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block font-display font-bold">{t("cch_title")}</span>
+                <span className="block text-sm text-muted-foreground">{t("cch_cross_link")}</span>
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+              {t("cch_browse")}
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        )}
+        {smCategories.length === 0 ? (
           <EmptyCategoryState />
         ) : (
           <ServiceCategoryBanner
             ariaLabel={t("smi_categories")}
-            categories={categories}
+            categories={smCategories}
             counts={counts}
             className="mt-5"
           />
@@ -180,7 +220,7 @@ function SpecialMomentsHub() {
             <div className="max-w-xl">
               <h2 className="font-display text-2xl font-bold">{t("smi_bespoke")}</h2>
               <p className="mt-2 text-sm opacity-90">
-                {t("smi_bespoke_text", { city: content?.city ?? "Bishoftu" })}
+                {t("smi_bespoke_text", { city: localizedCity(content?.city, language) })}
               </p>
             </div>
             <Button asChild size="lg" variant="secondary">

@@ -828,6 +828,8 @@ export const en = {
   smd_included: "What's included",
   smd_hours_value: "{hours} hours",
   smd_step_1: "Share your occasion, date, location and any customisation.",
+  smd_step_1_concierge:
+    "Tell us the job, the address and when you need it done. Add any detail that helps us quote accurately.",
   smd_step_2_quote: "Our team confirms pricing and sends a quote you can accept.",
   smd_step_2_fixed: "Confirm your details and continue to the secure payment step.",
   smd_step_3_quote: "Pay once you accept the quote, then we prepare your service.",
@@ -835,8 +837,11 @@ export const en = {
   smd_free_request: "Free to request",
   smd_pay_after: "Pay after confirming details",
   smd_tell_occasion: "Tell us the occasion and guests",
+  smd_tell_job: "Tell us the job and address",
   smd_add_custom: "Add customisation and a message",
+  smd_add_details: "Add details that help us quote",
   smd_pick_date: "Pick your date and time",
+  smd_pick_when: "Pick when you need it done",
   smd_more_in: "More in {category}",
   cd_from_shop: "from {shop}",
   cd_add_start: "Add some items from a shop to get started.",
@@ -2366,6 +2371,70 @@ export const en = {
   smcat_parcels_tagline: "Send anything across {city}",
   smcat_parcels_desc:
     "Documents, small packages, fragile items and bulk loads, picked up from your door and delivered across the city the same day.",
+  nav_concierge: "Errands & Bills",
+  cch_meta_title: "Errands, Bill Payments & Parcels in Bishoftu — የኔ Go",
+  cch_meta_desc:
+    "Send a rider for an errand, pay your electric, water or telephone bill without leaving home, or courier a parcel across Bishoftu. Describe the job and we quote it before we start.",
+  cch_badge: "Concierge",
+  cch_title: "Errands, bills and parcels",
+  cch_subtitle:
+    "Anything you would rather not do yourself, in {city}. Send a rider for an errand, pay a bill without leaving home, or courier a parcel across town — we quote the price before we start.",
+  cch_browse: "Browse",
+  cch_services_title: "What we can do for you",
+  cch_services_sub: "Tell us the job and we quote it. You pay only once you accept the price.",
+  cch_empty_title: "Concierge services are being set up",
+  cch_empty_text:
+    "Errands, bill payments and parcels will appear here as soon as they are published. In the meantime, browse everything else we deliver.",
+  cch_how_title: "How it works",
+  cch_how_text:
+    "Describe the job, we send you a price, and you pay once you accept it. Every request is handled by a real person on our team.",
+  cch_how_cta: "See all services",
+  cch_cross_link: "Errands, bill payments and parcels",
+  csvc_errand_grocery_run_name: "Grocery run",
+  csvc_errand_grocery_run_desc:
+    "Send us your shopping list and we buy it from any Bishoftu market or supermarket and deliver it to your door. You pay for the goods plus a service fee.",
+  csvc_errand_queue_standing_name: "Queue standing",
+  csvc_errand_queue_standing_desc:
+    "We stand in the queue for you — bank, government office, ticket counter — and bring back whatever you needed done.",
+  csvc_errand_document_pickup_name: "Document pickup & drop",
+  csvc_errand_document_pickup_desc:
+    "We collect a document from one address in Bishoftu and deliver it to another, the same day.",
+  csvc_errand_pharmacy_run_name: "Pharmacy run",
+  csvc_errand_pharmacy_run_desc:
+    "Send us the prescription or the medicine name and we collect it from a Bishoftu pharmacy and bring it to you.",
+  csvc_errand_custom_name: "Custom errand",
+  csvc_errand_custom_desc:
+    "Anything else you would rather not do yourself. Describe the task and we quote it before we start.",
+  csvc_bill_electric_name: "Electric bill",
+  csvc_bill_electric_desc:
+    "Share your meter or account number and the amount, and we pay your electric bill and bring the receipt.",
+  csvc_bill_water_name: "Water bill",
+  csvc_bill_water_desc:
+    "We pay your water bill at the Bishoftu office and deliver the stamped receipt to you.",
+  csvc_bill_telephone_name: "Telephone & internet",
+  csvc_bill_telephone_desc:
+    "Ethio Telecom, Safaricom and internet bill payments, paid for you and receipted.",
+  csvc_bill_school_fees_name: "School fees",
+  csvc_bill_school_fees_desc:
+    "We pay school or college fees at the bursar and bring back the official receipt.",
+  csvc_bill_other_name: "Other payment",
+  csvc_bill_other_desc:
+    "Rent, association dues, TV subscriptions or any other payment you need made on your behalf.",
+  csvc_parcel_document_name: "Document courier",
+  csvc_parcel_document_desc:
+    "One envelope or document file, picked up from your door and delivered anywhere in Bishoftu the same day.",
+  csvc_parcel_small_package_name: "Small package",
+  csvc_parcel_small_package_desc:
+    "A small box or bag up to about 5 kg, collected and delivered across the city.",
+  csvc_parcel_fragile_name: "Fragile item",
+  csvc_parcel_fragile_desc:
+    "Glassware, electronics, cake boxes and anything that needs careful handling. We quote after seeing the item.",
+  csvc_parcel_food_name: "Food package",
+  csvc_parcel_food_desc:
+    "Send a cooked meal or food package to family or a friend anywhere in Bishoftu while it is still warm.",
+  csvc_parcel_bulk_name: "Bulk / multiple packages",
+  csvc_parcel_bulk_desc:
+    "Several packages or one heavy load. Tell us the count and we quote per drop.",
   smd_gallery: "Photos",
   smd_gallery_aria: "Service photos",
   smd_photo_n: "{name} — photo {n}",

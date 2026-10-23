@@ -11,6 +11,7 @@ const ROUTES = [
   "/offers",
   "/special-moments",
   "/special-moments/search",
+  "/concierge",
   "/search?q=milk",
   "/cart",
   "/checkout",

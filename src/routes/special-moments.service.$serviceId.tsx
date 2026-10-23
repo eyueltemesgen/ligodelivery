@@ -19,7 +19,13 @@ import {
   servicesQuery,
   type Service,
 } from "@/lib/special-moments";
-import { categoryCopy, categoryMeta, pricingLabel } from "@/lib/service-catalog";
+import {
+  categoryCopy,
+  categoryMeta,
+  isConciergeSlug,
+  pricingLabel,
+  serviceCopy,
+} from "@/lib/service-catalog";
 import { RotatingSlides } from "@/components/ligo/RotatingCarousel";
 import { StorageImage } from "@/lib/media";
 import { shopQuery } from "@/lib/queries";
@@ -75,6 +81,8 @@ function ServiceDetailPage() {
   const slug = category?.slug ?? "";
   const meta = categoryMeta(slug);
   const copy = categoryCopy(t, category, language);
+  const svc = serviceCopy(t, service, language);
+  const isConcierge = isConciergeSlug(slug);
   const isQuote = service.pricing_type === "quote";
   const gallery = [service.image_url, ...(service.gallery ?? [])].filter(Boolean) as string[];
   const others = related.filter((s) => s.id !== service.id).slice(0, 4);
@@ -100,7 +108,7 @@ function ServiceDetailPage() {
                 <StorageImage
                   key={`${g}-${i}`}
                   path={g}
-                  alt={t("smd_photo_n", { name: service.name, n: i + 1 })}
+                  alt={t("smd_photo_n", { name: svc.name, n: i + 1 })}
                   priority={i === 0}
                   width={1440}
                   height={1080}
@@ -112,7 +120,7 @@ function ServiceDetailPage() {
           ) : (
             <StorageImage
               path={service.image_url}
-              alt={service.name}
+              alt={svc.name}
               priority
               width={1440}
               height={1080}
@@ -140,7 +148,7 @@ function ServiceDetailPage() {
             )}
           </div>
 
-          <h1 className="mt-3 font-display text-3xl font-extrabold">{service.name}</h1>
+          <h1 className="mt-3 font-display text-3xl font-extrabold">{svc.name}</h1>
 
           {shop && (
             <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -204,11 +212,11 @@ function ServiceDetailPage() {
 
       <section className="container-ligo grid gap-8 pb-14 lg:grid-cols-[1.15fr_1fr]">
         <div className="space-y-6">
-          {service.description && (
+          {svc.description && (
             <div>
               <h2 className="font-display text-xl font-bold">{t("smd_about")}</h2>
               <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
-                {service.description}
+                {svc.description}
               </p>
             </div>
           )}
@@ -254,7 +262,7 @@ function ServiceDetailPage() {
             <ol className="mt-3 space-y-3 text-sm text-muted-foreground">
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                {t("smd_step_1")}
+                {isConcierge ? t("smd_step_1_concierge") : t("smd_step_1")}
               </li>
               <li className="flex gap-3">
                 <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -286,15 +294,15 @@ function ServiceDetailPage() {
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                {t("smd_tell_occasion")}
+                {isConcierge ? t("smd_tell_job") : t("smd_tell_occasion")}
               </li>
               <li className="flex items-center gap-2">
                 <Palette className="h-4 w-4 text-primary" />
-                {t("smd_add_custom")}
+                {isConcierge ? t("smd_add_details") : t("smd_add_custom")}
               </li>
               <li className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                {t("smd_pick_date")}
+                {isConcierge ? t("smd_pick_when") : t("smd_pick_date")}
               </li>
             </ul>
             <Button className="mt-4 w-full" size="lg" onClick={() => setBookingOpen(true)}>

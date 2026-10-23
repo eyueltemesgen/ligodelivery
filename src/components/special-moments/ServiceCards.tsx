@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, MapPin, Star, Wallet } from "lucide-react";
 import type { Service, ServiceCategory } from "@/lib/special-moments";
-import { categoryMeta, categoryCopy, pricingLabel } from "@/lib/service-catalog";
+import { categoryMeta, categoryCopy, pricingLabel, serviceCopy } from "@/lib/service-catalog";
 import { StorageImage } from "@/lib/media";
 import { useLanguage } from "@/hooks/useLanguage";
 import { OPTION_LABEL_KEY } from "@/lib/special-moments";
@@ -195,7 +195,8 @@ export function ServiceCategoryPill({ category }: { category: ServiceCategory })
 }
 
 export function ServiceCard({ service }: { service: Service }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const copy = serviceCopy(t, service, language);
   return (
     <Link
       to="/special-moments/service/$serviceId"
@@ -204,7 +205,7 @@ export function ServiceCard({ service }: { service: Service }) {
     >
       <StorageImage
         path={service.image_url}
-        alt={service.name}
+        alt={copy.name}
         width={720}
         height={240}
         className="h-40 w-full object-cover"
@@ -212,7 +213,7 @@ export function ServiceCard({ service }: { service: Service }) {
       />
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display text-base font-bold leading-snug">{service.name}</h3>
+          <h3 className="font-display text-base font-bold leading-snug">{copy.name}</h3>
           {service.is_featured && (
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
               <Star className="h-3.5 w-3.5 fill-primary" />
@@ -225,7 +226,7 @@ export function ServiceCard({ service }: { service: Service }) {
           </p>
         )}
         <p className="mt-2 line-clamp-2 flex-1 text-sm text-muted-foreground">
-          {service.description || t("sc_details_default")}
+          {copy.description || t("sc_details_default")}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {service.service_area && (
