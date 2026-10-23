@@ -56,19 +56,16 @@ export const en = {
   home_quick_filter: "Quick category filter",
   home_what_title: "One app for everything in Bishoftu",
   home_what_subtitle:
-    "Order from local shops, hand off your errands, or arrange a gift — all brought to your door by riders you can track.",
+    "Order from local shops or hand off your errands — brought to your door by riders you can track.",
   home_what_shops_title: "Food, groceries & pharmacy",
   home_what_shops_text:
     "Order from Bishoftu shops and supermarkets, and get it delivered to your door.",
   home_what_errands_title: "Errands & bill payments",
   home_what_errands_text:
     "We queue, pay bills and courier parcels for you — with the price agreed before we start.",
-  home_what_moments_title: "Gifts & celebrations",
-  home_what_moments_text: "Surprises, catering and decoration arranged for your occasion.",
   home_what_cta: "Explore",
   home_what_shops_count: "shops",
   home_what_services_count: "services",
-  home_what_categories_count: "categories",
 
   // Common
   common_back: "Back",

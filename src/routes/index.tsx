@@ -3,16 +3,7 @@ import { useShopDistances } from "@/hooks/useShopDistances";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowRight,
-  Bike,
-  Clock,
-  ListChecks,
-  ShieldCheck,
-  Search,
-  Sparkles,
-  Store,
-} from "lucide-react";
+import { ArrowRight, Bike, Clock, ListChecks, ShieldCheck, Search, Store } from "lucide-react";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
 import { isConciergeSlug, splitCategories } from "@/lib/service-catalog";
@@ -169,7 +160,7 @@ function Home() {
           <h2 className="font-display text-2xl font-bold sm:text-3xl">{t("home_what_title")}</h2>
           <p className="mt-2 text-muted-foreground">{t("home_what_subtitle")}</p>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {[
             {
               icon: Store,
@@ -184,13 +175,6 @@ function Home() {
               text: t("home_what_errands_text"),
               to: "/concierge" as const,
               meta: `${conciergeCount} ${t("home_what_services_count")}`,
-            },
-            {
-              icon: Sparkles,
-              title: t("home_what_moments_title"),
-              text: t("home_what_moments_text"),
-              to: "/special-moments" as const,
-              meta: `${giftingCategories.length} ${t("home_what_categories_count")}`,
             },
           ].map((card) => (
             <Link

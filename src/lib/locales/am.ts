@@ -55,18 +55,14 @@ export const am = {
   home_explore_moments: "ልዩ ጊዜዎችን ያስሱ",
   home_quick_filter: "ፈጣን የምድብ ማጣሪያ",
   home_what_title: "በቢሾፍቱ ሁሉም ነገር በአንድ መተግበሪያ",
-  home_what_subtitle:
-    "ከአካባቢ መሸጫዎች ያዙ፣ ስራዎን ያስረክቡ፣ ወይም ስጦታ ያዘጋጁ — ሁሉም ሊከታተሏቸው በሚችሉ ራይደሮች ወደ ቤትዎ ይደርሳል።",
+  home_what_subtitle: "ከአካባቢ መሸጫዎች ያዙ ወይም ስራዎን ያስረክቡ — ሊከታተሏቸው በሚችሉ ራይደሮች ወደ ቤትዎ ይደርሳል።",
   home_what_shops_title: "ምግብ፣ ግሮሰሪ እና ፋርማሲ",
   home_what_shops_text: "ከቢሾፍቱ መሸጫዎች እና ሱፐርማርኬቶች ያዙ፤ ወደ ቤትዎ ይደርሳል።",
   home_what_errands_title: "ስራዎች እና የቢል ክፍያ",
   home_what_errands_text: "ተራ እንጠብቅልዎታለን፣ ቢል እንከፍላለን እና ጥቅል እናስተላልፋለን — ዋጋውን ከመጀመራችን በፊት እናረጋግጣለን።",
-  home_what_moments_title: "ስጦታዎች እና በዓላት",
-  home_what_moments_text: "ለአጋጣሚዎ አስገራሚ ነገሮች፣ ኬተሪንግ እና ማስዋብ ይዘጋጃል።",
   home_what_cta: "ያስሱ",
   home_what_shops_count: "መሸጫዎች",
   home_what_services_count: "አገልግሎቶች",
-  home_what_categories_count: "ምድቦች",
 
   // Common
   common_back: "ተመለስ",

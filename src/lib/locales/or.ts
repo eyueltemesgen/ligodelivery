@@ -56,19 +56,16 @@ export const or = {
   home_quick_filter: "Calaltuu ramaddii saffisaa",
   home_what_title: "Bishooftuu keessatti waan hundaaf app tokko",
   home_what_subtitle:
-    "Dukkaanota naannoo irraa ajaji, hojii kee dabarsi, yookaan kennaa qopheessi — hundi rideroota hordoffii dandeessuun balbala keetti ni dhihaata.",
+    "Dukkaanota naannoo irraa ajaji yookaan hojii kee dabarsi — rideroota hordoffii dandeessuun balbala keetti ni dhihaata.",
   home_what_shops_title: "Nyaata, qalqalloo fi qoricha",
   home_what_shops_text:
     "Dukkaanota fi suuparmaarkeetota Bishooftuu irraa ajaji; balbala keetti ni dhihaata.",
   home_what_errands_title: "Hojii fi kaffaltii biilii",
   home_what_errands_text:
     "Siif tarree dhaabbanna, biilii kaffalna, paakejii geeffanna — gatii duraan waliigalamna.",
-  home_what_moments_title: "Kennaa fi ayyaana",
-  home_what_moments_text: "Ayyaana keetiif ajaa'iba, keeteringii fi bareechinaa qophaa'a.",
   home_what_cta: "Sakatta'i",
   home_what_shops_count: "dukkaanota",
   home_what_services_count: "tajaajilaawwan",
-  home_what_categories_count: "ramaddiiwwan",
 
   // Common
   common_back: "Deebi'i",
