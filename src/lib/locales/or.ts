@@ -62,7 +62,7 @@ export const or = {
     "Dukkaanota fi suuparmaarkeetota Bishooftuu irraa ajaji; balbala keetti ni dhihaata.",
   home_what_errands_title: "Hojii fi kaffaltii biilii",
   home_what_errands_text:
-    "Siif tarree dhaabbanna, biilii kaffalna, paakejii geeffanna — gatii duraan waliigalamna.",
+    "Hojii kee siif raawwanna, biilii kaffalna, paakejii geeffanna — gatii duraan waliigalamna.",
   home_what_cta: "Sakatta'i",
   home_what_shops_count: "dukkaanota",
   home_what_services_count: "tajaajilaawwan",
@@ -2391,10 +2391,10 @@ export const or = {
   smcat_decoration_desc:
     "Faaya ayyaana dhalootaa, cidhaa, jaalala, eebbaa fi da'umsaaf bakka kamiif.",
   smcat_errands: "Hojiiwwan fi Ramaddiiwwan",
-  smcat_errands_blurb: "Bittaa gogaa, tarree dhaabbachuu, fudhachuu fi hojiiwwan adda addaa.",
+  smcat_errands_blurb: "Bittaa gogaa, fudhachuu fi hojiiwwan adda addaa.",
   smcat_errands_tagline: "Tarreeffama hojii keessan nuuf kenni",
   smcat_errands_desc:
-    "Bittaa gogaa, tarree dhaabbachuu, sanada fudhachuu fi geejjibuu, qoricha fiduu fi hojiiwwan adda addaa {city} keessatti. Maal akka hojjetamu barbaaddan nutti himi; ogeessa ergina.",
+    "Bittaa gogaa, sanada fudhachuu fi geejjibuu, qoricha fiduu fi hojiiwwan adda addaa {city} keessatti. Maal akka hojjetamu barbaaddan nutti himi; ogeessa ergina.",
   smcat_bills: "Kaffaltii Billii",
   smcat_bills_blurb: "Kaffaltii ibsaa, bishaan, bilbila, intarneetii fi barnootaa.",
   smcat_bills_tagline: "Mana keessanii ba'uu malee kaffalaa",
@@ -2428,9 +2428,6 @@ export const or = {
   csvc_errand_grocery_run_name: "Imala gabaa",
   csvc_errand_grocery_run_desc:
     "Tarree bittaa keessan nuuf ergi; gabaa yookaan suuparamaarkii Bishooftuu kamiyyuu irraa bitnaa balbala keessaniitti geessina. Gatii meeshaa fi kaffaltii tajaajilaa kaffaltu.",
-  csvc_errand_queue_standing_name: "Tartiiba eeguu",
-  csvc_errand_queue_standing_desc:
-    "Bakka keessan tartiiba eegna — baankii, waajjira mootummaa, gabaa tikkeetii — wanti isin barbaaddan fudhachuun deebina.",
   csvc_errand_document_pickup_name: "Sanada fudhachuu fi geessuu",
   csvc_errand_document_pickup_desc:
     "Sanada teessoo tokko Bishooftuu irraa fudhachuun guyyaa sana teessoo biraatti geessina.",

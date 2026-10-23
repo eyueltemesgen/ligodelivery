@@ -62,7 +62,7 @@ export const en = {
     "Order from Bishoftu shops and supermarkets, and get it delivered to your door.",
   home_what_errands_title: "Errands & bill payments",
   home_what_errands_text:
-    "We queue, pay bills and courier parcels for you — with the price agreed before we start.",
+    "We run your errands, pay bills and courier parcels for you — with the price agreed before we start.",
   home_what_cta: "Explore",
   home_what_shops_count: "shops",
   home_what_services_count: "services",
@@ -2371,10 +2371,10 @@ export const en = {
   smcat_decoration_desc:
     "Birthday, wedding, engagement, graduation and baby shower styling for any venue.",
   smcat_errands: "Errands & Tasks",
-  smcat_errands_blurb: "Grocery runs, queue standing, pickups and custom tasks.",
+  smcat_errands_blurb: "Grocery runs, pickups and custom tasks.",
   smcat_errands_tagline: "Hand us your to-do list",
   smcat_errands_desc:
-    "Grocery runs, queue standing, document pickup and drop, pharmacy runs and any custom task around {city}. Tell us what you need done and we send a rider.",
+    "Grocery runs, document pickup and drop, pharmacy runs and any custom task around {city}. Tell us what you need done and we send a rider.",
   smcat_bills: "Bill Payments",
   smcat_bills_blurb: "Electric, water, telephone, internet and school payments.",
   smcat_bills_tagline: "Pay without leaving home",
@@ -2407,9 +2407,6 @@ export const en = {
   csvc_errand_grocery_run_name: "Grocery run",
   csvc_errand_grocery_run_desc:
     "Send us your shopping list and we buy it from any Bishoftu market or supermarket and deliver it to your door. You pay for the goods plus a service fee.",
-  csvc_errand_queue_standing_name: "Queue standing",
-  csvc_errand_queue_standing_desc:
-    "We stand in the queue for you — bank, government office, ticket counter — and bring back whatever you needed done.",
   csvc_errand_document_pickup_name: "Document pickup & drop",
   csvc_errand_document_pickup_desc:
     "We collect a document from one address in Bishoftu and deliver it to another, the same day.",

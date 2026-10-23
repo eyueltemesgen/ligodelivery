@@ -83,9 +83,21 @@ const shopless = (
   await db.query(`
     SELECT count(*)::int AS n FROM public.services s
     JOIN public.service_categories c ON c.id = s.service_category_id
-    WHERE c.slug IN ('errands','bill-payments','parcels') AND s.shop_id IS NULL`)
+    WHERE c.slug IN ('errands','bill-payments','parcels') AND s.shop_id IS NULL
+      AND s.is_active`)
 ).rows[0].n;
-check("concierge services have no shop, as designed", shopless === 15, `shopless=${shopless}`);
+check("concierge services have no shop, as designed", shopless === 14, `shopless=${shopless}`);
+
+// "Queue standing" was withdrawn; the row stays for referential integrity but
+// must not be orderable.
+const retired = (
+  await db.query(`SELECT is_active FROM public.services WHERE slug = 'errand-queue-standing'`)
+).rows[0];
+check(
+  "queue standing is withdrawn but retained",
+  retired?.is_active === false,
+  JSON.stringify(retired),
+);
 
 // A fixed-price one and a quote one, to cover both pricing paths.
 const fixedSvc = (await db.query(`SELECT id FROM public.services WHERE slug = 'parcel-document'`))

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isMissingTable, supabaseErrorMessage } from "@/lib/supa-error";
+import { isRetiredService } from "@/lib/service-catalog";
 import type { TranslationKey } from "@/lib/i18n";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -324,7 +325,10 @@ export const servicesQuery = (filters: ServiceFilters = {}) => ({
       q = q.or(`name.ilike.${like},description.ilike.${like},occasion.ilike.${like}`);
     }
     if (filters.maxPrice != null) q = q.lte("price", filters.maxPrice);
-    return softArray<Service>(q);
+    const rows = await softArray<Service>(q);
+    // Withdrawn services may still be seeded on the live project, so drop them
+    // here — the single choke point every service consumer reads through.
+    return rows.filter((s) => !isRetiredService(s.slug));
   },
 });
 

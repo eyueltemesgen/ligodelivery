@@ -98,6 +98,15 @@ const FALLBACK_META: ServiceCategoryMeta = {
 };
 
 /**
+ * Concierge services we have withdrawn. A live project that already ran the
+ * seed migration still has the row, so filter it out by slug rather than
+ * relying on the database alone.
+ */
+export const RETIRED_SERVICE_SLUGS: readonly string[] = ["errand-queue-standing"];
+
+export const isRetiredService = (slug: string) => RETIRED_SERVICE_SLUGS.includes(slug);
+
+/**
  * Categories that belong to the concierge hub (errands, bills, parcels) rather
  * than to Special Moments gifting.
  *
@@ -190,10 +199,6 @@ const SERVICE_COPY: Record<string, { nameKey: TranslationKey; descKey: Translati
   "errand-grocery-run": {
     nameKey: "csvc_errand_grocery_run_name",
     descKey: "csvc_errand_grocery_run_desc",
-  },
-  "errand-queue-standing": {
-    nameKey: "csvc_errand_queue_standing_name",
-    descKey: "csvc_errand_queue_standing_desc",
   },
   "errand-document-pickup": {
     nameKey: "csvc_errand_document_pickup_name",
