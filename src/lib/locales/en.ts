@@ -54,6 +54,21 @@ export const en = {
   home_moments_subtitle: "Gifts, surprises, catering and decoration — arranged from one place.",
   home_explore_moments: "Explore Special Moments",
   home_quick_filter: "Quick category filter",
+  home_what_title: "One app for everything in Bishoftu",
+  home_what_subtitle:
+    "Order from local shops, hand off your errands, or arrange a gift — all brought to your door by riders you can track.",
+  home_what_shops_title: "Food, groceries & pharmacy",
+  home_what_shops_text:
+    "Order from Bishoftu shops and supermarkets, and get it delivered to your door.",
+  home_what_errands_title: "Errands & bill payments",
+  home_what_errands_text:
+    "We queue, pay bills and courier parcels for you — with the price agreed before we start.",
+  home_what_moments_title: "Gifts & celebrations",
+  home_what_moments_text: "Surprises, catering and decoration arranged for your occasion.",
+  home_what_cta: "Explore",
+  home_what_shops_count: "shops",
+  home_what_services_count: "services",
+  home_what_categories_count: "categories",
 
   // Common
   common_back: "Back",
@@ -1949,7 +1964,7 @@ export const en = {
     "Order food, groceries and essentials from Bishoftu shops with fast local delivery.",
   root_meta_og_desc: "Fast local delivery across Bishoftu.",
   index_meta_desc:
-    "Order food, groceries, pharmacy items and more from Bishoftu shops. Fast local delivery, live tracking and Telebirr, CBE or cash payment.",
+    "Order from Bishoftu shops, send an errand or pay a bill, and arrange gifts and catering. Fast local delivery with live tracking and Telebirr, CBE or cash payment.",
   index_meta_og_desc: "Fast local delivery across Bishoftu with live order tracking.",
   shop_meta_title: "Shop menu — የኔ Go · Bishoftu",
   shop_meta_desc: "Browse the menu and order delivery from this Bishoftu shop on የኔ Go.",

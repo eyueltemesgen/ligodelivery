@@ -54,6 +54,19 @@ export const am = {
   home_moments_subtitle: "ስጦታዎች፣ አስገራሚ ነገሮች፣ ኬተሪንግ እና ማስዋብ — ከአንድ ቦታ።",
   home_explore_moments: "ልዩ ጊዜዎችን ያስሱ",
   home_quick_filter: "ፈጣን የምድብ ማጣሪያ",
+  home_what_title: "በቢሾፍቱ ሁሉም ነገር በአንድ መተግበሪያ",
+  home_what_subtitle:
+    "ከአካባቢ መሸጫዎች ያዙ፣ ስራዎን ያስረክቡ፣ ወይም ስጦታ ያዘጋጁ — ሁሉም ሊከታተሏቸው በሚችሉ ራይደሮች ወደ ቤትዎ ይደርሳል።",
+  home_what_shops_title: "ምግብ፣ ግሮሰሪ እና ፋርማሲ",
+  home_what_shops_text: "ከቢሾፍቱ መሸጫዎች እና ሱፐርማርኬቶች ያዙ፤ ወደ ቤትዎ ይደርሳል።",
+  home_what_errands_title: "ስራዎች እና የቢል ክፍያ",
+  home_what_errands_text: "ተራ እንጠብቅልዎታለን፣ ቢል እንከፍላለን እና ጥቅል እናስተላልፋለን — ዋጋውን ከመጀመራችን በፊት እናረጋግጣለን።",
+  home_what_moments_title: "ስጦታዎች እና በዓላት",
+  home_what_moments_text: "ለአጋጣሚዎ አስገራሚ ነገሮች፣ ኬተሪንግ እና ማስዋብ ይዘጋጃል።",
+  home_what_cta: "ያስሱ",
+  home_what_shops_count: "መሸጫዎች",
+  home_what_services_count: "አገልግሎቶች",
+  home_what_categories_count: "ምድቦች",
 
   // Common
   common_back: "ተመለስ",
@@ -1909,7 +1922,7 @@ export const am = {
   root_meta_desc: "ከቢሾፍቱ ሱቆች ምግብ፣ ግሮሰሪ እና አስፈላጊ ነገሮችን በፈጣን የአካባቢ ማድረስ ያዙ።",
   root_meta_og_desc: "በቢሾፍቱ ፈጣን የአካባቢ ማድረስ።",
   index_meta_desc:
-    "ከቢሾፍቱ ሱቆች ምግብ፣ ግሮሰሪ፣ የፋርማሲ እቃዎች እና ተጨማሪ ያዙ። ፈጣን የአካባቢ ማድረስ፣ ቀጥታ መከታተያ እና ቴሌብር፣ ሲቢኢ ወይም ጥሬ ገንዘብ ክፍያ።",
+    "ከቢሾፍቱ መሸጫዎች ያዙ፤ ስራ ያስረክቡ ወይም ቢል ይክፈሉ። ስጦታ፣ ኬተሪንግ እና ማስዋብ ያዘጋጁ። ፈጣን የአካባቢ ማድረስ፣ ቀጥታ መከታተያ እና ቴሌብር፣ ሲቢኢ ወይም ጥሬ ገንዘብ ክፍያ።",
   index_meta_og_desc: "በቢሾፍቱ ፈጣን የአካባቢ ማድረስ ከቀጥታ የትዕዛዝ መከታተያ ጋር።",
   shop_meta_title: "የሱቅ ምናሌ — የኔ Go · ቢሾፍቱ",
   shop_meta_desc: "የዚህን የቢሾፍቱ ሱቅ ምናሌ ይመልከቱ እና በየኔ Go ማድረስ ያዙ።",

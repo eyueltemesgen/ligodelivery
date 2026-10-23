@@ -54,6 +54,21 @@ export const or = {
   home_moments_subtitle: "Kennaa, ajaa'iba, keeteringii fi bareechinaa — bakka tokkootti.",
   home_explore_moments: "Yeroo Addaa sakatta'i",
   home_quick_filter: "Calaltuu ramaddii saffisaa",
+  home_what_title: "Bishooftuu keessatti waan hundaaf app tokko",
+  home_what_subtitle:
+    "Dukkaanota naannoo irraa ajaji, hojii kee dabarsi, yookaan kennaa qopheessi — hundi rideroota hordoffii dandeessuun balbala keetti ni dhihaata.",
+  home_what_shops_title: "Nyaata, qalqalloo fi qoricha",
+  home_what_shops_text:
+    "Dukkaanota fi suuparmaarkeetota Bishooftuu irraa ajaji; balbala keetti ni dhihaata.",
+  home_what_errands_title: "Hojii fi kaffaltii biilii",
+  home_what_errands_text:
+    "Siif tarree dhaabbanna, biilii kaffalna, paakejii geeffanna — gatii duraan waliigalamna.",
+  home_what_moments_title: "Kennaa fi ayyaana",
+  home_what_moments_text: "Ayyaana keetiif ajaa'iba, keeteringii fi bareechinaa qophaa'a.",
+  home_what_cta: "Sakatta'i",
+  home_what_shops_count: "dukkaanota",
+  home_what_services_count: "tajaajilaawwan",
+  home_what_categories_count: "ramaddiiwwan",
 
   // Common
   common_back: "Deebi'i",
@@ -1964,7 +1979,7 @@ export const or = {
     "Dukkaanota Bishooftuu irraa nyaata, gosa nyaataa fi wantoota barbaachisoo saffisaan geessuu wajjin ajaji.",
   root_meta_og_desc: "Bishooftuu keessatti saffisaan geessuu naannoo.",
   index_meta_desc:
-    "Dukkaanota Bishooftuu irraa nyaata, gosa nyaataa, meeshaalee qorichaa fi dabalataa ajaji. Saffisaan geessuu naannoo, hordoffii kallattii fi kaffaltii Telebirr, CBE ykn maallaqa harkaa.",
+    "Dukkaanota Bishooftuu irraa ajaji, hojii ergi ykn biilii kaffali, kennaa fi keeteringii qopheessi. Saffisaan geessuu naannoo hordoffii kallattii fi kaffaltii Telebirr, CBE ykn maallaqa harkaa.",
   index_meta_og_desc: "Bishooftuu keessatti saffisaan geessuu naannoo hordoffii ajajaa kallattiin.",
   shop_meta_title: "Baafata dukkaanaa — የኔ Go · Bishooftuu",
   shop_meta_desc: "Baafata dukkaana Bishooftuu kanaa ilaaliitii የኔ Go irratti geessuu ajaji.",

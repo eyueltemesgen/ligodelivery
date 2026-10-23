@@ -3,9 +3,19 @@ import { useShopDistances } from "@/hooks/useShopDistances";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Bike, Clock, ShieldCheck, Search } from "lucide-react";
+import {
+  ArrowRight,
+  Bike,
+  Clock,
+  ListChecks,
+  ShieldCheck,
+  Search,
+  Sparkles,
+  Store,
+} from "lucide-react";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
 import { serviceCategoriesQuery, servicesQuery } from "@/lib/special-moments";
+import { isConciergeSlug, splitCategories } from "@/lib/service-catalog";
 import { ServiceCategoryBanner } from "@/components/special-moments/ServiceCards";
 import {
   FALLBACK_CATEGORIES,
@@ -72,6 +82,20 @@ function Home() {
     enabled: serviceCategories.length > 0,
   });
 
+  // The homepage strip is gifting-only; the errand/bill/parcel categories live
+  // on /concierge, so they must not appear here.
+  const { specialMoments: giftingCategories } = useMemo(
+    () => splitCategories(serviceCategories),
+    [serviceCategories],
+  );
+
+  // `Service` carries the category id, so resolve the slug to reuse the same
+  // concierge/gifting split the two hubs use.
+  const slugById = new Map(serviceCategories.map((cat) => [cat.id, cat.slug]));
+  const isConcierge = (service: (typeof momentServices)[number]) =>
+    isConciergeSlug(slugById.get(service.service_category_id ?? "") ?? "");
+  const conciergeCount = momentServices.filter(isConcierge).length;
+
   const featuredShops = (
     quickCategory ? shops.filter((s) => s.category_id === quickCategory) : shops
   ).slice(0, 6);
@@ -137,6 +161,55 @@ function Home() {
               <span className="font-display text-2xl font-bold text-primary/60">የኔ Go</span>
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="container-ligo py-10">
+        <div className="max-w-2xl">
+          <h2 className="font-display text-2xl font-bold sm:text-3xl">{t("home_what_title")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("home_what_subtitle")}</p>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              icon: Store,
+              title: t("home_what_shops_title"),
+              text: t("home_what_shops_text"),
+              to: "/shops" as const,
+              meta: `${shops.length} ${t("home_what_shops_count")}`,
+            },
+            {
+              icon: ListChecks,
+              title: t("home_what_errands_title"),
+              text: t("home_what_errands_text"),
+              to: "/concierge" as const,
+              meta: `${conciergeCount} ${t("home_what_services_count")}`,
+            },
+            {
+              icon: Sparkles,
+              title: t("home_what_moments_title"),
+              text: t("home_what_moments_text"),
+              to: "/special-moments" as const,
+              meta: `${giftingCategories.length} ${t("home_what_categories_count")}`,
+            },
+          ].map((card) => (
+            <Link
+              key={card.title}
+              to={card.to}
+              className="group flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft">
+                <card.icon className="h-5 w-5 text-primary" />
+              </span>
+              <h3 className="mt-3 font-display font-bold">{card.title}</h3>
+              <p className="mt-1 flex-1 text-sm text-muted-foreground">{card.text}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                {t("home_what_cta")}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </span>
+              <span className="mt-1 text-xs text-muted-foreground">{card.meta}</span>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -216,7 +289,7 @@ function Home() {
 
       <BannerSlot placement="home_middle" />
 
-      {serviceCategories.length > 0 && (
+      {giftingCategories.length > 0 && (
         <section className="container-ligo py-8">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
@@ -233,9 +306,9 @@ function Home() {
           </div>
           <ServiceCategoryBanner
             ariaLabel={t("home_moments_title")}
-            categories={serviceCategories}
+            categories={giftingCategories}
             counts={Object.fromEntries(
-              serviceCategories.map((cat) => [
+              giftingCategories.map((cat) => [
                 cat.id,
                 momentServices.filter((s) => s.service_category_id === cat.id).length,
               ]),
