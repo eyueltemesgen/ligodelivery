@@ -2351,6 +2351,21 @@ export const en = {
     "Birthday, family, corporate, wedding and graduation catering, delivered and set up.",
   smcat_decoration_desc:
     "Birthday, wedding, engagement, graduation and baby shower styling for any venue.",
+  smcat_errands: "Errands & Tasks",
+  smcat_errands_blurb: "Grocery runs, queue standing, pickups and custom tasks.",
+  smcat_errands_tagline: "Hand us your to-do list",
+  smcat_errands_desc:
+    "Grocery runs, queue standing, document pickup and drop, pharmacy runs and any custom task around {city}. Tell us what you need done and we send a rider.",
+  smcat_bills: "Bill Payments",
+  smcat_bills_blurb: "Electric, water, telephone, internet and school payments.",
+  smcat_bills_tagline: "Pay without leaving home",
+  smcat_bills_desc:
+    "Electric, water, telephone and internet bills, school fees and other payments. Share the account number and we pay it, then bring you the receipt.",
+  smcat_parcels: "Parcels & Courier",
+  smcat_parcels_blurb: "Documents, small packages, fragile items and bulk loads.",
+  smcat_parcels_tagline: "Send anything across {city}",
+  smcat_parcels_desc:
+    "Documents, small packages, fragile items and bulk loads, picked up from your door and delivered across the city the same day.",
   smd_gallery: "Photos",
   smd_gallery_aria: "Service photos",
   smd_photo_n: "{name} — photo {n}",

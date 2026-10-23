@@ -2371,6 +2371,21 @@ export const or = {
     "Nyaata ayyaana dhalootaa, maatii, dhaabbataa, cidhaa fi eebbaa, geessanii qopheessan.",
   smcat_decoration_desc:
     "Faaya ayyaana dhalootaa, cidhaa, jaalala, eebbaa fi da'umsaaf bakka kamiif.",
+  smcat_errands: "Hojiiwwan fi Ramaddiiwwan",
+  smcat_errands_blurb: "Bittaa gogaa, tarree dhaabbachuu, fudhachuu fi hojiiwwan adda addaa.",
+  smcat_errands_tagline: "Tarreeffama hojii keessan nuuf kenni",
+  smcat_errands_desc:
+    "Bittaa gogaa, tarree dhaabbachuu, sanada fudhachuu fi geejjibuu, qoricha fiduu fi hojiiwwan adda addaa {city} keessatti. Maal akka hojjetamu barbaaddan nutti himi; ogeessa ergina.",
+  smcat_bills: "Kaffaltii Billii",
+  smcat_bills_blurb: "Kaffaltii ibsaa, bishaan, bilbila, intarneetii fi barnootaa.",
+  smcat_bills_tagline: "Mana keessanii ba'uu malee kaffalaa",
+  smcat_bills_desc:
+    "Billii ibsaa, bishaan, bilbila fi intarneetii, kaffaltii barnootaa fi kanneen biroo. Lakkoofsa herregaa nuuf kenni; nuti ni kaffalna, nagahee sitti fidna.",
+  smcat_parcels: "Parcelii fi Ergisa",
+  smcat_parcels_blurb: "Sanadoota, parcelii xixiqqaa, wantoota caccaban fi fe'umsa guddaa.",
+  smcat_parcels_tagline: "Waan kamiyyuu {city} keessa ergi",
+  smcat_parcels_desc:
+    "Sanadoota, parcelii xixiqqaa, wantoota caccaban fi fe'umsa guddaa, balbala keessan irraa fudhatamanii guyyaa sana magaalaa keessatti geejjibamu.",
   smd_gallery: "Suuraawwan",
   smd_gallery_aria: "Suuraawwan tajaajilaa",
   smd_photo_n: "{name} — suuraa {n}",

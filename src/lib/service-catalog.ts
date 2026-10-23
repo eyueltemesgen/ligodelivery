@@ -3,7 +3,10 @@ import {
   CalendarHeart,
   Flower2,
   Gift,
+  ListChecks,
+  Package,
   PartyPopper,
+  ReceiptText,
   UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
@@ -11,9 +14,13 @@ import type { PricingType } from "@/lib/special-moments";
 import type { Language, TranslationKey } from "@/lib/i18n";
 
 /**
- * Presentation metadata for the five Special Moments categories. The database
- * owns the taxonomy (names, slugs, ordering, images); this map only supplies a
+ * Presentation metadata for the Special Moments categories. The database owns
+ * the taxonomy (names, slugs, ordering, images); this map only supplies a
  * neutral icon and the i18n keys used when the visitor is not reading English.
+ *
+ * This covers the original five gifting categories plus the three concierge
+ * ones (errands, bill payments, parcels) that compete directly with Tona and
+ * Bishoftu Delivery.
  */
 export type ServiceCategoryMeta = {
   icon: LucideIcon;
@@ -58,6 +65,27 @@ const META: Record<string, ServiceCategoryMeta> = {
     blurbKey: "smcat_decoration_blurb",
     taglineKey: "smcat_decoration_tagline",
     descKey: "smcat_decoration_desc",
+  },
+  errands: {
+    icon: ListChecks,
+    nounKey: "smcat_errands",
+    blurbKey: "smcat_errands_blurb",
+    taglineKey: "smcat_errands_tagline",
+    descKey: "smcat_errands_desc",
+  },
+  "bill-payments": {
+    icon: ReceiptText,
+    nounKey: "smcat_bills",
+    blurbKey: "smcat_bills_blurb",
+    taglineKey: "smcat_bills_tagline",
+    descKey: "smcat_bills_desc",
+  },
+  parcels: {
+    icon: Package,
+    nounKey: "smcat_parcels",
+    blurbKey: "smcat_parcels_blurb",
+    taglineKey: "smcat_parcels_tagline",
+    descKey: "smcat_parcels_desc",
   },
 };
 

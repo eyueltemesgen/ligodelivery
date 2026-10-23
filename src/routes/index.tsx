@@ -1,6 +1,7 @@
 import { translations } from "@/lib/i18n";
+import { useShopDistances } from "@/hooks/useShopDistances";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Bike, Clock, ShieldCheck, Search } from "lucide-react";
 import { categoriesQuery, featuredProductsQuery, offersQuery, shopsQuery } from "@/lib/queries";
@@ -74,6 +75,9 @@ function Home() {
   const featuredShops = (
     quickCategory ? shops.filter((s) => s.category_id === quickCategory) : shops
   ).slice(0, 6);
+
+  const featuredShopIds = useMemo(() => featuredShops.map((s) => s.id), [featuredShops]);
+  const { distances: featuredDistances } = useShopDistances(featuredShopIds);
 
   // The hero badge is opt-in: only show it when an admin has set a custom,
   // non-empty value. Default/empty renders nothing instead of placeholder copy.
@@ -286,7 +290,7 @@ function Home() {
         ) : (
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {featuredShops.map((s) => (
-              <ShopCard key={s.id} shop={s} />
+              <ShopCard key={s.id} shop={s} distance={featuredDistances[s.id]} />
             ))}
           </div>
         )}

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, Heart, Plus, Star, Truck } from "lucide-react";
+import { Clock, Heart, MapPin, Plus, Star, Truck } from "lucide-react";
 import { StorageImage } from "@/lib/media";
 import { ETB, discounted, isShopOpen } from "@/lib/format";
 import type { Product, Shop } from "@/lib/queries";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { useSaved } from "@/lib/saved";
 import { useLanguage } from "@/hooks/useLanguage";
+import { formatDistance } from "@/lib/delivery";
 import { toast } from "@/lib/toast";
 
 /** Delivery window shown as a range, e.g. "15–25 min", with safe fallbacks. */
@@ -15,11 +16,27 @@ const deliveryWindow = (mins: number | null | undefined) => {
   return `${base}–${base + 10}`;
 };
 
-export function ShopCard({ shop }: { shop: Shop }) {
+export function ShopCard({
+  shop,
+  distance,
+}: {
+  shop: Shop;
+  /**
+   * Distance in km and the fee the checkout will charge, from `shop_distances`.
+   * Absent when the customer's location is unknown — the card then shows the
+   * shop's flat fee, as it did before distances existed.
+   */
+  distance?:
+    { ok: boolean; distance?: number | undefined; deliveryFee?: number | undefined } | undefined;
+}) {
   const open = shop.is_online !== false && isShopOpen(shop.opens_at, shop.closes_at);
   const { isFavoriteShop, toggleShop } = useSaved();
   const { t } = useLanguage();
   const favorite = isFavoriteShop(shop.id);
+  // Prefer the engine's fee so the card and the checkout always agree; fall back
+  // to the shop's flat fee when there is no location to measure from.
+  const fee =
+    distance?.ok && distance.deliveryFee != null ? distance.deliveryFee : shop.delivery_fee;
   return (
     <Link
       to="/shops/$shopId"
@@ -82,10 +99,14 @@ export function ShopCard({ shop }: { shop: Shop }) {
           </span>
           <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
             <Truck className="h-3 w-3" />
-            {Number(shop.delivery_fee) > 0
-              ? t("common_fee", { amount: ETB(shop.delivery_fee) })
-              : t("common_free_delivery")}
+            {Number(fee) > 0 ? t("common_fee", { amount: ETB(fee) }) : t("common_free_delivery")}
           </span>
+          {distance?.ok && distance.distance != null && (
+            <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+              <MapPin className="h-3 w-3" />
+              {formatDistance(distance.distance)}
+            </span>
+          )}
         </div>
       </div>
     </Link>

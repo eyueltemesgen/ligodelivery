@@ -1,10 +1,12 @@
 import { BannerSlot } from "@/components/ligo/BannerSlot";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { categoriesQuery, shopsQuery } from "@/lib/queries";
 import { ShopCard } from "@/components/ligo/Cards";
 import { ShopGridSkeleton } from "@/components/ligo/Skeletons";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useShopDistances } from "@/hooks/useShopDistances";
 import { translations } from "@/lib/i18n";
 
 export const Route = createFileRoute("/shops/")({
@@ -29,6 +31,9 @@ function ShopsPage() {
   const { data: categories = [] } = useQuery(categoriesQuery);
   const { data: shops = [], isLoading } = useQuery(shopsQuery(category));
   const { t } = useLanguage();
+  // One request for the whole page rather than one per card.
+  const shopIds = useMemo(() => shops.map((s) => s.id), [shops]);
+  const { distances } = useShopDistances(shopIds);
 
   return (
     <div className="container-ligo py-10">
@@ -62,7 +67,7 @@ function ShopsPage() {
       ) : (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {shops.map((s) => (
-            <ShopCard key={s.id} shop={s} />
+            <ShopCard key={s.id} shop={s} distance={distances[s.id]} />
           ))}
         </div>
       )}

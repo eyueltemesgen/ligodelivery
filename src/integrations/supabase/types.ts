@@ -2437,6 +2437,10 @@ export type Database = {
         Args: { p_code: string; p_delivery_fee: number; p_subtotal: number }
         Returns: Json
       }
+      shop_distances: {
+        Args: { p_lat: number; p_lng: number; p_shop_ids: string[] }
+        Returns: Json
+      }
       complete_delivery: {
         Args: { _order_id: string; _pin: string }
         Returns: {
